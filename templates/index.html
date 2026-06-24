@@ -7,42 +7,92 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #f5f5f5; --card: #fff; --border: #ddd;
-    --active-bg: #fffde7; --active-border: #fbc02d; --active-text: #5d4037;
-    --done-bg: #e8f5e9; --done-text: #2e7d32;
-    --pending-bg: #f5f5f5; --pending-text: #757575;
-    --red: #d32f2f; --green: #388e3c; --orange: #f57f17;
-    --blue: #1565c0;
+    --bg: #f5f5f7; --card: #ffffff; --border: rgba(0,0,0,0.08);
+    --active-bg: #ffffff; --active-border: #0071e3; --active-text: #0071e3;
+    --done-bg: #f2fff5; --done-text: #1a7f37;
+    --pending-bg: #f5f5f7; --pending-text: #86868b;
+    --red: #ff3b30; --green: #34c759; --orange: #ff9f0a;
+    --blue: #0071e3;
   }
-  body { font-family: system-ui, sans-serif; background: var(--bg); color: #222; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif; background: var(--bg); color: #1d1d1f; -webkit-font-smoothing: antialiased; }
 
   /* ── Layout ── */
-  #layout { display: flex; height: 100vh; overflow: hidden; }
-  #sidebar { width: 260px; min-width: 220px; background: #263238; color: #eceff1;
-             display: flex; flex-direction: column; padding: 16px; gap: 12px; overflow-y: auto; }
-  #main { flex: 1; overflow-y: auto; padding: 20px; }
+  #layout { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  #sidebar { display: none !important; }
+  #main { flex: 1; overflow-y: auto; padding: 28px 36px; }
+
+  /* ── Top Bar ── */
+  #topbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 24px; height: 60px; min-height: 60px; flex-shrink: 0;
+    background: #1d1d1f; color: #f5f5f7;
+    border-bottom: 1px solid #3a3a3c;
+    position: sticky; top: 0; z-index: 100;
+  }
+  #topbar-logo {
+    font-size: 17px; font-weight: 800; white-space: nowrap;
+    letter-spacing: -0.3px; margin-right: 8px; flex-shrink: 0;
+  }
+  #topbar-logo #pin-role-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    border-radius: 6px; vertical-align: middle; margin-left: 6px;
+  }
+  .topbar-sep { width: 1px; height: 28px; background: #3a3a3c; flex-shrink: 0; margin: 0 4px; }
+  #topbar-center { display: flex; align-items: center; gap: 8px; flex: 1; flex-wrap: nowrap; }
+  #topbar-right  { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto; }
+  #topbar #pdf-reload-btn { display: inline-block; width: auto; padding: 8px 14px;
+    font-size: 13px; border-radius: 10px; white-space: nowrap; }
+  #topbar #upload-status { font-size: 12px; color: #86868b; white-space: nowrap; }
+  #topbar .phase-toggle { gap: 3px; }
+  #topbar .phase-btn { padding: 6px 11px; font-size: 12px; border-radius: 8px; }
+  #topbar #aktiver-tag-anzeige { font-size: 12px; font-weight: 600; white-space: nowrap; }
+  #topbar #tag-override-select {
+    padding: 6px 8px; background: #2c2c2e; color: #f5f5f7;
+    border: 1px solid #3a3a3c; border-radius: 8px; font-size: 12px; cursor: pointer;
+  }
+  #topbar .mode-btn { width: auto; padding: 6px 10px; font-size: 12px; border-radius: 8px; margin-bottom: 0; }
+  #topbar .sidebar-btn { width: auto; padding: 6px 10px; font-size: 12px; border-radius: 8px; margin-bottom: 0; }
+  #topbar #ws-status { font-size: 11px; color: #86868b; white-space: nowrap; }
+  #topbar #virtual-monitor { font-size: 11px; max-width: 160px; overflow: hidden; }
+  #logout-btn { padding: 6px 12px; border: 1px solid #ef5350; border-radius: 8px;
+    background: transparent; color: #ef9a9a; cursor: pointer; font-size: 12px; flex-shrink: 0; }
+  #logout-btn:hover { background: rgba(239,83,80,0.1); }
+  /* Admin-Panel Dropdown */
+  #admin-panel {
+    background: #1d1d1f; border-bottom: 1px solid #3a3a3c;
+    padding: 14px 24px; display: flex; gap: 24px; align-items: flex-end; flex-shrink: 0;
+  }
+  #admin-panel.hidden { display: none; }
 
   /* ── Sidebar ── */
-  #sidebar h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px;
-                color: #90a4ae; margin-top: 8px; }
-  #sidebar label { font-size: 13px; color: #b0bec5; }
-  .mode-btn { width: 100%; padding: 8px; border: none; border-radius: 6px; cursor: pointer;
-              font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-  .mode-btn.active-virtual { background: #4caf50; color: #fff; }
-  .mode-btn.active-mqtt    { background: #2196f3; color: #fff; }
-  .mode-btn.inactive { background: #37474f; color: #90a4ae; }
+  #sidebar h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+                color: #86868b; margin-top: 8px; font-weight: 600; }
+  #sidebar label { font-size: 13px; color: #aeaeb2; }
+  .mode-btn { width: 100%; padding: 9px; border: none; border-radius: 10px; cursor: pointer;
+              font-size: 13px; font-weight: 600; margin-bottom: 4px; transition: all .15s; }
+  .mode-btn.active-virtual { background: linear-gradient(180deg,#43d86a,#28a745); color:#fff;
+    box-shadow: 0 4px 0 #1a7a30, 0 5px 10px rgba(30,150,60,0.3); }
+  .mode-btn.active-mqtt    { background: linear-gradient(180deg,#1a8cff,#0060cc); color:#fff;
+    box-shadow: 0 4px 0 #004499, 0 5px 10px rgba(0,80,200,0.3); }
+  .mode-btn.inactive { background: linear-gradient(180deg,#3a3a3c,#2c2c2e); color:#86868b;
+    box-shadow: 0 3px 0 #1c1c1e; }
+  .mode-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #000 !important; }
   #virtual-monitor { font-size: 12px; }
   .display-item { padding: 3px 0; }
   .display-on  { color: #ff5252; font-weight: bold; }
   .display-off { color: #546e7a; }
-  .sidebar-btn { width: 100%; padding: 8px; border: 1px solid #546e7a; border-radius: 6px;
-                 background: transparent; color: #eceff1; cursor: pointer; font-size: 13px;
-                 margin-bottom: 4px; }
-  .sidebar-btn:hover { background: #37474f; }
-  #pdf-reload-btn { display: block; width: 100%; padding: 10px; background: #1565c0; color: #fff;
-                    border-radius: 8px; text-align: center; cursor: pointer; font-size: 14px;
-                    font-weight: 600; border: none; }
-  #pdf-reload-btn:hover { background: #0d47a1; }
+  .sidebar-btn { width: 100%; padding: 9px; border: 1px solid #3a3a3c; border-radius: 10px;
+                 background: transparent; color: #f5f5f7; cursor: pointer; font-size: 13px;
+                 margin-bottom: 4px; transition: background .15s; }
+  .sidebar-btn:hover { background: #2c2c2e; }
+  #pdf-reload-btn { display: block; width: 100%;
+                    background: linear-gradient(180deg, #1a8cff 0%, #0060cc 100%);
+                    color: #fff; border-radius: 10px; text-align: center; cursor: pointer;
+                    font-size: 14px; font-weight: 600; border: none;
+                    box-shadow: 0 4px 0 #004499, 0 6px 12px rgba(0,80,200,0.3);
+                    transition: transform .08s, box-shadow .08s; }
+  #pdf-reload-btn:hover { transform: translateY(1px); box-shadow: 0 3px 0 #004499, 0 4px 8px rgba(0,80,200,0.25); }
+  #pdf-reload-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #004499; }
   #pdf-upload-label { display: block; padding: 6px; background: #37474f; color: #90a4ae;
                       border-radius: 6px; text-align: center; cursor: pointer; font-size: 12px; }
   #pdf-upload-label:hover { background: #455a64; color: #fff; }
@@ -54,57 +104,99 @@
   .phase-toggle { display: flex; gap: 4px; }
   .phase-btn { flex: 1; padding: 8px 4px; border: 2px solid transparent; border-radius: 6px;
                cursor: pointer; font-size: 13px; font-weight: 700; }
-  .phase-btn.active-erst { background: #1565c0; color: #fff; border-color: #1565c0; }
-  .phase-btn.active-vor  { background: #6a1b9a; color: #fff; border-color: #6a1b9a; }
-  .phase-btn.active-zwei { background: #e65100; color: #fff; border-color: #e65100; }
-  .phase-btn.inactive    { background: #37474f; color: #90a4ae; border-color: #37474f; }
+  .phase-btn.active-erst { background: linear-gradient(180deg,#2196f3,#0d47a1); color:#fff; border-color:#0d47a1;
+    box-shadow: 0 3px 0 #0a3680, 0 4px 8px rgba(0,60,180,0.3); }
+  .phase-btn.active-vor  { background: linear-gradient(180deg,#9c27b0,#4a148c); color:#fff; border-color:#4a148c;
+    box-shadow: 0 3px 0 #380f6b, 0 4px 8px rgba(100,0,160,0.3); }
+  .phase-btn.active-zwei { background: linear-gradient(180deg,#ff7043,#bf360c); color:#fff; border-color:#bf360c;
+    box-shadow: 0 3px 0 #8d2600, 0 4px 8px rgba(180,50,0,0.3); }
+  .phase-btn.inactive    { background: linear-gradient(180deg,#546e7a,#37474f); color:#90a4ae; border-color:#37474f;
+    box-shadow: 0 3px 0 #263238; }
+  .phase-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #000 !important; }
 
   /* ── Tabs ── */
-  .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
-  .tab-btn { padding: 8px 20px; border: none; border-radius: 6px 6px 0 0; cursor: pointer;
-             font-size: 14px; font-weight: 600; background: #ddd; color: #555; }
-  .tab-btn.active { background: var(--card); color: #222; border-bottom: 2px solid var(--card); }
+  .tabs { display: flex; gap: 6px; margin-bottom: 20px; background: #d1d1d6; padding: 4px; border-radius: 12px;
+          box-shadow: inset 0 1px 3px rgba(0,0,0,0.15); }
+  .tab-btn { padding: 7px 16px; border: none; border-radius: 8px; cursor: pointer;
+             font-size: 13px; font-weight: 500; background: transparent; color: #636366;
+             transition: all .15s; }
+  .tab-btn:hover { background: rgba(255,255,255,0.5); color: #1d1d1f; }
+  .tab-btn.active { background: linear-gradient(180deg,#ffffff 0%,#f5f5f7 100%); color: #1d1d1f; font-weight: 700;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.14), 0 1px 0 rgba(255,255,255,0.9) inset; }
   .tab-pane { display: none; }
   .tab-pane.active { display: block; }
 
   /* ── Pack-Modus ── */
-  .card { background: var(--card); border-radius: 10px; padding: 16px; margin-bottom: 12px;
-          box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .card { background: linear-gradient(180deg, #ffffff 0%, #f8f8fb 100%);
+          border-radius: 16px; padding: 18px; margin-bottom: 12px;
+          box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset,
+                      0 2px 4px rgba(0,0,0,0.05),
+                      0 6px 20px rgba(0,0,0,0.07),
+                      0 1px 0 rgba(0,0,0,0.04); }
 
-  select { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);
-           font-size: 14px; width: 100%; background: #fff; }
+  select { padding: 8px 12px; border-radius: 10px; border: 1px solid #c7c7cc;
+           font-size: 14px; width: 100%;
+           background: linear-gradient(180deg,#f5f5f7 0%,#ffffff 100%);
+           box-shadow: inset 0 1px 3px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.8);
+           appearance: auto; }
 
   /* ── Großes Takt-Display ── */
-  #takt-display { border-radius: 12px; padding: 36px 24px; text-align: center;
-                  border-left: 10px solid var(--active-border); background: var(--active-bg);
-                  margin-bottom: 12px; }
-  #takt-display.sperre { border-left-color: #2e7d32; background: #e8f5e9; }
-  #takt-station { font-size: 52px; font-weight: 800; color: var(--active-text); letter-spacing: -0.5px; }
-  #takt-station span { color: var(--red); }
-  #takt-menge { font-size: 70px; font-weight: 900; margin: 8px 0; color: #000; }
-  #takt-produkt { font-size: 18px; color: #795548; }
-  #sperre-title { font-size: 36px; font-weight: 800; color: #1b5e20; }
-  #sperre-sub { font-size: 18px; color: #4caf50; margin-top: 8px; }
+  #takt-display { border-radius: 20px; padding: 40px 24px; text-align: center;
+                  border: 2px solid var(--active-border);
+                  background: linear-gradient(180deg, #ffffff 0%, #f5f9ff 100%);
+                  margin-bottom: 14px;
+                  box-shadow: 0 1px 0 rgba(255,255,255,1) inset,
+                              0 0 0 4px rgba(0,113,227,0.08),
+                              0 8px 32px rgba(0,113,227,0.15),
+                              0 2px 8px rgba(0,0,0,0.06); }
+  #takt-display.sperre { border-color: #34c759;
+                         background: linear-gradient(180deg, #ffffff 0%, #f2fff5 100%);
+                         box-shadow: 0 1px 0 rgba(255,255,255,1) inset,
+                                     0 0 0 4px rgba(52,199,89,0.08),
+                                     0 8px 32px rgba(52,199,89,0.15),
+                                     0 2px 8px rgba(0,0,0,0.06); }
+  #takt-station { font-size: 52px; font-weight: 700; color: #86868b; letter-spacing: -0.5px; }
+  #takt-station span { color: #1d1d1f; font-weight: 800; }
+  #takt-menge { font-size: 80px; font-weight: 800; margin: 4px 0; color: #0071e3; letter-spacing: -2px; }
+  #takt-produkt { font-size: 16px; color: #86868b; font-weight: 400; margin-top: 4px; }
+  #sperre-title { font-size: 36px; font-weight: 700; color: #1a7f37; letter-spacing: -0.5px; }
+  #sperre-sub { font-size: 16px; color: #34c759; margin-top: 8px; }
 
   /* ── Bestätigungs-Button ── */
   #bestaetigen-btn, #naechstes-btn {
-    width: 100%; padding: 18px; border: none; border-radius: 10px; cursor: pointer;
-    font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-  #bestaetigen-btn { background: #fbc02d; color: #5d4037; }
-  #bestaetigen-btn:hover { background: #f9a825; }
-  #naechstes-btn { background: #388e3c; color: #fff; }
-  #naechstes-btn:hover { background: #2e7d32; }
-  #zurueck-btn { width: 100%; padding: 14px; border: 2px solid #d32f2f; border-radius: 8px;
-                 cursor: pointer; font-size: 16px; font-weight: 600; background: #fff5f5; color: #d32f2f; }
-  #zurueck-btn:hover { background: #ffebee; }
+    width: 100%; padding: 18px; border: none; border-radius: 14px; cursor: pointer;
+    font-size: 18px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.2px;
+    transition: transform .08s, box-shadow .08s; }
+  #bestaetigen-btn {
+    background: linear-gradient(180deg, #1a8cff 0%, #0060cc 100%);
+    color: #fff;
+    box-shadow: 0 6px 0 #004499, 0 8px 16px rgba(0,80,200,0.35);
+  }
+  #bestaetigen-btn:hover { box-shadow: 0 4px 0 #004499, 0 6px 12px rgba(0,80,200,0.35); transform: translateY(2px); }
+  #bestaetigen-btn:active { box-shadow: 0 1px 0 #004499, 0 2px 6px rgba(0,80,200,0.25); transform: translateY(5px); }
+  #naechstes-btn {
+    background: linear-gradient(180deg, #43d86a 0%, #28a745 100%);
+    color: #fff;
+    box-shadow: 0 6px 0 #1a7a30, 0 8px 16px rgba(30,150,60,0.35);
+  }
+  #naechstes-btn:hover { box-shadow: 0 4px 0 #1a7a30, 0 6px 12px rgba(30,150,60,0.3); transform: translateY(2px); }
+  #naechstes-btn:active { box-shadow: 0 1px 0 #1a7a30; transform: translateY(5px); }
+  #zurueck-btn { width: 100%; padding: 14px; border: none; border-radius: 14px;
+                 cursor: pointer; font-size: 15px; font-weight: 600;
+                 background: linear-gradient(180deg, #fff5f5 0%, #ffe8e8 100%);
+                 color: #ff3b30;
+                 box-shadow: 0 4px 0 #cc1a10, 0 6px 12px rgba(200,30,20,0.2);
+                 transition: transform .08s, box-shadow .08s; }
+  #zurueck-btn:hover { box-shadow: 0 3px 0 #cc1a10, 0 4px 8px rgba(200,30,20,0.2); transform: translateY(1px); }
+  #zurueck-btn:active { box-shadow: 0 1px 0 #cc1a10; transform: translateY(3px); }
 
   /* ── Filial-Vorschau ── */
   #filialen-vorschau { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .filiale-chip { padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;
-                  min-width: 80px; text-align: center; }
-  .chip-done    { background: var(--done-bg); color: var(--done-text); }
-  .chip-active  { background: var(--active-bg); border: 2px solid var(--active-border); color: var(--orange); }
-  .chip-pending { background: var(--pending-bg); color: var(--pending-text); }
+  .filiale-chip { padding: 10px 14px; border-radius: 12px; font-size: 13px; font-weight: 600;
+                  min-width: 90px; text-align: center; transition: all .15s; }
+  .chip-done    { background: rgba(52,199,89,0.08); border: 1.5px solid #34c759; color: #1a7f37; }
+  .chip-active  { background: rgba(0,113,227,0.08); border: 2px solid #0071e3; color: #0071e3; }
+  .chip-pending { background: #f5f5f7; border: 1.5px solid #d1d1d6; color: #86868b; }
 
   /* ── Filter ── */
   .filter-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
@@ -118,7 +210,10 @@
   .tag-card h3 { font-size: 14px; margin-bottom: 8px; color: #1565c0; }
   .drag-list { min-height: 40px; border: 1px dashed #ccc; border-radius: 6px; padding: 4px;
                list-style: none; }
-  .drag-item { padding: 5px 8px; margin: 3px 0; background: #e3f2fd; border-radius: 4px;
+  .drag-item { padding: 8px 12px; margin: 4px 0;
+    background: linear-gradient(180deg,#ffffff,#e8f4fd); border-radius: 10px;
+    box-shadow: 0 3px 0 #b0c8e8, 0 4px 8px rgba(0,80,180,0.12);
+    transition: transform .08s, box-shadow .08s;
                font-size: 12px; cursor: grab; display: flex; justify-content: space-between;
                align-items: center; }
   .drag-item:active { cursor: grabbing; }
@@ -131,10 +226,13 @@
                      cursor: pointer; padding: 3px 4px; border-radius: 4px; }
   .filial-cb-label:hover { background: #f0f4ff; }
   .filial-cb-label input[type=checkbox] { width: 14px; height: 14px; cursor: pointer; accent-color: #1565c0; }
-  #touren-save-btn { width: 100%; padding: 14px; border: none; border-radius: 10px;
-                     background: #1565c0; color: #fff; font-size: 16px; font-weight: 700;
+  #touren-save-btn { width: 100%; padding: 14px; border: none; border-radius: 12px;
+                     background: linear-gradient(180deg,#1a8cff,#0060cc); color: #fff; font-size: 16px; font-weight: 700;
+                     box-shadow: 0 5px 0 #004499, 0 7px 14px rgba(0,80,200,0.3);
+                     transition: transform .08s, box-shadow .08s;
                      cursor: pointer; margin-top: 16px; }
-  #touren-save-btn:hover { background: #0d47a1; }
+  #touren-save-btn:hover { transform: translateY(2px); box-shadow: 0 3px 0 #004499, 0 4px 8px rgba(0,80,200,0.25); }
+  #touren-save-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #004499; }
   #touren-save-msg { text-align: center; color: var(--green); font-size: 13px; min-height: 20px;
                      margin-top: 6px; }
 
@@ -147,7 +245,9 @@
 
   /* ── Mengenkorrektur ── */
   .menge-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .menge-table th { background: #263238; color: #eceff1; padding: 8px 10px; text-align: left; position: sticky; top: 0; }
+  .menge-table th { background: linear-gradient(180deg,#37474f,#263238); color: #eceff1;
+    padding: 9px 10px; text-align: left; position: sticky; top: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
   .menge-table td { padding: 7px 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
   .menge-table tr:hover td { background: #f9f9f9; }
   .menge-table input[type=number] { width: 80px; padding: 4px 6px; border: 1px solid #bbb;
@@ -157,10 +257,17 @@
   .diff-null  { color: #999; }
   .ergebnis-row td { background: #e3f2fd; font-size: 12px; }
   .kat-select { padding: 3px 6px; border-radius: 4px; border: 1px solid #ccc; font-size: 12px; }
-  #menge-berechnen-btn { padding: 12px 32px; background: #1565c0; color: #fff; border: none;
+  #menge-berechnen-btn { padding: 12px 32px;
+    background: linear-gradient(180deg,#1a8cff,#0060cc); color: #fff; border: none;
+    box-shadow: 0 5px 0 #004499, 0 7px 12px rgba(0,80,200,0.3);
+    transition: transform .08s, box-shadow .08s;
                           border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; }
-  #menge-berechnen-btn:hover { background: #0d47a1; }
-  #menge-config-save-btn { padding: 8px 20px; background: #388e3c; color: #fff; border: none;
+  #menge-berechnen-btn:hover { transform: translateY(2px); box-shadow: 0 3px 0 #004499, 0 4px 8px rgba(0,80,200,0.25); }
+  #menge-berechnen-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #004499; }
+  #menge-config-save-btn { padding: 8px 20px;
+    background: linear-gradient(180deg,#43d86a,#28a745); color: #fff; border: none;
+    box-shadow: 0 4px 0 #1a7a30, 0 6px 10px rgba(30,150,60,0.3);
+    transition: transform .08s, box-shadow .08s;
                             border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
   .rundung-input { width: 60px; padding: 3px 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
 
@@ -172,9 +279,15 @@
   .nl-label input[type=checkbox] { width:18px; height:18px; cursor:pointer; accent-color:#f57f17; }
   .nl-status-gepackt { color:#388e3c; font-size:11px; font-weight:600; }
   .nl-status-offen   { color:#999; font-size:11px; }
-  .nl-mode-btn { padding:7px 18px; border-radius:8px; border:2px solid #ddd; background:#f5f5f5;
-                 color:#555; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; }
-  .nl-mode-btn.active { border-color:#f57f17; background:#fff8e1; color:#e65100; }
+  .nl-mode-btn { padding:8px 18px; border-radius:10px; border:none;
+    background: linear-gradient(180deg,#ffffff,#ebebeb);
+    color:#555; font-size:13px; font-weight:600; cursor:pointer;
+    box-shadow: 0 3px 0 #b0b0b0, 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform .08s, box-shadow .08s; }
+  .nl-mode-btn:hover { transform: translateY(1px); box-shadow: 0 2px 0 #b0b0b0; }
+  .nl-mode-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #b0b0b0; }
+  .nl-mode-btn.active { border:none; background: linear-gradient(180deg,#ffb74d,#f57f17);
+    color:#fff; box-shadow: 0 3px 0 #c85e00, 0 4px 8px rgba(200,90,0,0.3); }
   .nl-manuell-row { display:flex; align-items:center; gap:10px; padding:10px 14px;
                     border-radius:10px; border:2px solid #eee; background:#f9f9f9; }
   .nl-manuell-row.has-value { border-color:#f57f17; background:#fff8e1; }
@@ -194,7 +307,12 @@
   .modal-title { font-size:18px; font-weight:700; color:#222; }
   .modal-body { font-size:14px; line-height:1.7; color:#444; margin-bottom:24px; }
   .modal-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
-  .modal-btn { padding:10px 22px; border:none; border-radius:8px; font-size:14px;
+  .modal-btn { padding:10px 22px; border:none; border-radius:10px; font-size:14px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2), 0 5px 10px rgba(0,0,0,0.1);
+    transition: transform .08s, box-shadow .08s; }
+  .modal-btn:hover { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+  .modal-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+  /*
                font-weight:600; cursor:pointer; }
   .modal-warn-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:8px; }
   .modal-warn-table th { background:#f5f5f5; padding:6px 10px; text-align:left; font-weight:600; }
@@ -332,9 +450,11 @@
   .pin-change-row input { flex:1; min-width:80px; padding:7px 10px; border-radius:6px;
                            border:1px solid #546e7a; background:#263238; color:#eceff1;
                            font-size:14px; font-weight:700; letter-spacing:3px; text-align:center; }
-  .pin-save-btn { padding:7px 14px; background:#1565c0; color:#fff; border:none;
-                  border-radius:6px; font-size:13px; cursor:pointer; }
-  .pin-save-btn:hover { background:#0d47a1; }
+  .pin-save-btn { padding:7px 14px; border:none; border-radius:8px; font-size:13px; cursor:pointer;
+    background: linear-gradient(180deg,#1a8cff,#0060cc); color:#fff;
+    box-shadow: 0 3px 0 #004499; transition: transform .08s, box-shadow .08s; }
+  .pin-save-btn:hover { transform: translateY(1px); box-shadow: 0 2px 0 #004499; }
+  .pin-save-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #004499; }
   #pin-save-msg { color:#80cbc4; font-size:12px; min-height:16px; margin-top:4px; }
 
 </style>
@@ -373,82 +493,87 @@
 
 <div id="layout">
 
-  <!-- ════════════════════ SIDEBAR ════════════════════ -->
-  <aside id="sidebar">
-    <div style="font-size:18px; font-weight:800; color:#fff; letter-spacing:.5px;">
-      🥐 Pick-by-Light <span id="pin-role-badge">–</span>
+  <!-- ════════════════════ TOPBAR ════════════════════ -->
+  <header id="topbar">
+    <div id="topbar-logo">🥐 Pick-by-Light
+      <span id="pin-role-badge">–</span>
     </div>
 
-    <h2>PDF Einlesen</h2>
-    <button id="pdf-reload-btn" onclick="reloadPdf()">📄 Versandliste einlesen</button>
-    <div id="upload-status">Kein PDF geladen</div>
-    <label id="pdf-upload-label" for="pdf-input">⬆ Test-Upload (lokal)</label>
-    <input id="pdf-input" type="file" accept=".pdf">
+    <div class="topbar-sep"></div>
 
-    <h2>Lieferungs-Phase</h2>
-    <div class="phase-toggle">
-      <button class="phase-btn active-erst" id="btn-erst" onclick="setPhase('1.')">1. Lief.</button>
-      <button class="phase-btn inactive"    id="btn-vor"  onclick="setPhase('V')">Vorb.</button>
-      <button class="phase-btn inactive"    id="btn-zwei" onclick="setPhase('2.')">2. Lief.</button>
+    <div id="topbar-center">
+      <button id="pdf-reload-btn" onclick="reloadPdf()">📄 Versandliste einlesen</button>
+      <span id="upload-status">Kein PDF geladen</span>
+      <input id="pdf-input" type="file" accept=".pdf" style="display:none;">
+      <div class="topbar-sep"></div>
+      <div class="phase-toggle">
+        <button class="phase-btn active-erst" id="btn-erst" onclick="setPhase('1.')">1. Lief.</button>
+        <button class="phase-btn inactive"    id="btn-vor"  onclick="setPhase('V')">Vorb.</button>
+        <button class="phase-btn inactive"    id="btn-zwei" onclick="setPhase('2.')">2. Lief.</button>
+      </div>
+      <div class="topbar-sep"></div>
+      <div id="aktiver-tag-anzeige">–</div>
+      <select id="tag-override-select" onchange="setTagOverride(this.value)">
+        <option value="">📄 Aus PDF</option>
+        <option value="Montag">Montag</option>
+        <option value="Dienstag">Dienstag</option>
+        <option value="Mittwoch">Mittwoch</option>
+        <option value="Donnerstag">Donnerstag</option>
+        <option value="Freitag">Freitag</option>
+        <option value="Samstag">Samstag</option>
+        <option value="Sonntag">Sonntag</option>
+        <option value="Feiertag">🎉 Feiertag</option>
+      </select>
     </div>
 
-    <h2 class="admin-only">Hardware-Modus</h2>
-    <button class="mode-btn active-virtual admin-only" id="btn-virtual" onclick="setMode('VIRTUAL')">
-      🖥 VIRTUAL (Simulation)
-    </button>
-    <button class="mode-btn inactive admin-only" id="btn-mqtt" onclick="setMode('MQTT')">
-      📡 MQTT (Echte Displays)
-    </button>
-
-    <div id="virtual-monitor-wrap" class="admin-only">
-      <h2>Virtueller Monitor</h2>
-      <div id="virtual-monitor"><div style="color:#546e7a;font-size:12px;">– kein PDF –</div></div>
+    <div id="topbar-right">
+      <span id="ws-status">…</span>
+      <button class="sidebar-btn admin-only" onclick="toggleAdminPanel()" title="Admin-Einstellungen">⚙️ Admin</button>
+      <button id="logout-btn" onclick="doLogout()">🔒 Abmelden</button>
     </div>
+  </header>
 
-    <h2>Sprach-Steuerung</h2>
-    <button class="sidebar-btn" id="speech-toggle-btn" onclick="toggleSpeech()">🎤 Sprache starten</button>
-    <div id="speech-status">Inaktiv</div>
-
-    <h2>Aktiver Tag</h2>
-    <div id="aktiver-tag-anzeige" style="font-size:13px;color:#fbc02d;font-weight:700;margin-bottom:6px;">–</div>
-    <select id="tag-override-select" onchange="setTagOverride(this.value)"
-      style="width:100%;padding:7px;background:#37474f;color:#eceff1;border:1px solid #546e7a;
-             border-radius:6px;font-size:13px;cursor:pointer;">
-      <option value="">📄 Aus PDF (automatisch)</option>
-      <option value="Montag">Montag</option>
-      <option value="Dienstag">Dienstag</option>
-      <option value="Mittwoch">Mittwoch</option>
-      <option value="Donnerstag">Donnerstag</option>
-      <option value="Freitag">Freitag</option>
-      <option value="Samstag">Samstag</option>
-      <option value="Sonntag">Sonntag</option>
-      <option value="Feiertag">🎉 Feiertag</option>
-    </select>
-
-    <h2>Optionen</h2>
-    <button class="sidebar-btn" onclick="sendCmd('reset')">🧹 Morgen zurücksetzen</button>
-
-
-    <h2 class="admin-only">🔐 Admin</h2>
-    <div class="admin-only">
-      <div style="font-size:12px;color:#90a4ae;margin-bottom:4px;">Mitarbeiter-PIN:</div>
+  <!-- Admin-Panel Dropdown -->
+  <div id="admin-panel" class="hidden">
+    <div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:8px;">Hardware-Modus</div>
+      <div style="display:flex;gap:6px;">
+        <button class="mode-btn active-virtual" id="btn-virtual" onclick="setMode('VIRTUAL')">🖥 Virtual</button>
+        <button class="mode-btn inactive" id="btn-mqtt" onclick="setMode('MQTT')">📡 MQTT</button>
+      </div>
+      <div id="virtual-monitor-wrap" style="margin-top:8px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:4px;">Virtueller Monitor</div>
+        <div id="virtual-monitor"><span style="color:#546e7a;font-size:11px;">– kein PDF –</span></div>
+      </div>
+    </div>
+    <div style="width:1px;background:#3a3a3c;align-self:stretch;"></div>
+    <div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:8px;">Sprach-Steuerung</div>
+      <button class="sidebar-btn" id="speech-toggle-btn" onclick="toggleSpeech()">🎤 Sprache starten</button>
+      <div id="speech-status" style="font-size:12px;color:#86868b;margin-top:4px;">Inaktiv</div>
+    </div>
+    <div style="width:1px;background:#3a3a3c;align-self:stretch;"></div>
+    <div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:8px;">Optionen</div>
+      <button class="sidebar-btn" onclick="sendCmd('reset')" style="border-color:#ff9f0a;color:#ff9f0a;">🧹 Morgen zurücksetzen</button>
+    </div>
+    <div style="width:1px;background:#3a3a3c;align-self:stretch;"></div>
+    <div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:8px;">Mitarbeiter-PIN</div>
       <div class="pin-change-row">
-        <input type="password" id="new-pin-ma" maxlength="4" placeholder="Neu" inputmode="numeric">
+        <input type="password" id="new-pin-ma" maxlength="4" placeholder="Neuer PIN" inputmode="numeric">
         <button class="pin-save-btn" onclick="savePin('mitarbeiter')">💾</button>
       </div>
-      <div style="font-size:12px;color:#90a4ae;margin:8px 0 4px;">Admin-PIN:</div>
+    </div>
+    <div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:8px;">Admin-PIN</div>
       <div class="pin-change-row">
-        <input type="password" id="new-pin-ad" maxlength="4" placeholder="Neu" inputmode="numeric">
+        <input type="password" id="new-pin-ad" maxlength="4" placeholder="Neuer PIN" inputmode="numeric">
         <button class="pin-save-btn" onclick="savePin('admin')">💾</button>
       </div>
-      <div id="pin-save-msg"></div>
     </div>
-    <button class="sidebar-btn" onclick="doLogout()" style="margin-top:4px;border-color:#ef5350;color:#ef9a9a;">🔒 Abmelden</button>
-
-    <div style="margin-top:auto; font-size:11px; color:#546e7a; padding-top:8px;">
-      Verbindung: <span id="ws-status">…</span>
-    </div>
-  </aside>
+    <div id="pin-save-msg" style="font-size:12px;color:#86868b;"></div>
+  </div>
 
   <!-- ════════════════════ MAIN ════════════════════ -->
   <main id="main">
@@ -879,6 +1004,10 @@ document.addEventListener('keydown', function(e) {
 let ws;
 let state = {};
 let reconnectTimer = null;
+
+function toggleAdminPanel() {
+  document.getElementById('admin-panel').classList.toggle('hidden');
+}
 
 function connectWS() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
