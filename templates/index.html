@@ -584,7 +584,6 @@
           <b>📋 Berechnungs-History</b>
           <div style="display:flex;gap:8px;">
             <button onclick="ladeHistory()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:13px;">🔄 Aktualisieren</button>
-            <button onclick="loescheHistory()" style="padding:6px 14px;border:1px solid #d32f2f;border-radius:6px;cursor:pointer;font-size:13px;color:#d32f2f;">🗑 Löschen</button>
           </div>
         </div>
         <div id="history-wrap" style="font-size:13px;max-height:400px;overflow-y:auto;">
@@ -820,6 +819,9 @@ function setRole(role) {
 }
 
 function applyRole(role) {
+  if (role && (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING)) {
+    connectWS();
+  }
   const isAdmin = role === 'admin';
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.setProperty('display', isAdmin ? 'flex' : 'none', 'important');
@@ -933,6 +935,14 @@ function renderState(s) {
   const hasPdf = s.pdf_loaded;
   document.getElementById('no-pdf').classList.toggle('hidden', hasPdf);
   document.getElementById('pack-content').classList.toggle('hidden', !hasPdf);
+
+  // Nachlegen-Tab Sichtbarkeit
+  const nlNoPdf = document.getElementById('nl-no-pdf');
+  const nlInhalt = document.getElementById('nl-inhalt');
+  if (nlNoPdf) nlNoPdf.style.display = hasPdf ? 'none' : '';
+  if (nlInhalt) nlInhalt.style.display = hasPdf ? 'block' : 'none';
+  const dispNoPdf = document.getElementById('disp-no-pdf');
+  if (dispNoPdf) dispNoPdf.style.display = hasPdf ? 'none' : '';
 
   if (!hasPdf) return;
 
@@ -1279,18 +1289,30 @@ function saveTourenConfig() {
 // Displays-Tab
 // ═══════════════════════════════════════════════════════════
 function renderDisplays(s) {
-  const container = document.getElementById('display-simulator');
+  const container = document.getElementById('displays-grid');
   if (!container) return;
   const filialen = s.filialen_heute || [];
-  const displays = s.virtual_displays || {};
   if (filialen.length === 0) {
     container.innerHTML = '<p style="color:#546e7a;font-size:13px;">Keine Filialen für heute konfiguriert.</p>';
     return;
   }
+  const filStatus = {};
+  (s.filialen_status || []).forEach(f => { filStatus[f.name] = f; });
   container.innerHTML = filialen.map(f => {
-    const menge = displays[f] || 0;
-    if (menge > 0) return '<div class="disp-card disp-active"><div class="disp-name">' + f + '</div><span style="font-size:28px;font-weight:800;">' + menge + '</span><br><small>STÜCK</small></div>';
-    else           return '<div class="disp-card disp-off"><div class="disp-name">' + f + '</div><span style="font-size:18px;">–</span></div>';
+    const fs = filStatus[f];
+    let cls, menge, statusText;
+    if (fs) {
+      if (fs.status === 'active')  { cls = 'active';  menge = fs.menge;                    statusText = 'AKTIV'; }
+      else if (fs.status === 'done') { cls = 'done'; menge = fs.geliefert || fs.menge;     statusText = 'FERTIG'; }
+      else                           { cls = 'pending'; menge = fs.menge;                  statusText = 'WARTEN'; }
+    } else {
+      cls = 'none'; menge = '–'; statusText = '';
+    }
+    return '<div class="kiste ' + cls + '">' +
+      '<div class="kiste-name">' + f + '</div>' +
+      '<div class="led-display">' + menge + '</div>' +
+      '<div class="kiste-status">' + statusText + '</div>' +
+    '</div>';
   }).join('');
 }
 
@@ -1299,27 +1321,159 @@ function renderDisplays(s) {
 // ═══════════════════════════════════════════════════════════
 let kuerzLocal = {};
 
+let mengeArtikel = [];
+let mengeKuerzResult = null;
+
 function renderMengenkorrektur(s) {
   if (!s || !s.pdf_loaded) return;
-  fetch('/api/kuerzung/config').then(r => r.json()).then(cfg => {
+  Promise.all([
+    fetch('/api/alle-artikel').then(r => r.json()),
+    fetch('/api/kuerzung/config').then(r => r.json())
+  ]).then(([data, cfg]) => {
     kuerzLocal = cfg;
-    const tbody = document.getElementById('menge-tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    (s.posten_raw || []).forEach(p => {
-      const key = p.nr + '__' + p.typ;
-      const kuerz = cfg[key] || {};
-      const filCols = (s.filialen_liste || []).map(f => {
-        const soll = p[f] || 0; if (soll === 0) return '';
-        const k = kuerz[f] !== undefined ? kuerz[f] : soll;
-        const diff = k - soll;
-        const diffCls = diff > 0 ? 'diff-plus' : diff < 0 ? 'diff-minus' : 'diff-null';
-        return '<td>' + f + ': ' + soll + '</td><td><input type="number" value="' + k + '" min="0" style="width:55px" onchange="kuerzChange(\'' + key + '\',\'' + f + '\',this.value)"></td><td class="' + diffCls + '">' + (diff > 0 ? '+' : '') + diff + '</td>';
-      }).join('');
-      if (!filCols) return;
-      tbody.innerHTML += '<tr><td>' + p.nr + '</td><td>' + p.name + '</td><td>' + p.kat + '</td><td>' + p.typ + '</td>' + filCols + '</tr>';
-    });
+    mengeArtikel = data.artikel || [];
+    const kategorien = data.kategorien || [];
+    const katSel = document.getElementById('menge-kat-select');
+    if (katSel) katSel.innerHTML = '<option value="Alle">Alle</option>' +
+      kategorien.map(k => '<option value="' + k + '">' + k + '</option>').join('');
+    const prodSel = document.getElementById('menge-produkt-select');
+    if (prodSel) prodSel.innerHTML = '<option value="">Alle anzeigen</option>' +
+      mengeArtikel.map(a => '<option value="' + a.nr + '">' + a.nr + ' – ' + a.name + '</option>').join('');
+    buildMengeTbody(mengeArtikel, cfg);
+    ladeHistory();
   });
+}
+
+function buildMengeTbody(artikel, cfg) {
+  const tbody = document.getElementById('menge-tbody');
+  if (!tbody) return;
+  const rund = (cfg.produkt_rundung || {});
+  tbody.innerHTML = artikel.map(a => {
+    const r = rund[a.nr] !== undefined ? rund[a.nr] : (rund['default'] || 1);
+    return '<tr data-nr="' + a.nr + '" data-kat="' + a.kat + '">' +
+      '<td style="white-space:nowrap">' + a.nr + '</td>' +
+      '<td>' + a.name + '</td>' +
+      '<td style="text-align:right">' + a.soll_gesamt + '</td>' +
+      '<td><input type="number" class="ist-input" data-nr="' + a.nr + '" value="' + a.soll_gesamt + '" min="0" step="' + r + '" style="width:75px;padding:4px;border:1px solid #bbb;border-radius:4px;font-size:13px;" oninput="updateMengeDiff(this,' + a.soll_gesamt + ')"></td>' +
+      '<td class="diff-null" id="mdiff-' + a.nr + '">0</td>' +
+      '<td style="color:#888;font-size:12px;">×' + r + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function updateMengeDiff(input, soll) {
+  const ist = parseFloat(input.value) || 0;
+  const diff = Math.round((ist - soll) * 10) / 10;
+  const cell = document.getElementById('mdiff-' + input.dataset.nr);
+  if (!cell) return;
+  cell.textContent = (diff > 0 ? '+' : '') + diff;
+  cell.className = diff > 0 ? 'diff-plus' : diff < 0 ? 'diff-minus' : 'diff-null';
+}
+
+function filterMengeTbody() {
+  const kat = document.getElementById('menge-kat-select').value;
+  document.querySelectorAll('#menge-tbody tr').forEach(row => {
+    row.style.display = (kat === 'Alle' || row.dataset.kat === kat) ? '' : 'none';
+  });
+}
+
+function scrollToProdukt() {
+  const nr = document.getElementById('menge-produkt-select').value;
+  if (!nr) return;
+  const row = document.querySelector('#menge-tbody tr[data-nr="' + nr + '"]');
+  if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function berechneKuerzung() {
+  const inputs = document.querySelectorAll('.ist-input');
+  const ist_mengen = {};
+  inputs.forEach(inp => {
+    const val = parseFloat(inp.value);
+    if (!isNaN(val)) ist_mengen[inp.dataset.nr] = val;
+  });
+  const btn = document.getElementById('menge-berechnen-btn');
+  btn.textContent = '⏳ Berechne…'; btn.disabled = true;
+  try {
+    const r = await fetch('/api/kuerzung/berechnen', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ist_mengen})
+    });
+    const d = await r.json();
+    if (!d.ok) { alert('Fehler beim Berechnen'); return; }
+    mengeKuerzResult = d;
+    zeigeKuerzErgebnis(d);
+    const anwBtn = document.getElementById('anwenden-btn');
+    anwBtn.disabled = false;
+    anwBtn.style.cssText = 'padding:12px 24px;background:#388e3c;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;';
+    document.getElementById('menge-hint').textContent = '✅ Berechnung fertig – prüfen und übernehmen';
+  } finally {
+    btn.textContent = '⚖️ Berechnen'; btn.disabled = false;
+  }
+}
+
+function zeigeKuerzErgebnis(d) {
+  const wrap = document.getElementById('menge-ergebnis-wrap');
+  const container = document.getElementById('menge-ergebnis');
+  if (!wrap || !container) return;
+  wrap.classList.remove('hidden');
+  const filialen = d.filialen || [];
+  container.innerHTML = '<table class="menge-table"><thead><tr><th>Artikel</th><th>Filiale</th><th>Soll alt</th><th>Soll neu</th><th>Diff</th></tr></thead><tbody>' +
+    Object.entries(d.ergebnisse).map(([nr, erg]) => {
+      const diffGes = erg.differenz;
+      const diffCls = diffGes > 0 ? 'diff-plus' : diffGes < 0 ? 'diff-minus' : 'diff-null';
+      const headerRow = '<tr style="background:#e3f2fd;font-weight:700"><td colspan="2">' + nr + ' – ' + erg.name + '</td><td>' + erg.soll_gesamt + '</td><td>' + erg.ist_menge + '</td><td class="' + diffCls + '">' + (diffGes>0?'+':'') + diffGes + '</td></tr>';
+      const filRows = filialen.map(f => {
+        const fd = erg.filialen[f]; if (!fd) return '';
+        const sollGes = Math.round(((fd.soll_erst||0)+(fd.soll_vor||0))*10)/10;
+        const neuGes  = Math.round(((fd.neu_erst||0) +(fd.neu_vor||0)) *10)/10;
+        if (sollGes === 0 && neuGes === 0) return '';
+        const d2 = Math.round((neuGes - sollGes)*10)/10;
+        const d2cls = d2 > 0 ? 'diff-plus' : d2 < 0 ? 'diff-minus' : 'diff-null';
+        return '<tr><td></td><td style="color:#666;padding-left:16px">' + f + '</td><td>' + sollGes + '</td><td>' + neuGes + '</td><td class="' + d2cls + '">' + (d2>0?'+':'') + d2 + '</td></tr>';
+      }).join('');
+      return headerRow + filRows;
+    }).join('') +
+  '</tbody></table>';
+}
+
+async function wendeKuerzungAn() {
+  if (!mengeKuerzResult) return;
+  if (!confirm('Kürzung auf alle Filialen anwenden? Das ändert die Soll-Mengen im Pack-Modus.')) return;
+  const r = await fetch('/api/kuerzung/anwenden', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ergebnisse: mengeKuerzResult.ergebnisse})
+  });
+  const d = await r.json();
+  if (d.ok) {
+    document.getElementById('menge-hint').textContent = '✅ In Pack-Modus übernommen';
+    const anwBtn = document.getElementById('anwenden-btn');
+    anwBtn.disabled = true;
+    anwBtn.style.cssText = 'padding:12px 24px;background:#ccc;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:not-allowed;';
+    mengeKuerzResult = null;
+    ladeHistory();
+  }
+}
+
+async function ladeHistory() {
+  const r = await fetch('/api/kuerzung/history');
+  const history = await r.json();
+  const wrap = document.getElementById('history-wrap');
+  if (!wrap) return;
+  if (!history.length) { wrap.innerHTML = '<div style="color:#999;">Noch keine Berechnungen gespeichert.</div>'; return; }
+  wrap.innerHTML = history.slice(0,30).map(h => {
+    const diff = h.differenz !== undefined ? h.differenz : '';
+    const diffTxt = typeof diff === 'number' ? ' <span class="' + (diff>0?'diff-plus':diff<0?'diff-minus':'diff-null') + '">' + (diff>0?'+':'') + Math.round(diff*10)/10 + '</span>' : '';
+    return '<div style="padding:5px 0;border-bottom:1px solid #eee;">' +
+      '<span style="color:#999;margin-right:8px;font-size:11px;">' + (h.timestamp||'') + '</span>' +
+      '<b>' + (h.produkt_nr||'') + '</b> ' + (h.produkt_name||h.name||'') + diffTxt +
+    '</div>';
+  }).join('');
+}
+
+async function loescheHistory() {
+  if (!confirm('Berechnungs-History löschen?')) return;
+  await fetch('/api/kuerzung/history', {method:'DELETE'});
+  ladeHistory();
 }
 
 function kuerzChange(key, filiale, val) {
@@ -1344,12 +1498,14 @@ let nlArtikel = [];
 
 function renderNachlegen(s) {
   if (!s || !s.pdf_loaded) return;
-  nlArtikel = s.posten_raw || [];
-  const kats = [...new Set(nlArtikel.map(a => a.kat))];
-  const katSel = document.getElementById('nl-kat-select');
-  if (!katSel) return;
-  katSel.innerHTML = '<option value="Alle">Alle</option>' + kats.map(k => '<option value="' + k + '">' + k + '</option>').join('');
-  filterNlProdukte();
+  fetch('/api/nachlegen/info').then(r => r.json()).then(data => {
+    nlArtikel = (data.produkte || []).map(p => ({ nr: p.nr, name: p.name, kat: p.kat, filialen: p.filialen }));
+    const kats = data.kategorien || [...new Set(nlArtikel.map(a => a.kat))];
+    const katSel = document.getElementById('nl-kat-select');
+    if (!katSel) return;
+    katSel.innerHTML = '<option value="Alle">Alle</option>' + kats.map(k => '<option value="' + k + '">' + k + '</option>').join('');
+    filterNlProdukte();
+  });
 }
 
 function filterNlProdukte() {
