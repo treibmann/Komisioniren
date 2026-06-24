@@ -1,0 +1,16 @@
+services:
+
+  app:
+    build: .
+    container_name: baeckerei-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data          # Alle persistenten Dateien (SQLite, JSON-Configs)
+      - ./pdf:/pdf                # Netzwerkordner für PDFs
+      - ./templates:/app/templates  # HTML live (kein Rebuild nötig)
+    environment:
+      - PDF_PATH=/pdf/Drucke_Artikel-Versandliste.pdf
+      - DB_PATH=/app/data/kommission.db
+      - DATA_DIR=/app/data
+    restart: unless-stopped

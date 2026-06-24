@@ -1,0 +1,26 @@
+{
+    "Montag": [
+        "Penny",
+        "Berga",
+        "AOK"
+    ],
+    "Dienstag": [
+        "Penny",
+        "Berga",
+        "AOK",
+        "BMK GmbH",
+        "Benz 4",
+        "Regiom.",
+        "Ahorn"
+    ],
+    "Mittwoch": [
+        "Karl"
+    ],
+    "Donnerstag": [],
+    "Freitag": [],
+    "Samstag": [],
+    "Sonntag": [],
+    "Feiertag": [
+        "Berga"
+    ]
+}
