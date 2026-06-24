@@ -1224,18 +1224,10 @@ function buildTourenGrid(alle_filialen) {
     card.innerHTML = '<h3>' + (isFeiertag ? '🎉' : '🔹') + ' ' + tag + '</h3>' +
       (isFeiertag ? '<p style="font-size:11px;color:#f57f17;margin:0 0 6px;">Eigene Tour für Feiertage</p>' : '') +
       '<ul class="drag-list" id="list-' + tag + '" data-tag="' + tag + '"></ul>' +
-      '<div class="filial-picker"><select id="picker-' + tag + '">' +
-      '<option value="">+ Filiale hinzufügen</option>' +
-      alle_filialen.map(f => '<option value="' + f + '">' + f + '</option>').join('') +
-      '</select></div>';
+      '<div id="checks-' + tag + '" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>';
     grid.appendChild(card);
     renderDragList(tag);
-    document.getElementById('picker-' + tag).addEventListener('change', function() {
-      const f = this.value; if (!f) return;
-      if (!tourenLocal[tag]) tourenLocal[tag] = [];
-      if (!tourenLocal[tag].includes(f)) { tourenLocal[tag].push(f); renderDragList(tag); }
-      this.value = '';
-    });
+    renderFilialCheckboxen(tag, alle_filialen);
     setupDragList(tag);
   });
 }
@@ -1251,11 +1243,46 @@ function renderDragList(tag) {
     li.innerHTML = '<span>' + (i+1) + '. ' + f + '</span><span class="rm" onclick="removeFiliale(\'' + tag + '\',\'' + f + '\')">✕</span>';
     ul.appendChild(li);
   });
+  // Checkboxen synchronisieren
+  const checks = document.getElementById('checks-' + tag);
+  if (checks) {
+    checks.querySelectorAll('input[type=checkbox]').forEach(cb => {
+      cb.checked = (tourenLocal[tag] || []).includes(cb.value);
+      cb.closest('label').style.opacity = cb.checked ? '0.4' : '1';
+    });
+  }
+}
+
+function renderFilialCheckboxen(tag, alle_filialen) {
+  const wrap = document.getElementById('checks-' + tag);
+  if (!wrap) return;
+  wrap.innerHTML = alle_filialen.map(f => {
+    const checked = (tourenLocal[tag] || []).includes(f);
+    return '<label style="display:flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid #ddd;border-radius:20px;cursor:pointer;font-size:12px;background:#f9f9f9;opacity:' + (checked?'0.4':'1') + ';white-space:nowrap;">' +
+      '<input type="checkbox" value="' + f + '" ' + (checked?'checked':'') + ' onchange="toggleFiliale(\'' + tag + '\',\'' + f + '\',this.checked)" style="cursor:pointer;">' +
+      f + '</label>';
+  }).join('');
+}
+
+function toggleFiliale(tag, f, add) {
+  if (!tourenLocal[tag]) tourenLocal[tag] = [];
+  if (add) {
+    if (!tourenLocal[tag].includes(f)) tourenLocal[tag].push(f);
+  } else {
+    tourenLocal[tag] = tourenLocal[tag].filter(x => x !== f);
+  }
+  renderDragList(tag);
 }
 
 function removeFiliale(tag, f) {
   tourenLocal[tag] = (tourenLocal[tag] || []).filter(x => x !== f);
   renderDragList(tag);
+  // Checkbox deaktivieren
+  const wrap = document.getElementById('checks-' + tag);
+  if (wrap) {
+    const cb = wrap.querySelector('input[value="' + f + '"]');
+    if (cb) { cb.checked = false; cb.closest('label').style.opacity = '1'; }
+  }
 }
 
 function setupDragList(tag) {
