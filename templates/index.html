@@ -198,6 +198,21 @@
   .chip-active  { background: rgba(0,113,227,0.08); border: 2px solid #0071e3; color: #0071e3; }
   .chip-pending { background: #f5f5f7; border: 1.5px solid #d1d1d6; color: #86868b; }
 
+  /* ── Fortschrittsbalken ── */
+  #fortschritt-wrap { margin-bottom: 16px; background: linear-gradient(180deg,#fff,#f8f8fb);
+    border-radius: 14px; padding: 14px 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.9) inset; }
+  #fortschritt-bar-bg { height: 16px; background: #e5e5ea; border-radius: 20px; overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+  #fortschritt-bar { height: 100%; border-radius: 20px; min-width: 4px; transition: width .5s ease;
+    background: linear-gradient(90deg, #34c759 0%, #0071e3 100%);
+    box-shadow: 0 2px 6px rgba(0,113,227,0.4); }
+  #fortschritt-text { display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px; }
+  #fortschritt-label { font-size: 13px; color: #86868b; }
+  #fortschritt-label b { color: #1d1d1f; font-size: 15px; }
+  #fp-prozent { font-size: 20px; font-weight: 800; color: #0071e3; }
+
   /* ── Filter ── */
   .filter-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
   .filter-row label { font-size: 13px; color: #666; white-space: nowrap; }
@@ -594,6 +609,15 @@
       </div>
 
       <div id="pack-content" class="hidden">
+
+        <!-- Fortschrittsbalken -->
+        <div id="fortschritt-wrap">
+          <div id="fortschritt-text">
+            <span id="fortschritt-label">Artikel <b id="fp-aktuell">0</b> von <b id="fp-gesamt">0</b> erledigt</span>
+            <span id="fp-prozent">0%</span>
+          </div>
+          <div id="fortschritt-bar-bg"><div id="fortschritt-bar" style="width:0%"></div></div>
+        </div>
 
         <div class="filter-row">
           <label>Bereich:</label>
@@ -1122,6 +1146,26 @@ function renderState(s) {
   const sel = document.getElementById('tag-override-select');
   if (sel && s.tag_override !== undefined && document.activeElement !== sel) {
     sel.value = s.tag_override || '';
+  }
+
+  // Fortschrittsbalken aktualisieren
+  if (s.pdf_loaded && s.posten_labels) {
+    const gesamt = s.posten_labels.length;
+    const aktuell = s.selected_posten_idx || 0;
+    const prozent = gesamt > 0 ? Math.round((aktuell / gesamt) * 100) : 0;
+    const fpEl = document.getElementById('fortschritt-bar');
+    const fpText = document.getElementById('fp-aktuell');
+    const fpGes = document.getElementById('fp-gesamt');
+    const fpProz = document.getElementById('fp-prozent');
+    if (fpEl) fpEl.style.width = prozent + '%';
+    if (fpText) fpText.textContent = aktuell;
+    if (fpGes) fpGes.textContent = gesamt;
+    if (fpProz) { fpProz.textContent = prozent + '%';
+      fpProz.style.color = prozent === 100 ? '#34c759' : '#0071e3'; }
+    // Farbe: grün wenn fertig
+    if (fpEl) fpEl.style.background = prozent === 100
+      ? '#34c759'
+      : 'linear-gradient(90deg, #34c759 0%, #0071e3 100%)';
   }
 
   const hasPdf = s.pdf_loaded;
