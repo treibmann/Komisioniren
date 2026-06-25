@@ -582,6 +582,7 @@
       <button class="tab-btn" onclick="switchTab('menge', this)">⚖️ Mengenkorrektur</button>
       <button class="tab-btn" onclick="switchTab('nachlegen', this)">📦 Nachlegen</button>
       <button class="tab-btn admin-only" onclick="switchTab('displays', this)">🖥 Displays</button>
+      <button class="tab-btn admin-only" onclick="switchTab('auswertung', this)">📊 Auswertung</button>
     </div>
 
     <!-- ─── Pack-Modus ─── -->
@@ -827,6 +828,69 @@
 
       <div id="disp-no-pdf" style="color:#999;text-align:center;padding:40px;">
         Bitte zuerst eine Versandliste einlesen.
+      </div>
+    </div>
+
+
+    <!-- ─── Tages-Auswertung ─── -->
+    <div id="tab-auswertung" class="tab-pane">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap;">
+        <h2 style="margin:0;">📊 Tages-Auswertung</h2>
+        <select id="ausw-datum-select" onchange="ladeAuswertung(this.value)"
+          style="padding:8px 12px;border-radius:10px;border:1px solid #c7c7cc;font-size:14px;background:#fff;min-width:160px;">
+          <option value="">– Datum wählen –</option>
+        </select>
+        <button onclick="ladeAuswertung(document.getElementById('ausw-datum-select').value)"
+          style="padding:8px 16px;border:none;border-radius:10px;background:linear-gradient(180deg,#1a8cff,#0060cc);
+                 color:#fff;font-weight:600;cursor:pointer;font-size:14px;
+                 box-shadow:0 4px 0 #004499;">🔄 Laden</button>
+      </div>
+
+      <!-- Statistik-Karten -->
+      <div id="ausw-stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+
+      <!-- Haupttabelle -->
+      <div id="ausw-tabelle" class="card" style="overflow-x:auto;display:none;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:linear-gradient(180deg,#37474f,#263238);color:#eceff1;">
+              <th style="padding:10px 12px;text-align:left;border-radius:8px 0 0 0;">Nr.</th>
+              <th style="padding:10px 12px;text-align:left;">Artikel</th>
+              <th style="padding:10px 12px;text-align:left;">Filiale</th>
+              <th style="padding:10px 12px;text-align:right;">Soll</th>
+              <th style="padding:10px 12px;text-align:right;">Geliefert</th>
+              <th style="padding:10px 12px;text-align:right;">Diff</th>
+              <th style="padding:10px 12px;text-align:right;">Nachlege</th>
+              <th style="padding:10px 12px;text-align:center;border-radius:0 8px 0 0;">Zeit</th>
+            </tr>
+          </thead>
+          <tbody id="ausw-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Korrekturen -->
+      <div id="ausw-korrekturen" style="display:none;" class="card">
+        <b style="font-size:14px;">⚖️ Korrekturen (Kürzungen / Nachlegen)</b>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;">
+          <thead>
+            <tr style="background:#f5f5f7;color:#1d1d1f;">
+              <th style="padding:8px 10px;text-align:left;">Zeit</th>
+              <th style="padding:8px 10px;text-align:left;">Typ</th>
+              <th style="padding:8px 10px;text-align:left;">Artikel</th>
+              <th style="padding:8px 10px;text-align:left;">Filiale</th>
+              <th style="padding:8px 10px;text-align:right;">Alt</th>
+              <th style="padding:8px 10px;text-align:right;">Neu</th>
+              <th style="padding:8px 10px;text-align:right;">Diff</th>
+            </tr>
+          </thead>
+          <tbody id="ausw-korr-tbody"></tbody>
+        </table>
+      </div>
+
+      <div id="ausw-leer" style="text-align:center;padding:60px;color:#86868b;">
+        <div style="font-size:48px;margin-bottom:16px;">📊</div>
+        <div style="font-size:18px;font-weight:600;">Datum auswählen</div>
+        <div style="font-size:14px;margin-top:8px;">Wähle ein Datum um die Tages-Auswertung zu sehen.</div>
       </div>
     </div>
 
@@ -1289,6 +1353,7 @@ function switchTab(tab, btn) {
   if (tab === 'displays') renderDisplays(state);
   if (tab === 'menge') renderMengenkorrektur(state);
   if (tab === 'nachlegen') renderNachlegen(state);
+  if (tab === 'auswertung') initAuswertung();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1672,14 +1737,138 @@ function filterNlProdukte() {
   document.getElementById('nl-produkt-detail').style.display = 'none';
 }
 
-function nlWaehlProdukt() {
+function ladeNlProdukt() {
   const nr = document.getElementById('nl-produkt-select').value;
   if (!nr) { document.getElementById('nl-produkt-detail').style.display = 'none'; return; }
   const artikel = nlArtikel.find(a => a.nr === nr);
   if (!artikel) return;
+
   document.getElementById('nl-produkt-name').textContent = nr + ' – ' + artikel.name;
   document.getElementById('nl-menge').value = '';
   document.getElementById('nl-produkt-detail').style.display = 'block';
+
+  // Nur Filialen aus dem heutigen Tourplan die dieses Produkt bestellt haben
+  const filialen_heute = state.filialen_heute || [];
+  const relevant = (artikel.filialen || []).filter(f =>
+    filialen_heute.includes(f.name) && (f.soll_erst + f.soll_vor) > 0
+  );
+
+  // Auto-Modus: Checkboxen (via createElement um Quote-Probleme zu vermeiden)
+  const grid = document.getElementById('nl-filialen-grid');
+  grid.innerHTML = '';
+  relevant.forEach(f => {
+    const soll = f.soll_erst + f.soll_vor;
+    const geliefert = (f.geliefert_erst || 0) + (f.geliefert_vor || 0);
+    const lbl = document.createElement('label');
+    lbl.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;border:2px solid #0071e3;background:#f0f7ff;cursor:pointer;min-width:150px;transition:border-color .15s;';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.value = f.name; cb.checked = true;
+    cb.style.cssText = 'width:18px;height:18px;cursor:pointer;';
+    cb.onchange = function() {
+      lbl.style.borderColor = this.checked ? '#0071e3' : '#d1d1d6';
+      lbl.style.background  = this.checked ? '#f0f7ff' : '#f9f9f9';
+    };
+    const statusTxt = geliefert > 0 ? ' <span style="color:#34c759;font-size:11px;">✓ gepackt</span>' : ' <span style="color:#86868b;font-size:11px;">○ offen</span>';
+    const info = document.createElement('div');
+    info.innerHTML = '<div style="font-weight:700;font-size:14px;">' + f.name + statusTxt + '</div>'
+      + '<div style="font-size:12px;color:#86868b;">Soll: <b>' + soll + '</b> Stk</div>';
+    lbl.appendChild(cb); lbl.appendChild(info);
+    grid.appendChild(lbl);
+  });
+
+  // Manuell-Modus: Pro-Filiale-Inputs (via createElement)
+  const mGrid = document.getElementById('nl-manuell-grid');
+  mGrid.innerHTML = '';
+  relevant.forEach(f => {
+    const soll = f.soll_erst + f.soll_vor;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;border:2px solid #eee;background:#f9f9f9;';
+    row.innerHTML = '<div style="min-width:110px;font-weight:700;">' + f.name + '</div>'
+      + '<div style="font-size:12px;color:#86868b;min-width:70px;">Soll: ' + soll + '</div>';
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.className = 'nl-manuell-input'; inp.dataset.filiale = f.name;
+    inp.value = '0'; inp.min = '0'; inp.step = '0.5';
+    inp.style.cssText = 'width:90px;padding:8px;font-size:15px;font-weight:700;border:2px solid #d1d1d6;border-radius:8px;text-align:center;';
+    inp.oninput = function() {
+      this.style.borderColor = this.value > 0 ? '#f57f17' : '#d1d1d6';
+      row.style.background   = this.value > 0 ? '#fff8e1' : '#f9f9f9';
+    };
+    const stk = document.createElement('span');
+    stk.style.cssText = 'font-size:13px;color:#86868b;'; stk.textContent = 'Stk';
+    row.appendChild(inp); row.appendChild(stk);
+    mGrid.appendChild(row);
+  });
+
+  setNlMode('auto');
+}
+
+// Alias fuer alten Namen
+function nlWaehlProdukt() { ladeNlProdukt(); }
+
+function setNlMode(mode) {
+  const isAuto = mode === 'auto';
+  document.getElementById('nl-auto-bereich').style.display   = isAuto ? '' : 'none';
+  document.getElementById('nl-manuell-bereich').style.display = isAuto ? 'none' : '';
+  document.getElementById('nl-mode-auto-btn').classList.toggle('active', isAuto);
+  document.getElementById('nl-mode-manuell-btn').classList.toggle('active', !isAuto);
+}
+
+function alleNlFilialen(check) {
+  document.querySelectorAll('#nl-filialen-grid input[type=checkbox]').forEach(cb => {
+    cb.checked = check;
+    cb.closest('label').style.borderColor = check ? '#0071e3' : '#d1d1d6';
+  });
+}
+
+async function wendeNachlegenAn() {
+  const nr = document.getElementById('nl-produkt-select').value;
+  if (!nr) return;
+  const btn = document.getElementById('nl-anwenden-btn');
+  const isAuto = document.getElementById('nl-auto-bereich').style.display !== 'none';
+
+  if (isAuto) {
+    const menge = parseFloat(document.getElementById('nl-menge').value);
+    if (!menge || menge <= 0) { alert('Bitte Nachlege-Gesamtmenge eingeben'); return; }
+    const filialen = [];
+    document.querySelectorAll('#nl-filialen-grid input[type=checkbox]:checked').forEach(cb => filialen.push(cb.value));
+    if (!filialen.length) { alert('Bitte mindestens eine Filiale auswählen'); return; }
+    btn.textContent = '⏳ Wird verteilt...'; btn.disabled = true;
+    try {
+      const r = await fetch('/api/nachlegen/anwenden', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({nr, nachlege_menge: menge, filialen})
+      });
+      const d = await r.json();
+      if (d.ok) {
+        zeigToast('✅ Nachlegen übernommen — ' + filialen.length + ' Filialen neu im Pack-Modus');
+        document.getElementById('nl-produkt-detail').style.display = 'none';
+        document.getElementById('nl-produkt-select').value = '';
+        renderNachlegen(state);
+      }
+    } finally { btn.textContent = '📦 Nachlegen'; btn.disabled = false; }
+
+  } else {
+    const mengen = {};
+    document.querySelectorAll('.nl-manuell-input').forEach(inp => {
+      const val = parseFloat(inp.value);
+      if (val > 0) mengen[inp.dataset.filiale] = val;
+    });
+    if (!Object.keys(mengen).length) { alert('Bitte mindestens eine Menge eingeben'); return; }
+    btn.textContent = '⏳ Wird verteilt...'; btn.disabled = true;
+    try {
+      const r = await fetch('/api/nachlegen/anwenden-manuell', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({nr, filialen_mengen: mengen})
+      });
+      const d = await r.json();
+      if (d.ok) {
+        zeigToast('✅ Manuelles Nachlegen übernommen');
+        document.getElementById('nl-produkt-detail').style.display = 'none';
+        document.getElementById('nl-produkt-select').value = '';
+        renderNachlegen(state);
+      }
+    } finally { btn.textContent = '📦 Nachlegen'; btn.disabled = false; }
+  }
 }
 
 function nlSollZeile(f) {
@@ -1736,6 +1925,113 @@ function stopSpeech() {
 // ═══════════════════════════════════════════════════════════
 // Event-Delegation: Chip-Klicks
 // ═══════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════
+// Tages-Auswertung
+// ═══════════════════════════════════════════════════════════
+async function initAuswertung() {
+  const sel = document.getElementById('ausw-datum-select');
+  // Verfügbare Daten laden
+  const r = await fetch('/api/export/daten');
+  const d = await r.json();
+  const daten = d.daten || [];
+  const heute = new Date().toISOString().slice(0, 10);
+  sel.innerHTML = '<option value="">– Datum wählen –</option>' +
+    daten.map(dt => '<option value="' + dt + '"' + (dt === heute ? ' selected' : '') + '>' +
+      dt.split('-').reverse().join('.') + (dt === heute ? ' (heute)' : '') + '</option>').join('');
+  if (daten.includes(heute)) ladeAuswertung(heute);
+  else if (daten.length > 0) ladeAuswertung(daten[0]);
+}
+
+async function ladeAuswertung(datum) {
+  if (!datum) return;
+  document.getElementById('ausw-leer').style.display = 'none';
+
+  const r = await fetch('/api/export/' + datum);
+  const d = await r.json();
+  const eintraege = d.zusammenfassung || [];
+  const korrekturen = d.korrekturen || [];
+
+  // ── Statistik-Karten ──
+  const totalSoll = eintraege.reduce((s, e) => s + e.soll_gesamt, 0);
+  const totalGel  = eintraege.reduce((s, e) => s + e.geliefert_gesamt, 0);
+  const abweich   = eintraege.filter(e => e.soll_gesamt !== e.geliefert_gesamt).length;
+  const nachlegen = eintraege.filter(e => e.nachlege_gesamt > 0).length;
+
+  const stats = [
+    { label: 'Bestätigungen', wert: eintraege.length, farbe: '#0071e3' },
+    { label: 'Soll gesamt', wert: Math.round(totalSoll), farbe: '#636366' },
+    { label: 'Geliefert gesamt', wert: Math.round(totalGel), farbe: '#34c759' },
+    { label: 'Abweichungen', wert: abweich, farbe: abweich > 0 ? '#ff3b30' : '#34c759' },
+    { label: 'Mit Nachlegen', wert: nachlegen, farbe: nachlegen > 0 ? '#ff9f0a' : '#636366' },
+  ];
+  document.getElementById('ausw-stats').innerHTML = stats.map(s =>
+    '<div style="background:#fff;border-radius:14px;padding:14px 20px;min-width:130px;' +
+    'box-shadow:0 2px 8px rgba(0,0,0,0.07);border-left:4px solid ' + s.farbe + ';">' +
+    '<div style="font-size:28px;font-weight:800;color:' + s.farbe + ';">' + s.wert + '</div>' +
+    '<div style="font-size:12px;color:#86868b;margin-top:2px;">' + s.label + '</div>' +
+    '</div>'
+  ).join('');
+
+  // ── Haupttabelle ──
+  const tbody = document.getElementById('ausw-tbody');
+  tbody.innerHTML = '';
+  // Gruppierung nach Produkt
+  const byProdukt = {};
+  eintraege.forEach(e => {
+    const key = e.produkt_nr;
+    if (!byProdukt[key]) byProdukt[key] = { name: e.produkt_name, nr: e.produkt_nr, filialen: [] };
+    byProdukt[key].filialen.push(e);
+  });
+
+  let rowCount = 0;
+  Object.values(byProdukt).forEach(p => {
+    p.filialen.forEach((f, fi) => {
+      const diff = f.geliefert_gesamt - f.soll_gesamt;
+      const diffCls = diff > 0 ? 'color:#ff9f0a' : diff < 0 ? 'color:#ff3b30' : 'color:#34c759';
+      const diffTxt = (diff > 0 ? '+' : '') + Math.round(diff * 10) / 10;
+      const bg = rowCount % 2 === 0 ? '#ffffff' : '#f9f9f9';
+      const tr = document.createElement('tr');
+      tr.style.background = bg;
+      tr.innerHTML =
+        '<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;color:#86868b;font-size:12px;">' + (fi === 0 ? p.nr : '') + '</td>' +
+        '<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-weight:' + (fi === 0 ? '700' : '400') + ';color:' + (fi === 0 ? '#1d1d1f' : '#636366') + ';">' + (fi === 0 ? p.name : '') + '</td>' +
+        '<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;">' + f.filiale + '</td>' +
+        '<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;text-align:right;">' + f.soll_gesamt + '</td>' +
+        '<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:600;">' + f.geliefert_gesamt + '</td>' +
+        '<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:700;' + diffCls + ';">' + diffTxt + '</td>' +
+        '<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;text-align:right;color:#ff9f0a;">' + (f.nachlege_gesamt > 0 ? '+' + f.nachlege_gesamt : '–') + '</td>' +
+        '<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;text-align:center;color:#86868b;font-size:12px;">' + (f.letzte_bestaetigung || '–') + '</td>';
+      tbody.appendChild(tr);
+      rowCount++;
+    });
+  });
+  document.getElementById('ausw-tabelle').style.display = eintraege.length ? '' : 'none';
+
+  // ── Korrekturen ──
+  const korrWrap = document.getElementById('ausw-korrekturen');
+  if (korrekturen.length > 0) {
+    const ktbody = document.getElementById('ausw-korr-tbody');
+    ktbody.innerHTML = korrekturen.map((k, i) => {
+      const diff = k.delta;
+      const dc = diff > 0 ? 'color:#ff9f0a' : 'color:#ff3b30';
+      const bg = i % 2 === 0 ? '#fff' : '#f9f9f9';
+      return '<tr style="background:' + bg + ';">' +
+        '<td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;color:#86868b;font-size:12px;">' + k.zeit + '</td>' +
+        '<td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;font-weight:600;">' + k.ereignis + '</td>' +
+        '<td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;">' + k.produkt_nr + ' ' + k.produkt_name + '</td>' +
+        '<td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;">' + k.filiale + '</td>' +
+        '<td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;text-align:right;">' + k.soll_alt + '</td>' +
+        '<td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:600;">' + k.soll_neu + '</td>' +
+        '<td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:700;' + dc + ';">' + (diff > 0 ? '+' : '') + diff + '</td>' +
+        '</tr>';
+    }).join('');
+    korrWrap.style.display = '';
+  } else {
+    korrWrap.style.display = 'none';
+  }
+}
+
 document.getElementById('filialen-vorschau').addEventListener('click', function(e) {
   const chip = e.target.closest('[data-action]'); if (!chip) return;
   const action = chip.dataset.action, name = chip.dataset.name;
