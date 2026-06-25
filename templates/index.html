@@ -142,12 +142,12 @@
 
   /* ── Großes Takt-Display ── */
   #takt-display { border-radius: 20px; padding: 40px 24px; text-align: center;
-                  border: 2px solid var(--active-border);
-                  background: linear-gradient(180deg, #ffffff 0%, #f5f9ff 100%);
+                  border: 2px solid #ff9f0a;
+                  background: linear-gradient(180deg, #ffffff 0%, #fffbf0 100%);
                   margin-bottom: 14px;
                   box-shadow: 0 1px 0 rgba(255,255,255,1) inset,
-                              0 0 0 4px rgba(0,113,227,0.08),
-                              0 8px 32px rgba(0,113,227,0.15),
+                              0 0 0 4px rgba(255,159,10,0.10),
+                              0 8px 32px rgba(255,159,10,0.18),
                               0 2px 8px rgba(0,0,0,0.06); }
   #takt-display.sperre { border-color: #34c759;
                          background: linear-gradient(180deg, #ffffff 0%, #f2fff5 100%);
@@ -157,7 +157,7 @@
                                      0 2px 8px rgba(0,0,0,0.06); }
   #takt-station { font-size: 52px; font-weight: 700; color: #86868b; letter-spacing: -0.5px; }
   #takt-station span { color: #1d1d1f; font-weight: 800; }
-  #takt-menge { font-size: 80px; font-weight: 800; margin: 4px 0; color: #0071e3; letter-spacing: -2px; }
+  #takt-menge { font-size: 80px; font-weight: 800; margin: 4px 0; color: #e67e00; letter-spacing: -2px; }
   #takt-produkt { font-size: 16px; color: #86868b; font-weight: 400; margin-top: 4px; }
   #sperre-title { font-size: 36px; font-weight: 700; color: #1a7f37; letter-spacing: -0.5px; }
   #sperre-sub { font-size: 16px; color: #34c759; margin-top: 8px; }
@@ -168,12 +168,12 @@
     font-size: 18px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.2px;
     transition: transform .08s, box-shadow .08s; }
   #bestaetigen-btn {
-    background: linear-gradient(180deg, #1a8cff 0%, #0060cc 100%);
+    background: linear-gradient(180deg, #43d86a 0%, #28a745 100%);
     color: #fff;
-    box-shadow: 0 6px 0 #004499, 0 8px 16px rgba(0,80,200,0.35);
+    box-shadow: 0 6px 0 #1a7a30, 0 8px 16px rgba(30,150,60,0.35);
   }
-  #bestaetigen-btn:hover { box-shadow: 0 4px 0 #004499, 0 6px 12px rgba(0,80,200,0.35); transform: translateY(2px); }
-  #bestaetigen-btn:active { box-shadow: 0 1px 0 #004499, 0 2px 6px rgba(0,80,200,0.25); transform: translateY(5px); }
+  #bestaetigen-btn:hover { box-shadow: 0 4px 0 #1a7a30, 0 6px 12px rgba(30,150,60,0.35); transform: translateY(2px); }
+  #bestaetigen-btn:active { box-shadow: 0 1px 0 #1a7a30, 0 2px 6px rgba(30,150,60,0.25); transform: translateY(5px); }
   #naechstes-btn {
     background: linear-gradient(180deg, #43d86a 0%, #28a745 100%);
     color: #fff;
@@ -194,9 +194,9 @@
   #filialen-vorschau { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .filiale-chip { padding: 10px 14px; border-radius: 12px; font-size: 13px; font-weight: 600;
                   min-width: 90px; text-align: center; transition: all .15s; }
-  .chip-done    { background: rgba(52,199,89,0.08); border: 1.5px solid #34c759; color: #1a7f37; }
-  .chip-active  { background: rgba(0,113,227,0.08); border: 2px solid #0071e3; color: #0071e3; }
-  .chip-pending { background: #f5f5f7; border: 1.5px solid #d1d1d6; color: #86868b; }
+  .chip-done    { background: rgba(52,199,89,0.1);  border: 2px solid #34c759; color: #1a7f37; }
+  .chip-active  { background: rgba(255,159,10,0.12); border: 2px solid #ff9f0a; color: #c87000; }
+  .chip-pending { background: rgba(255,59,48,0.08); border: 2px solid #ff3b30; color: #c0392b; }
 
   /* ── Fortschrittsbalken ── */
   #fortschritt-wrap { margin-bottom: 16px; background: linear-gradient(180deg,#fff,#f8f8fb);
@@ -360,12 +360,12 @@
     border-color: #ff8c00;
     box-shadow: 0 0 18px rgba(255,140,0,.55), 0 0 6px rgba(255,140,0,.3);
   }
-  /* pending = noch nicht dran, aber hat bestellt → grün */
-  .kiste.pending { border-color: #2e7d32; background: #0d1f0d; }
-  /* done = bestätigt → rot durchgestrichen */
-  .kiste.done    { border-color: #b71c1c; background: #1f0d0d; }
-  /* none = hat nicht bestellt → roter Strich */
-  .kiste.none    { border-color: #4a1010; background: #120808; opacity: .7; }
+  /* pending = muss noch gepackt werden → rot */
+  .kiste.pending { border-color: #c0392b; background: #1f0d0d; }
+  /* done = erledigt → grün */
+  .kiste.done    { border-color: #1a7f37; background: #0d1f0d; }
+  /* none = keine Menge */
+  .kiste.none    { border-color: #333; background: #1a1a1a; opacity: .6; }
 
   .kiste-name {
     font-size: 11px; font-weight: 700; color: #aaa; text-align: center;
@@ -373,9 +373,9 @@
     min-height: 26px; display: flex; align-items: center; justify-content: center;
   }
   .kiste.active  .kiste-name { color: #ffcc80; }
-  .kiste.pending .kiste-name { color: #81c784; }
-  .kiste.done    .kiste-name { color: #ef9a9a; }
-  .kiste.none    .kiste-name { color: #6a3030; }
+  .kiste.pending .kiste-name { color: #ef9a9a; }
+  .kiste.done    .kiste-name { color: #81c784; }
+  .kiste.none    .kiste-name { color: #555; }
 
   /* 7-Segment-Style Display */
   .led-display {
@@ -394,13 +394,13 @@
     text-shadow: 0 0 8px #ffa500, 0 0 20px #ff6600, 0 0 2px #fff;
   }
   .kiste.pending .led-display {
-    color: #4caf50;
-    text-shadow: 0 0 6px rgba(76,175,80,.5);
+    color: #e74c3c;
+    text-shadow: 0 0 6px rgba(231,76,60,.5);
   }
   .kiste.done .led-display {
-    color: #c62828;
+    color: #27ae60;
     text-decoration: line-through;
-    text-shadow: none;
+    text-shadow: 0 0 4px rgba(39,174,96,.3);
   }
   .kiste.none .led-display {
     color: #6a1010; font-size: 32px;
@@ -411,9 +411,9 @@
     min-height: 14px;
   }
   .kiste.active  .kiste-status { color: #ff8c00; }
-  .kiste.pending .kiste-status { color: #4caf50; }
-  .kiste.done    .kiste-status { color: #ef5350; }
-  .kiste.none    .kiste-status { color: #6a3030; }
+  .kiste.pending .kiste-status { color: #e74c3c; }
+  .kiste.done    .kiste-status { color: #27ae60; }
+  .kiste.none    .kiste-status { color: #444; }
   #display-info-bar {
     background: #263238; color: #eceff1; border-radius: 10px;
     padding: 12px 18px; margin-bottom: 16px; font-size: 13px;
@@ -427,9 +427,9 @@
   .legend-item { display: flex; align-items: center; gap: 6px; }
   .legend-dot { width: 14px; height: 14px; border-radius: 3px; border: 2px solid; }
   .legend-dot.active  { border-color: #ff8c00; background: #1a0a00; }
-  .legend-dot.pending { border-color: #2e7d32; background: #0d1f0d; }
-  .legend-dot.done    { border-color: #b71c1c; background: #1f0d0d; }
-  .legend-dot.none    { border-color: #4a1010; background: #120808; }
+  .legend-dot.pending { border-color: #c0392b; background: #1f0d0d; }
+  .legend-dot.done    { border-color: #1a7f37; background: #0d1f0d; }
+  .legend-dot.none    { border-color: #333; background: #1a1a1a; }
 
   /* ── PIN Overlay ── */
   #pin-overlay { position:fixed; inset:0; background:rgba(15,20,30,.92);
@@ -844,10 +844,10 @@
       </div>
 
       <div class="display-legend" id="display-legend">
-        <div class="legend-item"><div class="legend-dot active"></div> Aktiv (leuchtet)</div>
-        <div class="legend-item"><div class="legend-dot pending"></div> Offen (noch nicht dran)</div>
-        <div class="legend-item"><div class="legend-dot done"></div> Bestätigt ✗</div>
-        <div class="legend-item"><div class="legend-dot none"></div> Nicht bestellt –</div>
+        <div class="legend-item"><div class="legend-dot active"></div> 🟠 Aktiv – wird gerade gepackt</div>
+        <div class="legend-item"><div class="legend-dot pending"></div> 🔴 Ausstehend – muss noch gepackt werden</div>
+        <div class="legend-item"><div class="legend-dot done"></div> 🟢 Erledigt – abgehakt</div>
+        <div class="legend-item"><div class="legend-dot none"></div> ⬛ Keine Menge für dieses Produkt</div>
       </div>
 
       <div id="displays-grid"></div>
@@ -1604,9 +1604,9 @@ function renderDisplays(s) {
     const fs = filStatus[f];
     let cls, menge, statusText;
     if (fs) {
-      if (fs.status === 'active')  { cls = 'active';  menge = fs.menge;                    statusText = 'AKTIV'; }
-      else if (fs.status === 'done') { cls = 'done'; menge = fs.geliefert || fs.menge;     statusText = 'FERTIG'; }
-      else                           { cls = 'pending'; menge = fs.menge;                  statusText = 'WARTEN'; }
+      if (fs.status === 'active')    { cls = 'active';  menge = fs.menge;              statusText = 'AKTIV'; }
+      else if (fs.status === 'done') { cls = 'done';    menge = fs.geliefert||fs.menge; statusText = 'FERTIG'; }
+      else                           { cls = 'pending'; menge = fs.menge;              statusText = 'OFFEN'; }
     } else {
       cls = 'none'; menge = '–'; statusText = '';
     }

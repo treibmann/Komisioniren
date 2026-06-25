@@ -29,10 +29,25 @@ def _cluster_xs(values, tol=8.0):
             clusters.append([v])
     return [sum(c)/len(c) for c in clusters]
 
-def _y_key(top):
-    """Rundet y auf nächste 4er-Schritte, um Nr und Name in gleicher Gruppe zu halten.
-    4er statt 2er, weil auf manchen Seiten die Artikelnummer 0.4px tiefer sitzt als der Rest."""
-    return round(top / 4) * 4
+def _group_by_y(words, min_top=0, max_x=None, tolerance=5):
+    """
+    Gruppiert Wörter in Zeilen per sequenziellem Clustering statt festem Raster.
+    Kein Grid-Grenzwert-Problem: Wörter innerhalb 'tolerance' px werden zusammengefasst.
+    Gibt geordnetes dict {repr_y: [wörter]} zurück.
+    """
+    filtered = [w for w in words if w['top'] > min_top and (max_x is None or w['x0'] <= max_x)]
+    if not filtered:
+        return {}
+    sorted_words = sorted(filtered, key=lambda w: w['top'])
+    groups = {}
+    group_y = None
+    for w in sorted_words:
+        if group_y is None or abs(w['top'] - group_y) > tolerance:
+            group_y = w['top']
+        if group_y not in groups:
+            groups[group_y] = []
+        groups[group_y].append(w)
+    return groups
 
 def _parse_header_tokens(chars, header_y, ges_x1):
     """
@@ -111,12 +126,8 @@ def _parse_standard_page(page, global_filialen):
     for f in filialen:
         global_filialen.add(f)
 
-    # Datenzeilen gruppieren (y gerundet auf 2er-Schritte)
-    row_groups = defaultdict(list)
-    for w in words:
-        if w['top'] <= header_y + 5:
-            continue
-        row_groups[_y_key(w['top'])].append(w)
+    # Datenzeilen gruppieren via sequenziellem Y-Clustering
+    row_groups = _group_by_y(words, min_top=header_y + 5)
 
     rows = []
     last_nr   = ''
@@ -256,13 +267,7 @@ def _parse_sonstige_page(page, global_filialen):
         filialen.append(filiale_name)
         global_filialen.add(filiale_name)
 
-    row_groups = defaultdict(list)
-    for w in words:
-        if w['top'] <= data_y + 5:
-            continue
-        if w['x0'] > 780:
-            continue
-        row_groups[_y_key(w['top'])].append(w)
+    row_groups = _group_by_y(words, min_top=data_y + 5, max_x=780)
 
     rows = []
     for y_key in sorted(row_groups):
