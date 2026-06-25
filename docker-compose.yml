@@ -1,5 +1,15 @@
 services:
 
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: baeckerei-mqtt
+    ports:
+      - "1883:1883"   # MQTT (ESP32-Displays)
+      - "9001:9001"   # WebSocket (optional)
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    restart: unless-stopped
+
   app:
     build: .
     container_name: baeckerei-app
@@ -13,4 +23,8 @@ services:
       - PDF_PATH=/pdf/Drucke_Artikel-Versandliste.pdf
       - DB_PATH=/app/data/kommission.db
       - DATA_DIR=/app/data
+      - MQTT_BROKER=mosquitto     # Im Docker-Netzwerk: Servicename statt localhost
+      - MQTT_PORT=1883
+    depends_on:
+      - mosquitto
     restart: unless-stopped
