@@ -257,6 +257,7 @@
 
   /* ── Kein Inhalt ── */
   .hidden { display: none !important; }
+  .superadmin-only { display: none !important; }
 
   /* ── Mengenkorrektur ── */
   .menge-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -598,6 +599,7 @@
       <button class="tab-btn" onclick="switchTab('nachlegen', this)">📦 Nachlegen</button>
       <button class="tab-btn admin-only" onclick="switchTab('displays', this)">🖥 Displays</button>
       <button class="tab-btn admin-only" onclick="switchTab('auswertung', this)">📊 Auswertung</button>
+      <button class="tab-btn superadmin-only" onclick="switchTab('superadmin', this)">🔐 Super Admin</button>
     </div>
 
     <!-- ─── Pack-Modus ─── -->
@@ -918,6 +920,37 @@
       </div>
     </div>
 
+
+    <!-- ─── Super Admin ─── -->
+    <div id="tab-superadmin" class="tab-pane">
+      <h2 style="margin-bottom:4px;">🔐 Super Admin</h2>
+      <p style="color:#666;font-size:13px;margin-bottom:20px;">PIN-Verwaltung und Rollen-Konfiguration für alle Module.</p>
+
+      <!-- PIN-Verwaltung -->
+      <div class="card" style="margin-bottom:16px;">
+        <b style="font-size:15px;">🔑 PIN-Verwaltung</b>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:16px;" id="sa-pin-grid"></div>
+        <div id="sa-pin-msg" style="margin-top:10px;font-size:13px;min-height:20px;"></div>
+      </div>
+
+      <!-- Modul-Matrix -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <b style="font-size:15px;">🗂 Modul-Berechtigungen</b>
+          <button onclick="speichereRoleConfig()"
+            style="padding:10px 24px;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;
+                   background:linear-gradient(180deg,#43d86a,#28a745);color:#fff;
+                   box-shadow:0 4px 0 #1a7a30;transition:transform .08s,box-shadow .08s;"
+            onmousedown="this.style.transform='translateY(2px)';this.style.boxShadow='0 2px 0 #1a7a30'"
+            onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #1a7a30'">
+            💾 Speichern
+          </button>
+        </div>
+        <div id="sa-role-matrix" style="overflow-x:auto;"></div>
+        <div id="sa-role-msg" style="margin-top:10px;font-size:13px;min-height:20px;"></div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -1025,7 +1058,7 @@ async function submitPin() {
 function setRole(role) {
   currentRole = role;
   const badge = document.getElementById('pin-role-badge');
-  badge.textContent = role === 'admin' ? '\uD83D\uDD11 Admin' : '\uD83D\uDC77 Mitarbeiter';
+  badge.textContent = role === 'superadmin' ? '\uD83D\uDD10 Super Admin' : role === 'admin' ? '\uD83D\uDD11 Admin' : '\uD83D\uDC77 Mitarbeiter';
   badge.className = 'pin-role-badge ' + role;
   applyRole(role);
 }
@@ -1034,9 +1067,13 @@ function applyRole(role) {
   if (role && (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING)) {
     connectWS();
   }
-  const isAdmin = role === 'admin';
+  const isAdmin = role === 'admin' || role === 'superadmin';
+  const isSuperAdmin = role === 'superadmin';
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.setProperty('display', isAdmin ? 'flex' : 'none', 'important');
+  });
+  document.querySelectorAll('.superadmin-only').forEach(el => {
+    el.style.setProperty('display', isSuperAdmin ? 'flex' : 'none', 'important');
   });
   if (!isAdmin) {
     const activePaneEl = document.querySelector('.tab-pane.active');
@@ -1398,6 +1435,7 @@ function switchTab(tab, btn) {
   if (tab === 'menge') renderMengenkorrektur(state);
   if (tab === 'nachlegen') renderNachlegen(state);
   if (tab === 'auswertung') initAuswertung();
+  if (tab === 'superadmin') initSuperAdmin();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2074,6 +2112,123 @@ async function ladeAuswertung(datum) {
   } else {
     korrWrap.style.display = 'none';
   }
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// Super Admin
+// ═══════════════════════════════════════════════════════════
+let saRoleConfig = {};
+let saAllTabs = [];
+
+async function initSuperAdmin() {
+  await Promise.all([ladeSaPins(), ladeSaRoleConfig()]);
+}
+
+async function ladeSaPins() {
+  const r = await fetch('/api/pin-config');
+  const d = await r.json();
+  const grid = document.getElementById('sa-pin-grid');
+  const rollen = ['mitarbeiter', 'admin', 'superadmin'];
+  const labels = { mitarbeiter: '👷 Mitarbeiter', admin: '👑 Admin', superadmin: '🔐 Super Admin' };
+  const farben = { mitarbeiter: '#0071e3', admin: '#ff9f0a', superadmin: '#ff3b30' };
+  grid.innerHTML = rollen.map(rolle => {
+    const sterne = d[rolle] || '****';
+    return '<div style="min-width:200px;">'
+      + '<div style="font-size:12px;font-weight:700;color:' + farben[rolle] + ';margin-bottom:8px;">' + labels[rolle] + '</div>'
+      + '<div style="font-size:12px;color:#86868b;margin-bottom:6px;">Aktuell: ' + sterne + '</div>'
+      + '<div style="display:flex;gap:6px;align-items:center;">'
+      + '<input type="password" id="sa-pin-' + rolle + '" maxlength="8" placeholder="Neuer PIN" inputmode="numeric"'
+      + '  style="width:110px;padding:8px;border:2px solid #d1d1d6;border-radius:8px;font-size:14px;text-align:center;">'
+      + '<button onclick="saPinSpeichern(\'' + rolle + '\')"'
+      + '  style="padding:8px 14px;border:none;border-radius:8px;background:linear-gradient(180deg,#1a8cff,#0060cc);'
+      + '  color:#fff;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #004499;font-size:13px;">💾</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+async function saPinSpeichern(rolle) {
+  const inp = document.getElementById('sa-pin-' + rolle);
+  const pin = inp.value.trim();
+  if (pin.length < 4) { zeigSaMsg('pin', '⚠ Mindestens 4 Stellen', '#ff3b30'); return; }
+  const superPin = prompt('Super Admin PIN zur Bestätigung:');
+  if (!superPin) return;
+  const r = await fetch('/api/pin-config', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({admin_pin: superPin, rolle: rolle, neuer_pin: pin})
+  });
+  const d = await r.json();
+  if (d.ok) { inp.value = ''; zeigSaMsg('pin', '✅ PIN für ' + rolle + ' gespeichert', '#34c759'); ladeSaPins(); }
+  else zeigSaMsg('pin', '❌ ' + d.fehler, '#ff3b30');
+}
+
+async function ladeSaRoleConfig() {
+  const r = await fetch('/api/role-config');
+  const d = await r.json();
+  saAllTabs = d.tabs || [];
+  saRoleConfig = d.role_config || {};
+  renderSaMatrix();
+}
+
+function renderSaMatrix() {
+  const rollen = ['mitarbeiter', 'admin', 'superadmin'];
+  const labels = { mitarbeiter: '👷 Mitarbeiter', admin: '👑 Admin', superadmin: '🔐 Super Admin' };
+  let t = '<table style="border-collapse:collapse;width:100%;font-size:13px;">';
+  t += '<thead><tr>';
+  t += '<th style="padding:10px 14px;text-align:left;background:#f5f5f7;border-radius:8px 0 0 0;">Modul</th>';
+  rollen.forEach(r => {
+    t += '<th style="padding:10px 18px;text-align:center;background:#f5f5f7;">' + labels[r] + '</th>';
+  });
+  t += '</tr></thead><tbody>';
+  saAllTabs.forEach((tab, i) => {
+    const bg = i % 2 === 0 ? '#fff' : '#fafafa';
+    t += '<tr style="background:' + bg + ';">';
+    t += '<td style="padding:10px 14px;font-weight:600;">' + tab.label + '</td>';
+    rollen.forEach(rolle => {
+      const isSuperAdmin = rolle === 'superadmin';
+      const checked = isSuperAdmin || (saRoleConfig[rolle] || []).includes(tab.id);
+      const locked = tab.locked || isSuperAdmin;
+      t += '<td style="padding:10px;text-align:center;">';
+      if (locked) {
+        t += '<span style="font-size:18px;">✅</span>';
+      } else {
+        t += '<input type="checkbox" data-rolle="' + rolle + '" data-tab="' + tab.id + '"'
+          + (checked ? ' checked' : '')
+          + ' style="width:18px;height:18px;cursor:pointer;accent-color:#0071e3;"'
+          + ' onchange="saToggleTab(\'' + rolle + '\',\'' + tab.id + '\',this.checked)">';
+      }
+      t += '</td>';
+    });
+    t += '</tr>';
+  });
+  t += '</tbody></table>';
+  document.getElementById('sa-role-matrix').innerHTML = t;
+}
+
+function saToggleTab(rolle, tabId, enabled) {
+  if (!saRoleConfig[rolle]) saRoleConfig[rolle] = [];
+  if (enabled) {
+    if (!saRoleConfig[rolle].includes(tabId)) saRoleConfig[rolle].push(tabId);
+  } else {
+    saRoleConfig[rolle] = saRoleConfig[rolle].filter(t => t !== tabId);
+  }
+}
+
+async function speichereRoleConfig() {
+  const r = await fetch('/api/role-config', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(saRoleConfig)
+  });
+  const d = await r.json();
+  if (d.ok) zeigSaMsg('role', '✅ Berechtigungen gespeichert — nach nächstem Login aktiv', '#34c759');
+  else zeigSaMsg('role', '❌ Fehler beim Speichern', '#ff3b30');
+}
+
+function zeigSaMsg(typ, msg, farbe) {
+  const el = document.getElementById('sa-' + typ + '-msg');
+  if (!el) return;
+  el.textContent = msg; el.style.color = farbe;
+  setTimeout(() => { el.textContent = ''; }, 4000);
 }
 
 document.getElementById('filialen-vorschau').addEventListener('click', function(e) {

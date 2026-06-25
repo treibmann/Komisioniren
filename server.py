@@ -59,27 +59,62 @@ os.makedirs(DATA_DIR, exist_ok=True)
 HISTORY_FILE = os.path.join(DATA_DIR, "kuerzungs_history.json")
 PIN_CONFIG_FILE = os.path.join(DATA_DIR, "pin_config.json")
 
-_DEFAULT_PINS = {"mitarbeiter": "1234", "admin": "9999"}
+_DEFAULT_PINS = {"mitarbeiter": "1234", "admin": "9999", "superadmin": "0000"}
+
+ROLE_CONFIG_FILE = os.path.join(DATA_DIR, "role_config.json")
+
+# Alle verwaltbaren Tabs — bei neuen Modulen hier eintragen
+ALL_TABS = [
+    {"id": "pack",        "label": "🚀 Pack-Modus",      "locked": True},
+    {"id": "menge",       "label": "⚖️ Mengenkorrektur", "locked": False},
+    {"id": "nachlegen",   "label": "📦 Nachlegen",       "locked": False},
+    {"id": "tour",        "label": "📅 Tourenplanung",   "locked": False},
+    {"id": "displays",    "label": "🖥 Displays",        "locked": False},
+    {"id": "auswertung",  "label": "📊 Auswertung",      "locked": False},
+]
+
+_DEFAULT_ROLE_CONFIG = {
+    "mitarbeiter": ["pack", "menge", "nachlegen"],
+    "admin":       ["pack", "menge", "nachlegen", "tour", "displays", "auswertung"],
+    "superadmin":  ["pack", "menge", "nachlegen", "tour", "displays", "auswertung"],
+}
 
 def load_pin_config() -> dict:
     if os.path.exists(PIN_CONFIG_FILE):
         try:
             with open(PIN_CONFIG_FILE, "r", encoding="utf-8") as f:
                 cfg = json.load(f)
-            # sicherstellen dass beide Rollen vorhanden sind
             for rolle in _DEFAULT_PINS:
                 if rolle not in cfg:
                     cfg[rolle] = _DEFAULT_PINS[rolle]
             return cfg
         except Exception:
             pass
-    # Erste Nutzung: Default-Config anlegen
     with open(PIN_CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(_DEFAULT_PINS, f, ensure_ascii=False, indent=2)
     return dict(_DEFAULT_PINS)
 
 def save_pin_config(cfg: dict) -> None:
     with open(PIN_CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, ensure_ascii=False, indent=2)
+
+def load_role_config() -> dict:
+    if os.path.exists(ROLE_CONFIG_FILE):
+        try:
+            with open(ROLE_CONFIG_FILE, "r", encoding="utf-8") as f:
+                cfg = json.load(f)
+            for rolle in _DEFAULT_ROLE_CONFIG:
+                if rolle not in cfg:
+                    cfg[rolle] = _DEFAULT_ROLE_CONFIG[rolle]
+            return cfg
+        except Exception:
+            pass
+    with open(ROLE_CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(_DEFAULT_ROLE_CONFIG, f, ensure_ascii=False, indent=2)
+    return dict(_DEFAULT_ROLE_CONFIG)
+
+def save_role_config(cfg: dict) -> None:
+    with open(ROLE_CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
 
 def load_history() -> list:
@@ -493,6 +528,8 @@ class PinUpdateBody(BaseModel):
 async def api_login(body: LoginBody):
     cfg = load_pin_config()
     pin = body.pin.strip()
+    if pin == cfg.get("superadmin"):
+        return {"ok": True, "rolle": "superadmin"}
     if pin == cfg.get("admin"):
         return {"ok": True, "rolle": "admin"}
     if pin == cfg.get("mitarbeiter"):
@@ -501,22 +538,51 @@ async def api_login(body: LoginBody):
 
 @app.get("/api/pin-config")
 async def api_get_pin_config():
-    """Gibt nur maskierte Info zurück (Länge), nicht die echten PINs."""
     cfg = load_pin_config()
     return {rolle: "*" * len(str(pin)) for rolle, pin in cfg.items()}
 
 @app.post("/api/pin-config")
 async def api_set_pin_config(body: PinUpdateBody):
     cfg = load_pin_config()
-    if body.admin_pin.strip() != cfg.get("admin"):
-        return JSONResponse({"ok": False, "fehler": "Admin-PIN falsch"}, status_code=403)
-    if body.rolle not in ("mitarbeiter", "admin"):
+    # Superadmin darf alles ohne Verifikation des eigenen PINs ändern
+    is_superadmin = body.admin_pin.strip() == cfg.get("superadmin")
+    is_admin      = body.admin_pin.strip() == cfg.get("admin")
+    if not is_superadmin and not is_admin:
+        return JSONResponse({"ok": False, "fehler": "PIN falsch"}, status_code=403)
+    # Admin darf nur mitarbeiter/admin ändern; superadmin darf alle
+    allowed = ("mitarbeiter", "admin", "superadmin") if is_superadmin else ("mitarbeiter", "admin")
+    if body.rolle not in allowed:
         return JSONResponse({"ok": False, "fehler": "Ungültige Rolle"}, status_code=400)
     if len(body.neuer_pin.strip()) < 4:
         return JSONResponse({"ok": False, "fehler": "PIN muss mind. 4 Stellen haben"}, status_code=400)
     cfg[body.rolle] = body.neuer_pin.strip()
     save_pin_config(cfg)
     db_module.log_aktion("pin_geaendert", {"rolle": body.rolle})
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Rollen-Konfiguration (Super Admin)
+# ---------------------------------------------------------------------------
+@app.get("/api/role-config")
+async def api_get_role_config():
+    return {
+        "tabs":        ALL_TABS,
+        "role_config": load_role_config(),
+    }
+
+@app.post("/api/role-config")
+async def api_set_role_config(cfg: dict):
+    # Superadmin-Tab immer für superadmin, nie für andere erzwingen
+    for rolle in ("mitarbeiter", "admin"):
+        tabs = cfg.get(rolle, [])
+        if "superadmin" in tabs:
+            tabs.remove("superadmin")
+        cfg[rolle] = tabs
+    if "superadmin" not in cfg.get("superadmin", []):
+        cfg.setdefault("superadmin", []).append("superadmin")
+    save_role_config(cfg)
+    db_module.log_aktion("role_config_gespeichert", cfg)
     return {"ok": True}
 
 
