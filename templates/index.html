@@ -89,7 +89,8 @@
   #topbar #upload-status { font-size: 12px; color: #86868b; white-space: nowrap; }
   #topbar .phase-toggle { gap: 3px; }
   #topbar .phase-btn { padding: 16px 24px; font-size: 21px; font-weight: 800; border-radius: 10px; white-space: nowrap; }
-  #topbar #aktiver-tag-anzeige { font-size: 42px; font-weight: 800; white-space: nowrap; }
+  #topbar #aktiver-tag-anzeige { font-size: 42px; font-weight: 800; white-space: nowrap; text-align: right; line-height: 1.0; }
+  #topbar #aktiver-tag-anzeige .tag-quelle { display: block; font-size: 15px; font-weight: 600; opacity: 0.85; margin-top: 2px; }
   /* Header-Menü-Icon + Dropdown (Verbindung, Ebene, Abmelden) */
   #header-menu-btn { background: rgba(255,255,255,0.12); color: inherit;
     border: 1px solid rgba(255,255,255,0.35); border-radius: 10px;
@@ -1405,7 +1406,10 @@ function renderState(s) {
       ? '🎉 Feiertag' + datum
       : '📅 ' + s.aktiver_tag + datum;
     const el = document.getElementById('aktiver-tag-anzeige');
-    if (el) { el.textContent = label; el.style.color = isFeiertag ? '#f57f17' : '#fbc02d'; }
+    if (el) {
+      el.innerHTML = label + '<span class="tag-quelle">' + quelle + '</span>';
+      el.style.color = isFeiertag ? '#f57f17' : '#fbc02d';
+    }
   }
   const sel = document.getElementById('tag-override-select');
   if (sel && s.tag_override !== undefined && document.activeElement !== sel) {
