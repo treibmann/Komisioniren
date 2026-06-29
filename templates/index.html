@@ -1032,9 +1032,9 @@
 
       <div class="card">
         <b style="font-size:15px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h2"/><path d="M14 9h4l4 4v4a1 1 0 0 1-1 1h-1"/><circle cx="7.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg>Tour-Tag</b>
-        <p style="color:#666;font-size:13px;margin:8px 0 14px;">Bestimmt die <b>Tour</b> (Filialen-Reihenfolge). „📄 Aus PDF" nutzt den Tag der Versandliste; manuell wählt einen anderen Wochentag. Die Datumsanzeige oben rechts bleibt davon unberührt (immer aus PDF).</p>
+        <p style="color:#666;font-size:13px;margin:8px 0 14px;">Bestimmt die <b>Tour</b> (Filialen-Reihenfolge). „Aus PDF" nutzt den Tag der Versandliste; manuell wählt einen anderen Wochentag. Die Datumsanzeige oben rechts bleibt davon unberührt (immer aus PDF).</p>
         <select id="tag-override-select" onchange="setTagOverride(this.value)" style="min-width:220px;font-size:15px;">
-          <option value="">📄 Aus PDF</option>
+          <option value="">Aus PDF (automatisch)</option>
           <option value="Montag">Montag</option>
           <option value="Dienstag">Dienstag</option>
           <option value="Mittwoch">Mittwoch</option>
@@ -1042,7 +1042,7 @@
           <option value="Freitag">Freitag</option>
           <option value="Samstag">Samstag</option>
           <option value="Sonntag">Sonntag</option>
-          <option value="Feiertag">🎉 Feiertag</option>
+          <option value="Feiertag">Feiertag</option>
         </select>
       </div>
     </div>
@@ -1150,7 +1150,7 @@
       Alle bisher gepackten Mengen werden auf <b>0</b> gesetzt und der Pack-Modus beginnt von vorne.
     </div>
     <div style="font-size:12px;color:#1a7a30;background:#e8f7ec;border-radius:8px;padding:8px 10px;margin-bottom:22px;">
-      ✓ Die gespeicherten Tagesdaten (Auswertung) bleiben erhalten.
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M20 6 9 17l-5-5"/></svg> Die gespeicherten Tagesdaten (Auswertung) bleiben erhalten.
     </div>
     <div style="display:flex;gap:10px;">
       <button onclick="resetAbbrechen()"
@@ -1190,7 +1190,7 @@
 <div id="warn-modal">
   <div class="modal-box">
     <div class="modal-header">
-      <span class="modal-icon" id="modal-icon">⚠️</span>
+      <span class="modal-icon" id="modal-icon" style="color:#ff9f0a;"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></span>
       <div class="modal-title" id="modal-title"></div>
     </div>
     <div class="modal-body" id="modal-body"></div>
@@ -1234,6 +1234,10 @@ const ICO = {
   antenna: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12a7 7 0 0 1 14 0M2 8.82a12 12 0 0 1 20 0M8.5 16a4 4 0 0 1 7 0M12 20h.01"/></svg>',
   warn: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
   x: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  ok: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  err: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  warnC: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#ff9f0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
+  circle: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>',
 };
 const TAB_ICO = { pack: ICO.rocket, menge: ICO.scale, nachlegen: ICO.box, tour: ICO.calendar, displays: ICO.monitor, auswertung: ICO.chart, einstellung: ICO.gear, superadmin: ICO.shield };
 const ROLE_ICO = { mitarbeiter: ICO.user, admin: ICO.crown, superadmin: ICO.shield };
@@ -1365,17 +1369,17 @@ async function savePin(rolle) {
   const inputId = rolle === 'admin' ? 'new-pin-ad' : 'new-pin-ma';
   const pin = document.getElementById(inputId).value.trim();
   const msg = document.getElementById('pin-save-msg');
-  if (!/^\d{4}$/.test(pin)) { msg.textContent = '\u26A0 Genau 4 Ziffern eingeben'; return; }
+  if (!/^\d{4}$/.test(pin)) { msg.innerHTML = ICO.warnC + 'Genau 4 Ziffern eingeben'; return; }
   try {
     const r = await fetch('/api/pin-config', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({rolle, pin})
     });
     const d = await r.json();
-    msg.textContent = d.ok ? '\u2705 PIN gespeichert' : '\u274C Fehler';
+    msg.innerHTML = d.ok ? ICO.ok + 'PIN gespeichert' : ICO.err + 'Fehler';
     document.getElementById(inputId).value = '';
     setTimeout(() => { msg.textContent = ''; }, 3000);
-  } catch(e) { msg.textContent = '\u26A0 Verbindungsfehler'; }
+  } catch(e) { msg.innerHTML = ICO.warnC + 'Verbindungsfehler'; }
 }
 
 // Tastatur-Support fuer PIN Overlay
@@ -1492,8 +1496,8 @@ function renderState(s) {
   if (!hasPdf) return;
 
   // Upload-Status
-  document.getElementById('upload-status').textContent =
-    `✅ ${s.filialen_liste.length} Filialen geladen`;
+  document.getElementById('upload-status').innerHTML =
+    ICO.ok + `${s.filialen_liste.length} Filialen geladen`;
 
   // Hardware-Modus Buttons
   document.getElementById('btn-virtual').className =
@@ -1596,11 +1600,11 @@ function renderState(s) {
         ? `<span style="text-decoration:line-through;opacity:.5">${f.menge}</span> → <b>${geliefert}</b> Stk`
         : `<s>${f.menge} Stk</s>`;
       return `<div class="filiale-chip ${cls}" data-action="rueckgaengig" data-name="${f.name}" style="cursor:pointer;">
-        <span style="float:right;font-size:11px;opacity:.7">↩</span><b>${f.name}</b><br>${mengeZeile}
+        <span style="float:right;opacity:.7"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg></span><b>${f.name}</b><br>${mengeZeile}
       </div>`;
     } else {
       return `<div class="filiale-chip ${cls}" data-action="bestaetigen" data-name="${f.name}" data-menge="${f.menge}" style="cursor:pointer;">
-        <span style="float:right;font-size:11px;opacity:.6">✓?</span><b>${f.name}</b><br>${f.menge} Stk
+        <span style="float:right;opacity:.6"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><b>${f.name}</b><br>${f.menge} Stk
       </div>`;
     }
   }).join('');
@@ -1739,10 +1743,10 @@ async function reloadPdf() {
   try {
     const r = await fetch('/reload-pdf');
     const d = await r.json();
-    document.getElementById('upload-status').textContent =
-      d.ok ? '✅ ' + d.filialen.length + ' Filialen' : '❌ Fehler';
+    document.getElementById('upload-status').innerHTML =
+      d.ok ? ICO.ok + d.filialen.length + ' Filialen' : ICO.err + 'Fehler';
   } catch(e) {
-    document.getElementById('upload-status').textContent = '⚠ Verbindungsfehler';
+    document.getElementById('upload-status').innerHTML = ICO.warnC + 'Verbindungsfehler';
   }
   document.getElementById('pdf-reload-btn').innerHTML = ICO.file + 'Versandliste einlesen';
 }
@@ -1751,14 +1755,14 @@ document.getElementById('pdf-input').addEventListener('change', async function()
   if (!this.files[0]) return;
   const fd = new FormData();
   fd.append('file', this.files[0]);
-  document.getElementById('upload-status').textContent = '⏳ Wird verarbeitet…';
+  document.getElementById('upload-status').innerHTML = ICO.refresh + 'Wird verarbeitet…';
   try {
     const r = await fetch('/upload-pdf', { method: 'POST', body: fd });
     const d = await r.json();
-    document.getElementById('upload-status').textContent =
-      d.ok ? '✅ ' + d.filialen.length + ' Filialen' : '❌ ' + (d.detail || 'Fehler');
+    document.getElementById('upload-status').innerHTML =
+      d.ok ? ICO.ok + d.filialen.length + ' Filialen' : ICO.err + (d.detail || 'Fehler');
   } catch(e) {
-    document.getElementById('upload-status').textContent = '⚠ Verbindungsfehler';
+    document.getElementById('upload-status').innerHTML = ICO.warnC + 'Verbindungsfehler';
   }
   this.value = '';
 });
@@ -1789,7 +1793,9 @@ function buildTourenGrid(alle_filialen) {
     const card = document.createElement('div');
     card.className = 'tag-card';
     if (isFeiertag) card.style.cssText = 'border:2px dashed #f57f17;background:rgba(245,127,23,0.07);';
-    card.innerHTML = '<h3>' + (isFeiertag ? '🎉' : '🔹') + ' ' + tag + '</h3>' +
+    card.innerHTML = '<h3>' + (isFeiertag
+        ? '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.5 2.3 7.1-6.3-4.6L5.7 21l2.3-7.1-6-4.5h7.6z"/></svg>'
+        : ICO.calendar) + tag + '</h3>' +
       (isFeiertag ? '<p style="font-size:11px;color:#f57f17;margin:0 0 6px;">Eigene Tour für Feiertage</p>' : '') +
       '<ul class="drag-list" id="list-' + tag + '" data-tag="' + tag + '"></ul>' +
       '<div id="checks-' + tag + '" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>';
@@ -1876,7 +1882,7 @@ function setupDragList(tag) {
 function saveTourenConfig() {
   sendCmd('save_touren', { config: tourenLocal });
   const msg = document.getElementById('touren-save-msg');
-  msg.textContent = '✅ Gespeichert!';
+  msg.innerHTML = ICO.ok + 'Gespeichert!';
   setTimeout(() => msg.textContent = '', 3000);
 }
 
@@ -2000,7 +2006,7 @@ async function berechneKuerzung() {
     const anwBtn = document.getElementById('anwenden-btn');
     anwBtn.disabled = false;
     anwBtn.style.cssText = 'padding:12px 24px;background:#388e3c;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;';
-    document.getElementById('menge-hint').textContent = '✅ Berechnung fertig – prüfen und übernehmen';
+    document.getElementById('menge-hint').innerHTML = ICO.ok + 'Berechnung fertig – prüfen und übernehmen';
   } finally {
     btn.innerHTML = ICO.scale + 'Berechnen'; btn.disabled = false;
   }
@@ -2040,7 +2046,7 @@ async function wendeKuerzungAn() {
   });
   const d = await r.json();
   if (d.ok) {
-    document.getElementById('menge-hint').textContent = '✅ In Pack-Modus übernommen';
+    document.getElementById('menge-hint').innerHTML = ICO.ok + 'In Pack-Modus übernommen';
     const anwBtn = document.getElementById('anwenden-btn');
     anwBtn.disabled = true;
     anwBtn.style.cssText = 'padding:12px 24px;background:#ccc;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:not-allowed;';
@@ -2083,7 +2089,7 @@ async function saveKuerzungen() {
   });
   const d = await r.json();
   const msg = document.getElementById('menge-save-msg');
-  if (msg) { msg.textContent = d.ok ? '✅ Gespeichert' : '❌ Fehler'; setTimeout(() => msg.textContent = '', 3000); }
+  if (msg) { msg.innerHTML = d.ok ? ICO.ok + 'Gespeichert' : ICO.err + 'Fehler'; setTimeout(() => msg.textContent = '', 3000); }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2143,7 +2149,7 @@ function ladeNlProdukt() {
       lbl.style.borderColor = this.checked ? '#0071e3' : '#d1d1d6';
       lbl.style.background  = this.checked ? '#f0f7ff' : '#f9f9f9';
     };
-    const statusTxt = geliefert > 0 ? ' <span style="color:#34c759;font-size:11px;">✓ gepackt</span>' : ' <span style="color:#86868b;font-size:11px;">○ offen</span>';
+    const statusTxt = geliefert > 0 ? ' <span style="color:#34c759;font-size:11px;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> gepackt</span>' : ' <span style="color:#86868b;font-size:11px;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg> offen</span>';
     const info = document.createElement('div');
     info.innerHTML = '<div style="font-weight:700;font-size:14px;">' + f.name + statusTxt + '</div>'
       + '<div style="font-size:12px;color:#86868b;">Soll: <b>' + soll + '</b> Stk</div>';
@@ -2251,15 +2257,15 @@ function nlSollZeile(f) {
   let sollTxt = '', packTxt = '';
   if (hatErst && hatVor) {
     sollTxt = 'Soll: <b>' + f.soll_erst + '</b> <span style="color:#6a1b9a;font-size:10px;">+' + f.soll_vor + 'V</span>';
-    const pE = f.geliefert_erst > 0 ? '<span class="nl-status-gepackt">✅ ' + f.geliefert_erst + '</span>' : '<span class="nl-status-offen">○ offen</span>';
-    const pV = f.geliefert_vor  > 0 ? '<span style="color:#6a1b9a;font-size:11px;font-weight:600;">✅ ' + f.geliefert_vor + 'V</span>' : '<span style="color:#ccc;font-size:11px;">○ V offen</span>';
+    const pE = f.geliefert_erst > 0 ? '<span class="nl-status-gepackt"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ' + f.geliefert_erst + '</span>' : '<span class="nl-status-offen"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg> offen</span>';
+    const pV = f.geliefert_vor  > 0 ? '<span style="color:#6a1b9a;font-size:11px;font-weight:600;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ' + f.geliefert_vor + 'V</span>' : '<span style="color:#ccc;font-size:11px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg> V offen</span>';
     packTxt = pE + ' ' + pV;
   } else if (hatErst) {
     sollTxt = 'Soll: <b>' + f.soll_erst + '</b>';
-    packTxt = f.geliefert_erst > 0 ? '<span class="nl-status-gepackt">✅ ' + f.geliefert_erst + '</span>' : '<span class="nl-status-offen">○ offen</span>';
+    packTxt = f.geliefert_erst > 0 ? '<span class="nl-status-gepackt"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ' + f.geliefert_erst + '</span>' : '<span class="nl-status-offen"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg> offen</span>';
   } else if (hatVor) {
     sollTxt = 'Soll: <b>' + f.soll_vor + 'V</b>';
-    packTxt = f.geliefert_vor > 0 ? '<span style="color:#6a1b9a;font-size:11px;font-weight:600;">✅ ' + f.geliefert_vor + 'V</span>' : '<span style="color:#ccc;font-size:11px;">○ V offen</span>';
+    packTxt = f.geliefert_vor > 0 ? '<span style="color:#6a1b9a;font-size:11px;font-weight:600;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ' + f.geliefert_vor + 'V</span>' : '<span style="color:#ccc;font-size:11px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg> V offen</span>';
   }
   return { sollTxt, packTxt };
 }
@@ -2286,14 +2292,14 @@ function startSpeech() {
   };
   recognition.onerror = (e) => { document.getElementById('speech-status').textContent = 'Fehler: ' + e.error; };
   recognition.start(); speechActive = true;
-  document.getElementById('speech-toggle-btn').textContent = '⏹ Sprache stoppen';
-  document.getElementById('speech-status').textContent = '🎤 Aktiv – höre zu…';
+  document.getElementById('speech-toggle-btn').innerHTML = '<svg class="ico" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>Sprache stoppen';
+  document.getElementById('speech-status').innerHTML = ICO.mic + 'Aktiv – höre zu…';
 }
 
 function stopSpeech() {
   speechActive = false;
   if (recognition) { recognition.stop(); recognition = null; }
-  document.getElementById('speech-toggle-btn').textContent = '🎤 Sprache starten';
+  document.getElementById('speech-toggle-btn').innerHTML = ICO.mic + 'Sprache starten';
   document.getElementById('speech-status').textContent = 'Inaktiv';
 }
 
@@ -2424,18 +2430,18 @@ async function uploadPersonal(input) {
   if (!file) return;
   const fd = new FormData();
   fd.append('file', file);
-  zeigPersonalMsg('⏳ Lade hoch…', '#86868b');
+  zeigPersonalMsg(ICO.refresh + 'Lade hoch…', '#86868b');
   try {
     const r = await fetch('/api/personal/upload', { method: 'POST', body: fd });
     const d = await r.json();
     if (d.ok) {
-      zeigPersonalMsg('✅ ' + d.anzahl + ' Personen geladen', '#34c759');
+      zeigPersonalMsg(ICO.ok + d.anzahl + ' Personen geladen', '#34c759');
       renderPersonal(d.personen);
     } else {
-      zeigPersonalMsg('❌ ' + (d.detail || d.fehler || 'Fehler beim Einlesen'), '#ff3b30');
+      zeigPersonalMsg(ICO.err + (d.detail || d.fehler || 'Fehler beim Einlesen'), '#ff3b30');
     }
   } catch (e) {
-    zeigPersonalMsg('❌ ' + e, '#ff3b30');
+    zeigPersonalMsg(ICO.err + e, '#ff3b30');
   }
   input.value = '';
 }
@@ -2452,10 +2458,10 @@ async function clearPersonal() {
   if (!confirm('Personal-Liste wirklich leeren? Danach gelten nur noch die festen Rollen-PINs.')) return;
   try {
     await fetch('/api/personal', { method: 'DELETE' });
-    zeigPersonalMsg('🗑 Personal-Liste geleert', '#86868b');
+    zeigPersonalMsg(ICO.trash + 'Personal-Liste geleert', '#86868b');
     renderPersonal([]);
   } catch (e) {
-    zeigPersonalMsg('❌ ' + e, '#ff3b30');
+    zeigPersonalMsg(ICO.err + e, '#ff3b30');
   }
 }
 
@@ -2486,7 +2492,7 @@ function renderPersonal(personen) {
 function zeigPersonalMsg(msg, farbe) {
   const el = document.getElementById('personal-msg');
   if (!el) return;
-  el.textContent = msg;
+  el.innerHTML = msg;
   el.style.color = farbe;
 }
 
@@ -2544,16 +2550,16 @@ async function speichereHeaderConfig() {
     if (d.ok) {
       _headerCfg = d.config;
       applyHeaderConfig(d.config);
-      m.textContent = '✅ Gespeichert — sofort aktiv';
+      m.innerHTML = ICO.ok + 'Gespeichert — sofort aktiv';
       m.style.color = '#34c759';
     } else {
-      m.textContent = '❌ Fehler beim Speichern';
+      m.innerHTML = ICO.err + 'Fehler beim Speichern';
       m.style.color = '#ff3b30';
     }
     setTimeout(() => { m.textContent = ''; }, 3000);
   } catch (e) {
     const m = document.getElementById('header-config-msg');
-    m.textContent = '❌ ' + e; m.style.color = '#ff3b30';
+    m.innerHTML = ICO.err + e; m.style.color = '#ff3b30';
   }
 }
 
@@ -2582,7 +2588,7 @@ async function ladeSaPins() {
 async function saPinSpeichern(rolle) {
   const inp = document.getElementById('sa-pin-' + rolle);
   const pin = inp.value.trim();
-  if (pin.length < 4) { zeigSaMsg('pin', '⚠ Mindestens 4 Stellen', '#ff3b30'); return; }
+  if (pin.length < 4) { zeigSaMsg('pin', ICO.warnC + 'Mindestens 4 Stellen', '#ff3b30'); return; }
   const superPin = prompt('Super Admin PIN zur Bestätigung:');
   if (!superPin) return;
   const r = await fetch('/api/pin-config', {
@@ -2590,8 +2596,8 @@ async function saPinSpeichern(rolle) {
     body: JSON.stringify({admin_pin: superPin, rolle: rolle, neuer_pin: pin})
   });
   const d = await r.json();
-  if (d.ok) { inp.value = ''; zeigSaMsg('pin', '✅ PIN für ' + rolle + ' gespeichert', '#34c759'); ladeSaPins(); }
-  else zeigSaMsg('pin', '❌ ' + d.fehler, '#ff3b30');
+  if (d.ok) { inp.value = ''; zeigSaMsg('pin', ICO.ok + 'PIN für ' + rolle + ' gespeichert', '#34c759'); ladeSaPins(); }
+  else zeigSaMsg('pin', ICO.err + d.fehler, '#ff3b30');
 }
 
 async function ladeSaRoleConfig() {
@@ -2652,14 +2658,14 @@ async function speichereRoleConfig() {
     body: JSON.stringify(saRoleConfig)
   });
   const d = await r.json();
-  if (d.ok) zeigSaMsg('role', '✅ Berechtigungen gespeichert — nach nächstem Login aktiv', '#34c759');
-  else zeigSaMsg('role', '❌ Fehler beim Speichern', '#ff3b30');
+  if (d.ok) zeigSaMsg('role', ICO.ok + 'Berechtigungen gespeichert — nach nächstem Login aktiv', '#34c759');
+  else zeigSaMsg('role', ICO.err + 'Fehler beim Speichern', '#ff3b30');
 }
 
 function zeigSaMsg(typ, msg, farbe) {
   const el = document.getElementById('sa-' + typ + '-msg');
   if (!el) return;
-  el.textContent = msg; el.style.color = farbe;
+  el.innerHTML = msg; el.style.color = farbe;
   setTimeout(() => { el.textContent = ''; }, 4000);
 }
 
