@@ -971,6 +971,29 @@
         <div id="sa-role-matrix" style="overflow-x:auto;"></div>
         <div id="sa-role-msg" style="margin-top:10px;font-size:13px;min-height:20px;"></div>
       </div>
+
+      <!-- Personal-Liste (Excel/CSV) -->
+      <div class="card" style="margin-top:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;flex-wrap:wrap;">
+          <b style="font-size:15px;">👥 Personal-Liste (Excel/CSV)</b>
+          <div style="display:flex;gap:8px;">
+            <label style="padding:9px 18px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;
+                          background:linear-gradient(180deg,#1a8cff,#0060cc);color:#fff;box-shadow:0 3px 0 #004499;">
+              ⬆️ Datei wählen
+              <input type="file" id="personal-file" accept=".csv,.xlsx,.xls" style="display:none;" onchange="uploadPersonal(this)">
+            </label>
+            <button onclick="clearPersonal()"
+              style="padding:9px 16px;border:1px solid #ff3b30;border-radius:10px;cursor:pointer;font-size:13px;
+                     font-weight:600;background:#fff;color:#ff3b30;">🗑 Leeren</button>
+          </div>
+        </div>
+        <p style="color:#666;font-size:12px;margin-bottom:14px;">
+          Erwartete Spalten: <b>Name</b>, <b>PIN</b>, <b>Rolle</b> (mitarbeiter / admin / superadmin).
+          Jede Person erhält einen eigenen PIN. Die feste Rollen-PINs bleiben als Notfall-Login bestehen.
+        </p>
+        <div id="personal-liste"></div>
+        <div id="personal-msg" style="margin-top:10px;font-size:13px;min-height:20px;"></div>
+      </div>
     </div>
 
   </main>
@@ -1124,13 +1147,17 @@ function applyRole(role) {
   document.querySelectorAll('.superadmin-only').forEach(el => {
     el.style.setProperty('display', isSuperAdmin ? 'flex' : 'none', 'important');
   });
-  if (!isAdmin) {
-    const activePaneEl = document.querySelector('.tab-pane.active');
-    if (activePaneEl && (activePaneEl.id === 'tab-tour' || activePaneEl.id === 'tab-displays')) {
-      const packBtn = document.querySelector('.tab-btn');
-      switchTab('pack', packBtn);
-      packBtn.classList.add('active');
-    }
+  // Bei fehlenden Rechten von gesperrten Tabs auf Pack-Modus zurückschalten
+  const activePaneEl = document.querySelector('.tab-pane.active');
+  const adminPanes = ['tab-tour', 'tab-displays', 'tab-auswertung', 'tab-superadmin'];
+  const verboten = activePaneEl && (
+    (!isAdmin && adminPanes.includes(activePaneEl.id)) ||
+    (!isSuperAdmin && activePaneEl.id === 'tab-superadmin')
+  );
+  if (verboten) {
+    const packBtn = document.querySelector('.tab-btn');
+    switchTab('pack', packBtn);
+    packBtn.classList.add('active');
   }
 }
 
@@ -1145,6 +1172,22 @@ function doLogout() {
   badge.textContent = '\u2013';
   badge.className = 'pin-role-badge';
 }
+
+// \u2500\u2500 Auto-R\u00fccksprung Admin/Super-Admin \u2192 Mitarbeiter nach 1 Min Inaktivit\u00e4t \u2500\u2500
+let _lastActivity = Date.now();
+const ADMIN_IDLE_MS = 60000;
+['mousedown', 'keydown', 'touchstart', 'click', 'wheel'].forEach(ev =>
+  document.addEventListener(ev, () => { _lastActivity = Date.now(); }, true));
+setInterval(() => {
+  if ((currentRole === 'admin' || currentRole === 'superadmin')
+      && (Date.now() - _lastActivity) > ADMIN_IDLE_MS) {
+    _lastActivity = Date.now();
+    const ap = document.getElementById('admin-panel');
+    if (ap) ap.classList.add('hidden');   // offenes Admin-Panel schlie\u00dfen
+    setRole('mitarbeiter');
+    zeigToast('\ud83d\udd12 Admin-Sitzung nach 1 Min Inaktivit\u00e4t beendet \u2013 zur\u00fcck zu Mitarbeiter');
+  }
+}, 5000);
 
 async function savePin(rolle) {
   const inputId = rolle === 'admin' ? 'new-pin-ad' : 'new-pin-ma';
@@ -2187,7 +2230,79 @@ let saRoleConfig = {};
 let saAllTabs = [];
 
 async function initSuperAdmin() {
-  await Promise.all([ladeSaPins(), ladeSaRoleConfig()]);
+  await Promise.all([ladeSaPins(), ladeSaRoleConfig(), ladePersonal()]);
+}
+
+// ── Personal-Liste (Excel/CSV) ──
+async function uploadPersonal(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  zeigPersonalMsg('⏳ Lade hoch…', '#86868b');
+  try {
+    const r = await fetch('/api/personal/upload', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (d.ok) {
+      zeigPersonalMsg('✅ ' + d.anzahl + ' Personen geladen', '#34c759');
+      renderPersonal(d.personen);
+    } else {
+      zeigPersonalMsg('❌ ' + (d.detail || d.fehler || 'Fehler beim Einlesen'), '#ff3b30');
+    }
+  } catch (e) {
+    zeigPersonalMsg('❌ ' + e, '#ff3b30');
+  }
+  input.value = '';
+}
+
+async function ladePersonal() {
+  try {
+    const r = await fetch('/api/personal');
+    const d = await r.json();
+    renderPersonal(d.personen || []);
+  } catch (e) {}
+}
+
+async function clearPersonal() {
+  if (!confirm('Personal-Liste wirklich leeren? Danach gelten nur noch die festen Rollen-PINs.')) return;
+  try {
+    await fetch('/api/personal', { method: 'DELETE' });
+    zeigPersonalMsg('🗑 Personal-Liste geleert', '#86868b');
+    renderPersonal([]);
+  } catch (e) {
+    zeigPersonalMsg('❌ ' + e, '#ff3b30');
+  }
+}
+
+function renderPersonal(personen) {
+  const el = document.getElementById('personal-liste');
+  if (!el) return;
+  if (!personen || !personen.length) {
+    el.innerHTML = '<div style="color:#86868b;font-size:13px;">Noch keine Personal-Liste geladen.</div>';
+    return;
+  }
+  const farben = { mitarbeiter: '#0d6e63', admin: '#3f3a8c', superadmin: '#7a1f3d' };
+  let t = '<table style="border-collapse:collapse;width:100%;font-size:13px;"><thead><tr>'
+    + '<th style="text-align:left;padding:8px 12px;background:#f5f5f7;border-radius:8px 0 0 0;">Name</th>'
+    + '<th style="text-align:left;padding:8px 12px;background:#f5f5f7;">PIN</th>'
+    + '<th style="text-align:left;padding:8px 12px;background:#f5f5f7;border-radius:0 8px 0 0;">Rolle</th>'
+    + '</tr></thead><tbody>';
+  personen.forEach((p, i) => {
+    t += '<tr style="background:' + (i % 2 ? '#fafafa' : '#fff') + ';">'
+      + '<td style="padding:8px 12px;">' + (p.name || '—') + '</td>'
+      + '<td style="padding:8px 12px;color:#86868b;letter-spacing:2px;">' + (p.pin_masked || '••••') + '</td>'
+      + '<td style="padding:8px 12px;"><span style="color:' + (farben[p.rolle] || '#333') + ';font-weight:700;">' + p.rolle + '</span></td>'
+      + '</tr>';
+  });
+  t += '</tbody></table>';
+  el.innerHTML = t;
+}
+
+function zeigPersonalMsg(msg, farbe) {
+  const el = document.getElementById('personal-msg');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = farbe;
 }
 
 async function ladeSaPins() {

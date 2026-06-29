@@ -19,6 +19,10 @@ kommission.db
 # Laufzeit-Daten
 kuerzungs_history.json
 pdf/*.pdf
+data/personal.json
+
+# Test-Artefakte (Playwright MCP)
+.playwright-mcp/
 
 # OS
 .DS_Store

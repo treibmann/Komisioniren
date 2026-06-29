@@ -117,6 +117,80 @@ def save_role_config(cfg: dict) -> None:
     with open(ROLE_CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
 
+
+# ---------------------------------------------------------------------------
+# Personal-Liste (pro Person ein PIN + Rolle, aus Excel/CSV-Upload)
+# ---------------------------------------------------------------------------
+PERSONAL_FILE = os.path.join(DATA_DIR, "personal.json")
+
+_ROLE_ALIASES = {
+    "mitarbeiter": "mitarbeiter", "ma": "mitarbeiter", "worker": "mitarbeiter",
+    "mitarbeiterin": "mitarbeiter", "personal": "mitarbeiter",
+    "admin": "admin", "administrator": "admin", "leitung": "admin",
+    "superadmin": "superadmin", "super admin": "superadmin",
+    "super-admin": "superadmin", "sa": "superadmin", "chef": "superadmin",
+}
+
+def load_personal() -> list:
+    if os.path.exists(PERSONAL_FILE):
+        try:
+            with open(PERSONAL_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return []
+
+def save_personal(liste: list) -> None:
+    with open(PERSONAL_FILE, "w", encoding="utf-8") as f:
+        json.dump(liste, f, ensure_ascii=False, indent=2)
+
+def _parse_personal_file(file_obj, filename: str) -> list:
+    """
+    Liest eine Personal-Liste aus CSV oder Excel.
+    Erwartete Spalten (Gross-/Kleinschreibung egal): Name, PIN, Rolle.
+    Rolle wird auf mitarbeiter/admin/superadmin normalisiert.
+    """
+    import pandas as pd
+    fn = (filename or "").lower()
+    if fn.endswith(".csv"):
+        df = pd.read_csv(file_obj, dtype=str, sep=None, engine="python")
+    elif fn.endswith((".xlsx", ".xls")):
+        df = pd.read_excel(file_obj, dtype=str)
+    else:
+        raise ValueError("Nur CSV oder Excel (.xlsx) erlaubt.")
+
+    df.columns = [str(c).strip().lower() for c in df.columns]
+
+    def find_col(*names):
+        for n in names:
+            if n in df.columns:
+                return n
+        return None
+
+    c_name = find_col("name", "mitarbeiter", "person", "vorname")
+    c_pin  = find_col("pin", "passwort", "password", "code", "kennwort")
+    c_role = find_col("rolle", "role", "funktion", "berechtigung")
+    if not c_pin:
+        raise ValueError("Spalte 'PIN' fehlt.")
+    if not c_role:
+        raise ValueError("Spalte 'Rolle' fehlt.")
+
+    out, seen_pins = [], set()
+    for _, row in df.iterrows():
+        pin = str(row[c_pin]).strip()
+        if not pin or pin.lower() == "nan":
+            continue
+        if pin in seen_pins:
+            raise ValueError(f"PIN '{pin}' kommt mehrfach vor — PINs muessen eindeutig sein.")
+        seen_pins.add(pin)
+        rolle_raw = str(row[c_role]).strip().lower()
+        rolle = _ROLE_ALIASES.get(rolle_raw, "mitarbeiter")
+        name = str(row[c_name]).strip() if c_name else ""
+        if name.lower() == "nan":
+            name = ""
+        out.append({"name": name, "pin": pin, "rolle": rolle})
+    return out
+
 def load_history() -> list:
     if os.path.exists(HISTORY_FILE):
         try:
@@ -528,8 +602,13 @@ class PinUpdateBody(BaseModel):
 
 @app.post("/api/login")
 async def api_login(body: LoginBody):
-    cfg = load_pin_config()
     pin = body.pin.strip()
+    # 1. Personal-Liste (eigener PIN pro Person, aus Upload)
+    for p in load_personal():
+        if str(p.get("pin", "")).strip() == pin:
+            return {"ok": True, "rolle": p.get("rolle", "mitarbeiter"), "name": p.get("name", "")}
+    # 2. Fallback: feste Rollen-PINs (abwaertskompatibel)
+    cfg = load_pin_config()
     if pin == cfg.get("superadmin"):
         return {"ok": True, "rolle": "superadmin"}
     if pin == cfg.get("admin"):
@@ -537,6 +616,44 @@ async def api_login(body: LoginBody):
     if pin == cfg.get("mitarbeiter"):
         return {"ok": True, "rolle": "mitarbeiter"}
     return JSONResponse({"ok": False, "fehler": "Falscher PIN"}, status_code=401)
+
+
+# ---------------------------------------------------------------------------
+# Personal-Liste Endpunkte
+# ---------------------------------------------------------------------------
+@app.post("/api/personal/upload")
+async def upload_personal(file: UploadFile = File(...)):
+    try:
+        liste = _parse_personal_file(file.file, file.filename)
+    except Exception as exc:
+        raise HTTPException(400, f"Fehler beim Einlesen: {exc}")
+    if not liste:
+        raise HTTPException(400, "Keine gueltigen Eintraege gefunden (Spalten Name, PIN, Rolle?).")
+    save_personal(liste)
+    db_module.log_aktion("personal_upload", {"datei": file.filename, "anzahl": len(liste)})
+    return {
+        "ok": True,
+        "anzahl": len(liste),
+        "personen": [{"name": p["name"], "rolle": p["rolle"]} for p in liste],
+    }
+
+@app.get("/api/personal")
+async def get_personal():
+    liste = load_personal()
+    return {
+        "anzahl": len(liste),
+        "personen": [
+            {"name": p.get("name", ""), "rolle": p.get("rolle", "mitarbeiter"),
+             "pin_masked": "•" * len(str(p.get("pin", "")))}
+            for p in liste
+        ],
+    }
+
+@app.delete("/api/personal")
+async def clear_personal():
+    save_personal([])
+    db_module.log_aktion("personal_geleert", {})
+    return {"ok": True}
 
 @app.get("/api/pin-config")
 async def api_get_pin_config():
