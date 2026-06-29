@@ -20,6 +20,7 @@ kommission.db
 kuerzungs_history.json
 pdf/*.pdf
 data/personal.json
+data/header_config.json
 
 # Test-Artefakte (Playwright MCP)
 .playwright-mcp/

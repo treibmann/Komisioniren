@@ -119,6 +119,37 @@ def save_role_config(cfg: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Header-Konfiguration (welche Elemente im Header sichtbar sind)
+# ---------------------------------------------------------------------------
+HEADER_CONFIG_FILE = os.path.join(DATA_DIR, "header_config.json")
+
+_DEFAULT_HEADER_CONFIG = {
+    "pdf_btn": True,       # Versandliste-einlesen-Button
+    "filialen": True,      # Status "x Filialen geladen"
+    "phase": True,         # Lieferphasen-Umschalter (1./Vorb./2.)
+    "tag": True,           # Aktiver Tag + Datum
+    "tag_dropdown": True,  # Tag-Auswahl-Dropdown
+}
+
+def load_header_config() -> dict:
+    if os.path.exists(HEADER_CONFIG_FILE):
+        try:
+            with open(HEADER_CONFIG_FILE, "r", encoding="utf-8") as f:
+                cfg = json.load(f)
+            for k, v in _DEFAULT_HEADER_CONFIG.items():
+                if k not in cfg:
+                    cfg[k] = v
+            return cfg
+        except Exception:
+            pass
+    return dict(_DEFAULT_HEADER_CONFIG)
+
+def save_header_config(cfg: dict) -> None:
+    with open(HEADER_CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, ensure_ascii=False, indent=2)
+
+
+# ---------------------------------------------------------------------------
 # Personal-Liste (pro Person ein PIN + Rolle, aus Excel/CSV-Upload)
 # ---------------------------------------------------------------------------
 PERSONAL_FILE = os.path.join(DATA_DIR, "personal.json")
@@ -654,6 +685,22 @@ async def clear_personal():
     save_personal([])
     db_module.log_aktion("personal_geleert", {})
     return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Header-Konfiguration Endpunkte
+# ---------------------------------------------------------------------------
+@app.get("/api/header-config")
+async def api_get_header_config():
+    return load_header_config()
+
+@app.post("/api/header-config")
+async def api_save_header_config(cfg: dict):
+    # Nur bekannte Schluessel uebernehmen, als bool speichern
+    clean = {k: bool(cfg.get(k, _DEFAULT_HEADER_CONFIG[k])) for k in _DEFAULT_HEADER_CONFIG}
+    save_header_config(clean)
+    db_module.log_aktion("header_config_gespeichert", clean)
+    return {"ok": True, "config": clean}
 
 @app.get("/api/pin-config")
 async def api_get_pin_config():

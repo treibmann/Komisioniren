@@ -28,12 +28,15 @@
     background: #1d1d1f; color: #f5f5f7;
     border-bottom: 1px solid #3a3a3c;
     position: sticky; top: 0; z-index: 100;
-    transition: background .25s ease;
   }
-  /* Header-Farbe je Rolle (neue Farben, sonst nirgends verwendet) */
-  #topbar.role-mitarbeiter { background: #0d6e63; }  /* Petrol/Teal */
-  #topbar.role-admin       { background: #3f3a8c; }  /* Indigo */
-  #topbar.role-superadmin  { background: #7a1f3d; }  /* Bordeaux */
+  /* Rollenfarbe als Rahmen um den ganzen Bildschirm (Header bleibt neutral) */
+  #role-frame {
+    position: fixed; inset: 0; pointer-events: none; z-index: 9998;
+    border: 6px solid transparent; transition: border-color .25s ease;
+  }
+  body.role-mitarbeiter #role-frame { border-color: #0d6e63; }  /* Petrol/Teal */
+  body.role-admin       #role-frame { border-color: #3f3a8c; }  /* Indigo */
+  body.role-superadmin  #role-frame { border-color: #7a1f3d; }  /* Bordeaux */
   #topbar-logo {
     font-size: 17px; font-weight: 800; white-space: nowrap;
     letter-spacing: -0.3px; margin-right: 8px; flex-shrink: 0;
@@ -481,6 +484,8 @@
 </head>
 <body>
 
+<!-- Farbiger Rollen-Rahmen ums ganze Fenster -->
+<div id="role-frame"></div>
 
 <!-- ════════════════════ PIN OVERLAY ════════════════════ -->
 <div id="pin-overlay">
@@ -508,6 +513,9 @@
       <button class="pin-key del" onclick="pinClear()">✕</button>
     </div>
     <div id="pin-error"></div>
+    <button id="pin-cancel-btn" onclick="pinAbbrechen()"
+      style="display:none;margin-top:14px;background:none;border:none;color:#86868b;
+             font-size:14px;cursor:pointer;text-decoration:underline;">Abbrechen</button>
   </div>
 </div>
 
@@ -522,18 +530,18 @@
     <div class="topbar-sep"></div>
 
     <div id="topbar-center">
-      <button id="pdf-reload-btn" onclick="reloadPdf()">📄 Versandliste einlesen</button>
-      <span id="upload-status">Kein PDF geladen</span>
+      <button id="pdf-reload-btn" data-hdr="pdf_btn" onclick="reloadPdf()">📄 Versandliste einlesen</button>
+      <span id="upload-status" data-hdr="filialen">Kein PDF geladen</span>
       <input id="pdf-input" type="file" accept=".pdf" style="display:none;">
       <div class="topbar-sep"></div>
-      <div class="phase-toggle">
+      <div class="phase-toggle" data-hdr="phase">
         <button class="phase-btn active-erst" id="btn-erst" onclick="setPhase('1.')">1. Lief.</button>
         <button class="phase-btn inactive"    id="btn-vor"  onclick="setPhase('V')">Vorb.</button>
         <button class="phase-btn inactive"    id="btn-zwei" onclick="setPhase('2.')">2. Lief.</button>
       </div>
       <div class="topbar-sep"></div>
-      <div id="aktiver-tag-anzeige">–</div>
-      <select id="tag-override-select" onchange="setTagOverride(this.value)">
+      <div id="aktiver-tag-anzeige" data-hdr="tag">–</div>
+      <select id="tag-override-select" data-hdr="tag_dropdown" onchange="setTagOverride(this.value)">
         <option value="">📄 Aus PDF</option>
         <option value="Montag">Montag</option>
         <option value="Dienstag">Dienstag</option>
@@ -549,6 +557,7 @@
     <div id="topbar-right">
       <span id="ws-status">…</span>
       <button class="sidebar-btn admin-only" onclick="toggleAdminPanel()" title="Admin-Einstellungen">⚙️ Admin</button>
+      <button class="sidebar-btn" id="elevate-btn" onclick="ebeneWechseln()" title="Ebene wechseln (PIN eingeben)" style="border-color:#5b8def;color:#5b8def;">🔼 Ebene</button>
       <button id="logout-btn" onclick="doLogout()">🔒 Abmelden</button>
     </div>
   </header>
@@ -994,6 +1003,21 @@
         <div id="personal-liste"></div>
         <div id="personal-msg" style="margin-top:10px;font-size:13px;min-height:20px;"></div>
       </div>
+
+      <!-- Header-Anzeige konfigurieren -->
+      <div class="card" style="margin-top:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px;flex-wrap:wrap;">
+          <b style="font-size:15px;">🧭 Header-Anzeige</b>
+          <button onclick="speichereHeaderConfig()"
+            style="padding:10px 24px;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;
+                   background:linear-gradient(180deg,#43d86a,#28a745);color:#fff;box-shadow:0 4px 0 #1a7a30;">
+            💾 Speichern
+          </button>
+        </div>
+        <p style="color:#666;font-size:12px;margin-bottom:14px;">Welche Elemente sollen oben im Header erscheinen?</p>
+        <div id="header-config-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+        <div id="header-config-msg" style="margin-top:10px;font-size:13px;min-height:20px;"></div>
+      </div>
     </div>
 
   </main>
@@ -1114,6 +1138,8 @@ async function submitPin() {
       setRole(d.rolle);
       document.getElementById('pin-overlay').classList.add('hidden');
       document.getElementById('pin-error').textContent = '';
+      document.getElementById('pin-cancel-btn').style.display = 'none';
+      if (d.name) zeigToast('👋 Angemeldet als ' + d.name);
     } else {
       document.getElementById('pin-error').textContent = '\u274C Falscher PIN';
       pinClear();
@@ -1138,9 +1164,11 @@ function applyRole(role) {
   }
   const isAdmin = role === 'admin' || role === 'superadmin';
   const isSuperAdmin = role === 'superadmin';
-  // Header-Farbe je Rolle setzen (leer = Standard-Dunkel beim Logout)
-  const topbarEl = document.getElementById('topbar');
-  if (topbarEl) topbarEl.className = role ? 'role-' + role : '';
+  // Rollenfarbe als Rahmen ums Fenster (body-Klasse, leer beim Logout)
+  document.body.classList.remove('role-mitarbeiter', 'role-admin', 'role-superadmin');
+  if (role) document.body.classList.add('role-' + role);
+  // Header-Anzeige-Konfiguration (re-)anwenden
+  if (typeof _headerCfg !== 'undefined' && _headerCfg) applyHeaderConfig(_headerCfg);
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.setProperty('display', isAdmin ? 'flex' : 'none', 'important');
   });
@@ -1168,9 +1196,26 @@ function doLogout() {
   applyRole('');
   document.getElementById('pin-overlay').classList.remove('hidden');
   document.getElementById('pin-error').textContent = '';
+  document.getElementById('pin-cancel-btn').style.display = 'none';
   const badge = document.getElementById('pin-role-badge');
   badge.textContent = '\u2013';
   badge.className = 'pin-role-badge';
+}
+
+// Ebene wechseln: PIN-Overlay zum Hochstufen anzeigen (ohne kompletten Logout)
+function ebeneWechseln() {
+  pinClear();
+  document.getElementById('pin-error').textContent = '';
+  // Abbrechen nur anbieten wenn schon jemand angemeldet ist
+  document.getElementById('pin-cancel-btn').style.display = currentRole ? 'inline-block' : 'none';
+  document.getElementById('pin-overlay').classList.remove('hidden');
+}
+
+function pinAbbrechen() {
+  document.getElementById('pin-overlay').classList.add('hidden');
+  document.getElementById('pin-cancel-btn').style.display = 'none';
+  document.getElementById('pin-error').textContent = '';
+  pinClear();
 }
 
 // \u2500\u2500 Auto-R\u00fccksprung Admin/Super-Admin \u2192 Mitarbeiter nach 1 Min Inaktivit\u00e4t \u2500\u2500
@@ -2230,7 +2275,7 @@ let saRoleConfig = {};
 let saAllTabs = [];
 
 async function initSuperAdmin() {
-  await Promise.all([ladeSaPins(), ladeSaRoleConfig(), ladePersonal()]);
+  await Promise.all([ladeSaPins(), ladeSaRoleConfig(), ladePersonal(), ladeHeaderConfigUI()]);
 }
 
 // ── Personal-Liste (Excel/CSV) ──
@@ -2303,6 +2348,75 @@ function zeigPersonalMsg(msg, farbe) {
   if (!el) return;
   el.textContent = msg;
   el.style.color = farbe;
+}
+
+// ── Header-Anzeige (welche Elemente sichtbar sind) ──
+let _headerCfg = null;
+const HEADER_LABELS = {
+  pdf_btn:      '📄 Versandliste-einlesen-Button',
+  filialen:     'Filialen-Status (z.B. „36 Filialen geladen")',
+  phase:        'Lieferphasen-Umschalter (1. / Vorb. / 2.)',
+  tag:          'Aktiver Tag + Datum',
+  tag_dropdown: 'Tag-Auswahl-Dropdown',
+};
+
+function applyHeaderConfig(cfg) {
+  if (!cfg) return;
+  document.querySelectorAll('[data-hdr]').forEach(el => {
+    const key = el.getAttribute('data-hdr');
+    if (key in cfg) el.style.display = cfg[key] ? '' : 'none';
+  });
+}
+
+async function ladeHeaderConfig() {
+  try {
+    const r = await fetch('/api/header-config');
+    _headerCfg = await r.json();
+    applyHeaderConfig(_headerCfg);
+  } catch (e) {}
+}
+
+function renderHeaderConfigUI() {
+  const cfg = _headerCfg || {};
+  const el = document.getElementById('header-config-list');
+  if (!el) return;
+  el.innerHTML = Object.keys(HEADER_LABELS).map(k =>
+    '<label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">'
+    + '<input type="checkbox" data-hkey="' + k + '"' + (cfg[k] !== false ? ' checked' : '')
+    + ' style="width:18px;height:18px;accent-color:#0071e3;cursor:pointer;">'
+    + HEADER_LABELS[k] + '</label>'
+  ).join('');
+}
+
+async function ladeHeaderConfigUI() {
+  await ladeHeaderConfig();
+  renderHeaderConfigUI();
+}
+
+async function speichereHeaderConfig() {
+  const cfg = {};
+  document.querySelectorAll('#header-config-list input[data-hkey]').forEach(c => cfg[c.dataset.hkey] = c.checked);
+  try {
+    const r = await fetch('/api/header-config', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cfg)
+    });
+    const d = await r.json();
+    const m = document.getElementById('header-config-msg');
+    if (d.ok) {
+      _headerCfg = d.config;
+      applyHeaderConfig(d.config);
+      m.textContent = '✅ Gespeichert — sofort aktiv';
+      m.style.color = '#34c759';
+    } else {
+      m.textContent = '❌ Fehler beim Speichern';
+      m.style.color = '#ff3b30';
+    }
+    setTimeout(() => { m.textContent = ''; }, 3000);
+  } catch (e) {
+    const m = document.getElementById('header-config-msg');
+    m.textContent = '❌ ' + e; m.style.color = '#ff3b30';
+  }
 }
 
 async function ladeSaPins() {
@@ -2418,6 +2532,9 @@ document.getElementById('filialen-vorschau').addEventListener('click', function(
   if (action === 'bestaetigen') manuellBestaetigen(name, menge);
   if (action === 'rueckgaengig') rueckgaengigFiliale(name);
 });
+
+// Header-Anzeige-Konfiguration beim Start laden und anwenden (gilt für alle Rollen)
+ladeHeaderConfig();
 
 
 </script>
