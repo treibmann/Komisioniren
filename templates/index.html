@@ -25,27 +25,29 @@
           transition: background .25s ease; }
   /* Innerer Hintergrund je Lieferphase */
   body.phase-erst #main { background: #444841; }  /* Pantone 19-0509 TPG (1. Lieferung) */
-  body.phase-vor  #main { background: #e6e3f0; }  /* Lavendel-Grau (Vorbestellung) */
-  body.phase-zwei #main { background: #ece6d8; }  /* Sand-Grau (2. Lieferung) */
-  /* Labels direkt auf dunklem Hintergrund (1. Lieferung) hell halten */
-  body.phase-erst .filter-row label { color: #e8ece6; }
+  body.phase-vor  #main { background: #7b1fa2; }  /* Lila (Vorbestellung) */
+  body.phase-zwei #main { background: #d84315; }  /* Orange (2. Lieferung) */
+  /* Labels auf dem farbigen Hintergrund hell halten (alle Phasen) */
+  body[class*="phase-"] .filter-row label { color: #e8ece6; }
   /* Station-, Reihenfolge- + Fortschritts-Karte in Phasenfarbe (keine weissen Inseln) */
   body.phase-erst #takt-display:not(.sperre),
   body.phase-erst #reihenfolge-card,
   body.phase-erst #fortschritt-wrap { background: #444841; }
   body.phase-vor  #takt-display:not(.sperre),
   body.phase-vor  #reihenfolge-card,
-  body.phase-vor  #fortschritt-wrap { background: #e6e3f0; }
+  body.phase-vor  #fortschritt-wrap { background: #7b1fa2; }
   body.phase-zwei #takt-display:not(.sperre),
   body.phase-zwei #reihenfolge-card,
-  body.phase-zwei #fortschritt-wrap { background: #ece6d8; }
-  /* Dunkle 1.-Lieferung: Texte in den Karten hell halten */
-  body.phase-erst #takt-display:not(.sperre) #takt-station { color: #b0b5aa; }
-  body.phase-erst #takt-display:not(.sperre) #takt-station span { color: #ffffff; }
-  body.phase-erst #takt-display:not(.sperre) #takt-produkt { color: #c2c7bc; }
-  body.phase-erst #reihenfolge-card .reihenfolge-label { color: #e8ece6 !important; }
-  body.phase-erst #fortschritt-label { color: #c2c7bc; }
-  body.phase-erst #fortschritt-label b { color: #ffffff; }
+  body.phase-zwei #fortschritt-wrap { background: #d84315; }
+  /* Texte in den Karten hell halten (alle Phasen, da farbiger Grund) */
+  body[class*="phase-"] #takt-display:not(.sperre) #takt-station { color: #d6dad2; }
+  body[class*="phase-"] #takt-display:not(.sperre) #takt-station span { color: #ffffff; }
+  body[class*="phase-"] #takt-display:not(.sperre) #takt-produkt { color: #e8ece6; }
+  body[class*="phase-"] #reihenfolge-card .reihenfolge-label { color: #e8ece6 !important; }
+  body[class*="phase-"] #fortschritt-label { color: #e0e3dc; }
+  body[class*="phase-"] #fortschritt-label b { color: #ffffff; }
+  /* 2. Lieferung (Orange): Mengen-Zahl weiss statt orange (Kontrast) */
+  body.phase-zwei #takt-display:not(.sperre) #takt-menge { color: #ffffff; }
 
   /* ── Top Bar ── */
   #topbar {
@@ -63,14 +65,13 @@
   }
   /* Rahmen + Header folgen der Lieferphase (nicht mehr der Rolle) */
   body.phase-erst #role-frame { border-color: #444841; }
-  body.phase-vor  #role-frame { border-color: #e6e3f0; }
-  body.phase-zwei #role-frame { border-color: #ece6d8; }
+  body.phase-vor  #role-frame { border-color: #7b1fa2; }  /* Lila wie Vorb.-Button */
+  body.phase-zwei #role-frame { border-color: #d84315; }  /* Orange wie 2.-Lief.-Button */
   body.phase-erst #topbar { background: #444841; }
-  body.phase-vor  #topbar { background: #e6e3f0; }
-  body.phase-zwei #topbar { background: #ece6d8; }
-  /* Helle Phasen (Vorb./2. Lief.): Header-Schrift dunkel halten */
-  body.phase-vor #topbar, body.phase-zwei #topbar { color: #1d1d1f; }
-  body.phase-vor #aktiver-tag-anzeige, body.phase-zwei #aktiver-tag-anzeige { color: #5a4a00 !important; }
+  body.phase-vor  #topbar { background: #7b1fa2; }
+  body.phase-zwei #topbar { background: #d84315; }
+  /* 2. Lieferung (Orange): Tag-Anzeige hell statt amber */
+  body.phase-zwei #aktiver-tag-anzeige { color: #ffffff !important; }
   /* Modul-Karten mit Farb-Akzent in Rollenfarbe (linker Streifen) */
   body.role-mitarbeiter .card { border-left: 5px solid #0d6e63; }
   body.role-admin       .card { border-left: 5px solid #3f3a8c; }
