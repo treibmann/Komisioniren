@@ -570,7 +570,7 @@
     <div style="width:1px;background:#3a3a3c;align-self:stretch;"></div>
     <div>
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:8px;">Optionen</div>
-      <button class="sidebar-btn" onclick="sendCmd('reset')" style="border-color:#ff9f0a;color:#ff9f0a;">🧹 Morgen zurücksetzen</button>
+      <button class="sidebar-btn" onclick="resetAnfordern()" style="border-color:#ff9f0a;color:#ff9f0a;">🧹 Morgen zurücksetzen</button>
     </div>
     <div style="width:1px;background:#3a3a3c;align-self:stretch;"></div>
     <div>
@@ -918,6 +918,23 @@
         <div style="font-size:18px;font-weight:600;">Datum auswählen</div>
         <div style="font-size:14px;margin-top:8px;">Wähle ein Datum um die Tages-Auswertung zu sehen.</div>
       </div>
+
+      <!-- Tag neu starten (Admin + Super-Admin) -->
+      <div class="card" style="margin-top:24px;border:1px solid #ffe0b2;">
+        <b style="font-size:15px;">🧹 Tag neu starten</b>
+        <p style="color:#666;font-size:13px;margin:8px 0 16px;">
+          Setzt alle gepackten Mengen zurück und startet den Pack-Modus von vorne.
+          Die gespeicherten Tagesdaten dieser Auswertung bleiben erhalten.
+        </p>
+        <button onclick="resetAnfordern()"
+          style="padding:10px 24px;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;
+                 background:linear-gradient(180deg,#ffb340,#ff9f0a);color:#fff;
+                 box-shadow:0 4px 0 #c77a00;transition:transform .08s,box-shadow .08s;"
+          onmousedown="this.style.transform='translateY(2px)';this.style.boxShadow='0 2px 0 #c77a00'"
+          onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #c77a00'">
+          🧹 Tag neu starten
+        </button>
+      </div>
     </div>
 
 
@@ -971,6 +988,30 @@
       <button onclick="rgBestaetigen()"
         style="flex:1;padding:12px;font-size:15px;border:none;border-radius:8px;
                background:#d32f2f;color:#fff;cursor:pointer;font-weight:700;">↩ Zurücksetzen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ Tag-neu-starten Bestätigung Popup ════ -->
+<div id="reset-popup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
+     z-index:10000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:28px 32px;min-width:320px;max-width:400px;
+              box-shadow:0 8px 32px rgba(0,0,0,.4);text-align:center;">
+    <div style="font-size:32px;margin-bottom:10px;">🧹</div>
+    <div style="font-size:18px;font-weight:700;margin-bottom:10px;color:#222;">Tag wirklich neu starten?</div>
+    <div style="font-size:13px;color:#666;margin-bottom:8px;">
+      Alle bisher gepackten Mengen werden auf <b>0</b> gesetzt und der Pack-Modus beginnt von vorne.
+    </div>
+    <div style="font-size:12px;color:#1a7a30;background:#e8f7ec;border-radius:8px;padding:8px 10px;margin-bottom:22px;">
+      ✓ Die gespeicherten Tagesdaten (Auswertung) bleiben erhalten.
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="resetAbbrechen()"
+        style="flex:1;padding:12px;font-size:15px;border:2px solid #ccc;border-radius:8px;
+               background:#f5f5f5;cursor:pointer;font-weight:600;">Abbrechen</button>
+      <button onclick="resetBestaetigen()"
+        style="flex:1;padding:12px;font-size:15px;border:none;border-radius:8px;
+               background:#ff9f0a;color:#fff;cursor:pointer;font-weight:700;">🧹 Neu starten</button>
     </div>
   </div>
 </div>
@@ -1405,6 +1446,21 @@ function rgBestaetigen() {
 function rgAbbrechen() {
   document.getElementById('rueckgaengig-popup').style.display = 'none';
   _rgFiliale = null;
+}
+
+// ── Tag neu starten (mit Sicherheitsabfrage) ──
+function resetAnfordern() {
+  document.getElementById('reset-popup').style.display = 'flex';
+}
+
+function resetBestaetigen() {
+  document.getElementById('reset-popup').style.display = 'none';
+  sendCmd('reset');
+  zeigToast('🧹 Tag neu gestartet');
+}
+
+function resetAbbrechen() {
+  document.getElementById('reset-popup').style.display = 'none';
 }
 
 function zeigToast(msg) {

@@ -1,0 +1,23 @@
+{
+  "mitarbeiter": [
+    "pack",
+    "menge",
+    "nachlegen"
+  ],
+  "admin": [
+    "pack",
+    "menge",
+    "nachlegen",
+    "tour",
+    "displays",
+    "auswertung"
+  ],
+  "superadmin": [
+    "pack",
+    "menge",
+    "nachlegen",
+    "tour",
+    "displays",
+    "auswertung"
+  ]
+}

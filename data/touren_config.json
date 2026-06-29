@@ -2,7 +2,19 @@
     "Montag": [
         "Penny",
         "Berga",
-        "AOK"
+        "AOK",
+        "Ahorn",
+        "Karl",
+        "Neustä.",
+        "Pölzig",
+        "Rothe",
+        "Schafw.",
+        "Schleiz",
+        "WT",
+        "Völker",
+        "Opel",
+        "Benz 4",
+        "Reno 1"
     ],
     "Dienstag": [
         "Penny",
@@ -11,7 +23,8 @@
         "BMK GmbH",
         "Benz 4",
         "Regiom.",
-        "Ahorn"
+        "Ahorn",
+        "WT"
     ],
     "Mittwoch": [
         "Karl"
