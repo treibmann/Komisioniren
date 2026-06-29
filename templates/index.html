@@ -78,7 +78,7 @@
     letter-spacing: -0.3px; margin-right: 8px; flex-shrink: 0;
     display: flex; align-items: center; gap: 4px;
   }
-  #topbar-logo .logo-raute { width: 40px; height: 40px; flex-shrink: 0; }
+  #topbar-logo .logo-raute { font-size: 40px; font-weight: 900; line-height: 1; color: #fbc02d; }
   /* Einheitliche Inline-SVG-Icons (erben Textfarbe via currentColor) */
   svg.ico { width: 1.15em; height: 1.15em; vertical-align: -0.18em; margin-right: 8px; flex-shrink: 0; }
   #topbar-logo #pin-role-badge {
@@ -588,7 +588,7 @@
 
   <!-- ════════════════════ TOPBAR ════════════════════ -->
   <header id="topbar">
-    <div id="topbar-logo"><svg class="logo-raute" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 22 12 12 23 2 12Z" fill="#fbc02d" stroke="#fff3cd" stroke-width="1"/></svg> Pick by Raute
+    <div id="topbar-logo"><span class="logo-raute">#</span> Pick by Raute
       <span id="pin-role-badge">–</span>
     </div>
 
@@ -737,7 +737,7 @@
 
     <!-- ─── Tourenplanung ─── -->
     <div id="tab-tour" class="tab-pane">
-      <h2 style="margin-bottom:4px;">📅 Wochentags-Reihenfolge</h2>
+      <h2 style="margin-bottom:4px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>Wochentags-Reihenfolge</h2>
       <p style="color:#666; font-size:13px; margin-bottom:16px;">
         Ziehe Filialen per Drag &amp; Drop in die gewünschte Reihenfolge. Oben = Kiste 1.
       </p>
@@ -749,7 +749,7 @@
     </div>
     <!-- ─── Mengenkorrektur ─── -->
     <div id="tab-menge" class="tab-pane">
-      <h2 style="margin-bottom:4px;">⚖️ Mengenkorrektur</h2>
+      <h2 style="margin-bottom:4px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>Mengenkorrektur</h2>
       <p style="color:#666;font-size:13px;margin-bottom:16px;">
         Ist-Menge eingeben → System verteilt automatisch nach Priorität (Kürzung & Vermehrung).
       </p>
@@ -809,7 +809,7 @@
       <!-- History -->
       <div class="card" style="margin-top:16px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <b>📋 Berechnungs-History</b>
+          <b><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 14h6M9 18h6"/></svg>Berechnungs-History</b>
           <div style="display:flex;gap:8px;">
             <button onclick="ladeHistory()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:13px;">🔄 Aktualisieren</button>
           </div>
@@ -822,7 +822,7 @@
 
     <!-- ─── Nachlegen ─── -->
     <div id="tab-nachlegen" class="tab-pane">
-      <h2 style="margin-bottom:4px;">📦 Nachlegen</h2>
+      <h2 style="margin-bottom:4px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>Nachlegen</h2>
       <p style="color:#666;font-size:13px;margin-bottom:16px;">
         Überschuss-Menge auf ausgewählte Filialen verteilen — erscheinen danach neu im Pack-Modus.
       </p>
@@ -938,7 +938,7 @@
     <!-- ─── Tages-Auswertung ─── -->
     <div id="tab-auswertung" class="tab-pane">
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap;">
-        <h2 style="margin:0;">📊 Tages-Auswertung</h2>
+        <h2 style="margin:0;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-3M12 16V8M17 16v-6"/></svg>Tages-Auswertung</h2>
         <select id="ausw-datum-select" onchange="ladeAuswertung(this.value)"
           style="padding:8px 12px;border-radius:10px;border:1px solid #c7c7cc;font-size:14px;background:#fff;min-width:160px;">
           <option value="">– Datum wählen –</option>
@@ -973,7 +973,7 @@
 
       <!-- Korrekturen -->
       <div id="ausw-korrekturen" style="display:none;" class="card">
-        <b style="font-size:14px;">⚖️ Korrekturen (Kürzungen / Nachlegen)</b>
+        <b style="font-size:14px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>Korrekturen (Kürzungen / Nachlegen)</b>
         <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;">
           <thead>
             <tr style="background:#f5f5f7;color:#1d1d1f;">
@@ -998,7 +998,7 @@
 
       <!-- Tag neu starten (Admin + Super-Admin) -->
       <div class="card" style="margin-top:24px;border:1px solid #ffe0b2;">
-        <b style="font-size:15px;">🧹 Tag neu starten</b>
+        <b style="font-size:15px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>Tag neu starten</b>
         <p style="color:#666;font-size:13px;margin:8px 0 16px;">
           Setzt alle gepackten Mengen zurück und startet den Pack-Modus von vorne.
           Die gespeicherten Tagesdaten dieser Auswertung bleiben erhalten.
@@ -1017,18 +1017,18 @@
 
     <!-- ─── Einstellung ─── -->
     <div id="tab-einstellung" class="tab-pane">
-      <h2 style="margin-bottom:4px;">⚙️ Einstellung</h2>
+      <h2 style="margin-bottom:4px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Einstellung</h2>
       <p style="color:#666;font-size:13px;margin-bottom:20px;">Versandliste laden und aktiven Tag festlegen.</p>
 
       <div class="card" style="margin-bottom:16px;">
-        <b style="font-size:15px;">📄 Versandliste</b>
+        <b style="font-size:15px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Versandliste</b>
         <p style="color:#666;font-size:13px;margin:8px 0 14px;">Aktuelle Versandliste aus dem Netzwerkordner einlesen.</p>
         <button id="pdf-reload-btn" onclick="reloadPdf()">📄 Versandliste einlesen</button>
         <input id="pdf-input" type="file" accept=".pdf" style="display:none;">
       </div>
 
       <div class="card">
-        <b style="font-size:15px;">🚚 Tour-Tag</b>
+        <b style="font-size:15px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h2"/><path d="M14 9h4l4 4v4a1 1 0 0 1-1 1h-1"/><circle cx="7.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg>Tour-Tag</b>
         <p style="color:#666;font-size:13px;margin:8px 0 14px;">Bestimmt die <b>Tour</b> (Filialen-Reihenfolge). „📄 Aus PDF" nutzt den Tag der Versandliste; manuell wählt einen anderen Wochentag. Die Datumsanzeige oben rechts bleibt davon unberührt (immer aus PDF).</p>
         <select id="tag-override-select" onchange="setTagOverride(this.value)" style="min-width:220px;font-size:15px;">
           <option value="">📄 Aus PDF</option>
@@ -1046,12 +1046,12 @@
 
     <!-- ─── Super Admin ─── -->
     <div id="tab-superadmin" class="tab-pane">
-      <h2 style="margin-bottom:4px;">🔐 Super Admin</h2>
+      <h2 style="margin-bottom:4px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Super Admin</h2>
       <p style="color:#666;font-size:13px;margin-bottom:20px;">PIN-Verwaltung und Rollen-Konfiguration für alle Module.</p>
 
       <!-- PIN-Verwaltung -->
       <div class="card" style="margin-bottom:16px;">
-        <b style="font-size:15px;">🔑 PIN-Verwaltung</b>
+        <b style="font-size:15px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>PIN-Verwaltung</b>
         <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:16px;" id="sa-pin-grid"></div>
         <div id="sa-pin-msg" style="margin-top:10px;font-size:13px;min-height:20px;"></div>
       </div>
@@ -1059,7 +1059,7 @@
       <!-- Modul-Matrix -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <b style="font-size:15px;">🗂 Modul-Berechtigungen</b>
+          <b style="font-size:15px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>Modul-Berechtigungen</b>
           <button onclick="speichereRoleConfig()"
             style="padding:10px 24px;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;
                    background:linear-gradient(180deg,#43d86a,#28a745);color:#fff;
@@ -1076,7 +1076,7 @@
       <!-- Personal-Liste (Excel/CSV) -->
       <div class="card" style="margin-top:16px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;flex-wrap:wrap;">
-          <b style="font-size:15px;">👥 Personal-Liste (Excel/CSV)</b>
+          <b style="font-size:15px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Personal-Liste (Excel/CSV)</b>
           <div style="display:flex;gap:8px;">
             <label style="padding:9px 18px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;
                           background:linear-gradient(180deg,#1a8cff,#0060cc);color:#fff;box-shadow:0 3px 0 #004499;">
@@ -1099,7 +1099,7 @@
       <!-- Header-Anzeige konfigurieren -->
       <div class="card" style="margin-top:16px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px;flex-wrap:wrap;">
-          <b style="font-size:15px;">🧭 Header-Anzeige</b>
+          <b style="font-size:15px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/></svg>Header-Anzeige</b>
           <button onclick="speichereHeaderConfig()"
             style="padding:10px 24px;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;
                    background:linear-gradient(180deg,#43d86a,#28a745);color:#fff;box-shadow:0 4px 0 #1a7a30;">
