@@ -61,12 +61,16 @@
     position: fixed; inset: 0; pointer-events: none; z-index: 9998;
     border: 36px solid transparent; transition: border-color .25s ease;
   }
-  body.role-mitarbeiter #role-frame { border-color: #0d6e63; }  /* Petrol/Teal */
-  body.role-admin       #role-frame { border-color: #3f3a8c; }  /* Indigo */
-  body.role-superadmin  #role-frame { border-color: #7a1f3d; }  /* Bordeaux */
-  body.role-mitarbeiter #topbar { background: #0d6e63; }
-  body.role-admin       #topbar { background: #3f3a8c; }
-  body.role-superadmin  #topbar { background: #7a1f3d; }
+  /* Rahmen + Header folgen der Lieferphase (nicht mehr der Rolle) */
+  body.phase-erst #role-frame { border-color: #444841; }
+  body.phase-vor  #role-frame { border-color: #e6e3f0; }
+  body.phase-zwei #role-frame { border-color: #ece6d8; }
+  body.phase-erst #topbar { background: #444841; }
+  body.phase-vor  #topbar { background: #e6e3f0; }
+  body.phase-zwei #topbar { background: #ece6d8; }
+  /* Helle Phasen (Vorb./2. Lief.): Header-Schrift dunkel halten */
+  body.phase-vor #topbar, body.phase-zwei #topbar { color: #1d1d1f; }
+  body.phase-vor #aktiver-tag-anzeige, body.phase-zwei #aktiver-tag-anzeige { color: #5a4a00 !important; }
   /* Modul-Karten mit Farb-Akzent in Rollenfarbe (linker Streifen) */
   body.role-mitarbeiter .card { border-left: 5px solid #0d6e63; }
   body.role-admin       .card { border-left: 5px solid #3f3a8c; }
