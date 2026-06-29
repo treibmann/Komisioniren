@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bäckerei Pick-by-Light</title>
+<title>Pick by Raute</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -74,8 +74,13 @@
   body.role-admin       .card { border-left: 5px solid #3f3a8c; }
   body.role-superadmin  .card { border-left: 5px solid #7a1f3d; }
   #topbar-logo {
-    font-size: 17px; font-weight: 800; white-space: nowrap;
+    font-size: 24px; font-weight: 800; white-space: nowrap;
     letter-spacing: -0.3px; margin-right: 8px; flex-shrink: 0;
+    display: flex; align-items: center; gap: 4px;
+  }
+  #topbar-logo .logo-raute {
+    font-size: 40px; font-weight: 900; line-height: 1;
+    color: #fbc02d; margin-right: 2px;
   }
   #topbar-logo #pin-role-badge {
     font-size: 10px; font-weight: 700; padding: 2px 7px;
@@ -551,7 +556,7 @@
 <!-- ════════════════════ PIN OVERLAY ════════════════════ -->
 <div id="pin-overlay">
   <div class="pin-box">
-    <h2>🥐 Pick-by-Light</h2>
+    <h2># Pick by Raute</h2>
     <p>PIN eingeben</p>
     <div id="pin-dots">
       <div class="pin-dot" id="d0"></div>
@@ -584,7 +589,7 @@
 
   <!-- ════════════════════ TOPBAR ════════════════════ -->
   <header id="topbar">
-    <div id="topbar-logo">🥐 Pick-by-Light
+    <div id="topbar-logo"><span class="logo-raute">#</span> Pick by Raute
       <span id="pin-role-badge">–</span>
     </div>
 
@@ -725,7 +730,6 @@
 
         <!-- Filial-Vorschau -->
         <div class="card" id="reihenfolge-card" style="margin-top:12px;">
-          <div class="reihenfolge-label" style="font-size:13px; color:#666; margin-bottom:6px;">Reihenfolge für diesen Artikel:</div>
           <div id="filialen-vorschau"></div>
         </div>
 
