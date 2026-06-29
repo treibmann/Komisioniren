@@ -71,12 +71,13 @@ ALL_TABS = [
     {"id": "tour",        "label": "📅 Tourenplanung",   "locked": False},
     {"id": "displays",    "label": "🖥 Displays",        "locked": False},
     {"id": "auswertung",  "label": "📊 Auswertung",      "locked": False},
+    {"id": "einstellung", "label": "⚙️ Einstellung",     "locked": False},
 ]
 
 _DEFAULT_ROLE_CONFIG = {
     "mitarbeiter": ["pack", "menge", "nachlegen"],
-    "admin":       ["pack", "menge", "nachlegen", "tour", "displays", "auswertung"],
-    "superadmin":  ["pack", "menge", "nachlegen", "tour", "displays", "auswertung"],
+    "admin":       ["pack", "menge", "nachlegen", "tour", "displays", "auswertung", "einstellung"],
+    "superadmin":  ["pack", "menge", "nachlegen", "tour", "displays", "auswertung", "einstellung"],
 }
 
 def load_pin_config() -> dict:
@@ -124,11 +125,9 @@ def save_role_config(cfg: dict) -> None:
 HEADER_CONFIG_FILE = os.path.join(DATA_DIR, "header_config.json")
 
 _DEFAULT_HEADER_CONFIG = {
-    "pdf_btn": True,       # Versandliste-einlesen-Button
     "filialen": True,      # Status "x Filialen geladen"
     "phase": True,         # Lieferphasen-Umschalter (1./Vorb./2.)
     "tag": True,           # Aktiver Tag + Datum
-    "tag_dropdown": True,  # Tag-Auswahl-Dropdown
 }
 
 def load_header_config() -> dict:

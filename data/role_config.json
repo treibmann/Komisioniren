@@ -10,7 +10,8 @@
     "nachlegen",
     "tour",
     "displays",
-    "auswertung"
+    "auswertung",
+    "einstellung"
   ],
   "superadmin": [
     "pack",
@@ -18,6 +19,7 @@
     "nachlegen",
     "tour",
     "displays",
-    "auswertung"
+    "auswertung",
+    "einstellung"
   ]
 }

@@ -540,9 +540,7 @@
     <div class="topbar-sep"></div>
 
     <div id="topbar-center">
-      <button id="pdf-reload-btn" data-hdr="pdf_btn" onclick="reloadPdf()">📄 Versandliste einlesen</button>
       <span id="upload-status" data-hdr="filialen">Kein PDF geladen</span>
-      <input id="pdf-input" type="file" accept=".pdf" style="display:none;">
       <div class="topbar-sep"></div>
       <div class="phase-toggle" data-hdr="phase">
         <button class="phase-btn active-erst" id="btn-erst" onclick="setPhase('1.')">1. Lief.</button>
@@ -551,17 +549,6 @@
       </div>
       <div class="topbar-sep"></div>
       <div id="aktiver-tag-anzeige" data-hdr="tag">–</div>
-      <select id="tag-override-select" data-hdr="tag_dropdown" onchange="setTagOverride(this.value)">
-        <option value="">📄 Aus PDF</option>
-        <option value="Montag">Montag</option>
-        <option value="Dienstag">Dienstag</option>
-        <option value="Mittwoch">Mittwoch</option>
-        <option value="Donnerstag">Donnerstag</option>
-        <option value="Freitag">Freitag</option>
-        <option value="Samstag">Samstag</option>
-        <option value="Sonntag">Sonntag</option>
-        <option value="Feiertag">🎉 Feiertag</option>
-      </select>
     </div>
 
     <div id="topbar-right">
@@ -623,6 +610,7 @@
       <button class="tab-btn" onclick="switchTab('nachlegen', this)">📦 Nachlegen</button>
       <button class="tab-btn admin-only" onclick="switchTab('displays', this)">🖥 Displays</button>
       <button class="tab-btn admin-only" onclick="switchTab('auswertung', this)">📊 Auswertung</button>
+      <button class="tab-btn admin-only" onclick="switchTab('einstellung', this)">⚙️ Einstellung</button>
       <button class="tab-btn superadmin-only" onclick="switchTab('superadmin', this)">🔐 Super Admin</button>
     </div>
 
@@ -962,6 +950,35 @@
     </div>
 
 
+    <!-- ─── Einstellung ─── -->
+    <div id="tab-einstellung" class="tab-pane">
+      <h2 style="margin-bottom:4px;">⚙️ Einstellung</h2>
+      <p style="color:#666;font-size:13px;margin-bottom:20px;">Versandliste laden und aktiven Tag festlegen.</p>
+
+      <div class="card" style="margin-bottom:16px;">
+        <b style="font-size:15px;">📄 Versandliste</b>
+        <p style="color:#666;font-size:13px;margin:8px 0 14px;">Aktuelle Versandliste aus dem Netzwerkordner einlesen.</p>
+        <button id="pdf-reload-btn" onclick="reloadPdf()">📄 Versandliste einlesen</button>
+        <input id="pdf-input" type="file" accept=".pdf" style="display:none;">
+      </div>
+
+      <div class="card">
+        <b style="font-size:15px;">📅 Aktiver Tag</b>
+        <p style="color:#666;font-size:13px;margin:8px 0 14px;">Welcher Wochentag wird gepackt? „📄 Aus PDF" nutzt den Tag aus der Versandliste.</p>
+        <select id="tag-override-select" onchange="setTagOverride(this.value)" style="min-width:220px;font-size:15px;">
+          <option value="">📄 Aus PDF</option>
+          <option value="Montag">Montag</option>
+          <option value="Dienstag">Dienstag</option>
+          <option value="Mittwoch">Mittwoch</option>
+          <option value="Donnerstag">Donnerstag</option>
+          <option value="Freitag">Freitag</option>
+          <option value="Samstag">Samstag</option>
+          <option value="Sonntag">Sonntag</option>
+          <option value="Feiertag">🎉 Feiertag</option>
+        </select>
+      </div>
+    </div>
+
     <!-- ─── Super Admin ─── -->
     <div id="tab-superadmin" class="tab-pane">
       <h2 style="margin-bottom:4px;">🔐 Super Admin</h2>
@@ -1187,7 +1204,7 @@ function applyRole(role) {
   });
   // Bei fehlenden Rechten von gesperrten Tabs auf Pack-Modus zurückschalten
   const activePaneEl = document.querySelector('.tab-pane.active');
-  const adminPanes = ['tab-tour', 'tab-displays', 'tab-auswertung', 'tab-superadmin'];
+  const adminPanes = ['tab-tour', 'tab-displays', 'tab-auswertung', 'tab-einstellung', 'tab-superadmin'];
   const verboten = activePaneEl && (
     (!isAdmin && adminPanes.includes(activePaneEl.id)) ||
     (!isSuperAdmin && activePaneEl.id === 'tab-superadmin')
@@ -2363,11 +2380,9 @@ function zeigPersonalMsg(msg, farbe) {
 // ── Header-Anzeige (welche Elemente sichtbar sind) ──
 let _headerCfg = null;
 const HEADER_LABELS = {
-  pdf_btn:      '📄 Versandliste-einlesen-Button',
   filialen:     'Filialen-Status (z.B. „36 Filialen geladen")',
   phase:        'Lieferphasen-Umschalter (1. / Vorb. / 2.)',
   tag:          'Aktiver Tag + Datum',
-  tag_dropdown: 'Tag-Auswahl-Dropdown',
 };
 
 function applyHeaderConfig(cfg) {
