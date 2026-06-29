@@ -24,9 +24,11 @@
           box-shadow: inset 0 8px 16px -8px rgba(0,0,0,0.22);
           transition: background .25s ease; }
   /* Innerer Hintergrund je Lieferphase */
-  body.phase-erst #main { background: #ebe1e5; }  /* Rosé-Grau (1. Lieferung) */
+  body.phase-erst #main { background: #444841; }  /* Pantone 19-0509 TPG (1. Lieferung) */
   body.phase-vor  #main { background: #e6e3f0; }  /* Lavendel-Grau (Vorbestellung) */
   body.phase-zwei #main { background: #ece6d8; }  /* Sand-Grau (2. Lieferung) */
+  /* Labels direkt auf dunklem Hintergrund (1. Lieferung) hell halten */
+  body.phase-erst .filter-row label { color: #e8ece6; }
 
   /* ── Top Bar ── */
   #topbar {
