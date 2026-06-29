@@ -24,7 +24,7 @@
           box-shadow: inset 0 8px 16px -8px rgba(0,0,0,0.22);
           transition: background .25s ease; }
   /* Innerer Hintergrund je Lieferphase */
-  body.phase-erst #main { background: #444841; }  /* Pantone 19-0509 TPG (1. Lieferung) */
+  body.phase-erst #main { background: #4e3527; }  /* Espresso-Braun (1. Lieferung) */
   body.phase-vor  #main { background: #7b1fa2; }  /* Lila (Vorbestellung) */
   body.phase-zwei #main { background: #1b3b6b; }  /* Dunkelblau (2. Lieferung) */
   /* Labels auf dem farbigen Hintergrund hell halten (alle Phasen) */
@@ -32,7 +32,7 @@
   /* Station-, Reihenfolge- + Fortschritts-Karte in Phasenfarbe (keine weissen Inseln) */
   body.phase-erst #takt-display:not(.sperre),
   body.phase-erst #reihenfolge-card,
-  body.phase-erst #fortschritt-wrap { background: #444841; }
+  body.phase-erst #fortschritt-wrap { background: #4e3527; }
   body.phase-vor  #takt-display:not(.sperre),
   body.phase-vor  #reihenfolge-card,
   body.phase-vor  #fortschritt-wrap { background: #7b1fa2; }
@@ -63,10 +63,10 @@
     border: 36px solid transparent; transition: border-color .25s ease;
   }
   /* Rahmen + Header folgen der Lieferphase (nicht mehr der Rolle) */
-  body.phase-erst #role-frame { border-color: #444841; }
+  body.phase-erst #role-frame { border-color: #4e3527; }
   body.phase-vor  #role-frame { border-color: #7b1fa2; }  /* Lila wie Vorb.-Button */
   body.phase-zwei #role-frame { border-color: #1b3b6b; }  /* Dunkelblau (2. Lieferung) */
-  body.phase-erst #topbar { background: #444841; }
+  body.phase-erst #topbar { background: #4e3527; }
   body.phase-vor  #topbar { background: #7b1fa2; }
   body.phase-zwei #topbar { background: #1b3b6b; }
   /* Modul-Karten mit Farb-Akzent in Rollenfarbe (linker Streifen) */
@@ -148,8 +148,8 @@
   .phase-toggle { display: flex; gap: 4px; }
   .phase-btn { flex: 1; padding: 8px 4px; border: 2px solid transparent; border-radius: 6px;
                cursor: pointer; font-size: 13px; font-weight: 700; }
-  .phase-btn.active-erst { background: linear-gradient(180deg,#5a5f54,#3a3e37); color:#fff; border-color:#2e312c;
-    box-shadow: 0 3px 0 #23251f, 0 4px 8px rgba(40,42,36,0.4); }
+  .phase-btn.active-erst { background: linear-gradient(180deg,#6a4a38,#4e3527); color:#fff; border-color:#3a2719;
+    box-shadow: 0 3px 0 #2c1d12, 0 4px 8px rgba(78,53,39,0.4); }
   .phase-btn.active-vor  { background: linear-gradient(180deg,#9540bb,#631a8f); color:#fff; border-color:#4a148c;
     box-shadow: 0 3px 0 #380f6b, 0 4px 8px rgba(100,0,160,0.3); }
   .phase-btn.active-zwei { background: linear-gradient(180deg,#2a5b9e,#14305a); color:#fff; border-color:#14305a;
