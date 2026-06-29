@@ -19,7 +19,9 @@
   /* ── Layout ── */
   #layout { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   #sidebar { display: none !important; }
-  #main { flex: 1; overflow-y: auto; padding: 28px 36px; }
+  #main { flex: 1; overflow-y: auto; padding: 28px 36px;
+          background: #e7e7ec;
+          box-shadow: inset 0 8px 16px -8px rgba(0,0,0,0.22); }
 
   /* ── Top Bar ── */
   #topbar {
@@ -27,13 +29,13 @@
     padding: 0 24px; height: 60px; min-height: 60px; flex-shrink: 0;
     background: #1d1d1f; color: #f5f5f7;
     border-bottom: 1px solid #3a3a3c;
-    position: sticky; top: 0; z-index: 100;
+    position: sticky; top: 0; z-index: 9999;
     transition: background .25s ease;
   }
   /* Rollenfarbe: dicker Rahmen ums Fenster + Header in derselben Farbe */
   #role-frame {
     position: fixed; inset: 0; pointer-events: none; z-index: 9998;
-    border: 12px solid transparent; transition: border-color .25s ease;
+    border: 36px solid transparent; transition: border-color .25s ease;
   }
   body.role-mitarbeiter #role-frame { border-color: #0d6e63; }  /* Petrol/Teal */
   body.role-admin       #role-frame { border-color: #3f3a8c; }  /* Indigo */
@@ -41,6 +43,10 @@
   body.role-mitarbeiter #topbar { background: #0d6e63; }
   body.role-admin       #topbar { background: #3f3a8c; }
   body.role-superadmin  #topbar { background: #7a1f3d; }
+  /* Modul-Karten mit Farb-Akzent in Rollenfarbe (linker Streifen) */
+  body.role-mitarbeiter .card { border-left: 5px solid #0d6e63; }
+  body.role-admin       .card { border-left: 5px solid #3f3a8c; }
+  body.role-superadmin  .card { border-left: 5px solid #7a1f3d; }
   #topbar-logo {
     font-size: 17px; font-weight: 800; white-space: nowrap;
     letter-spacing: -0.3px; margin-right: 8px; flex-shrink: 0;
@@ -52,22 +58,22 @@
   .topbar-sep { width: 1px; height: 28px; background: #3a3a3c; flex-shrink: 0; margin: 0 4px; }
   #topbar-center { display: flex; align-items: center; gap: 8px; flex: 1; flex-wrap: nowrap; }
   #topbar-right  { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto; }
-  #topbar #pdf-reload-btn { display: inline-block; width: auto; padding: 8px 14px;
-    font-size: 13px; border-radius: 10px; white-space: nowrap; }
+  #topbar #pdf-reload-btn { display: inline-block; width: auto; padding: 10px 18px;
+    font-size: 14px; border-radius: 10px; white-space: nowrap; }
   #topbar #upload-status { font-size: 12px; color: #86868b; white-space: nowrap; }
   #topbar .phase-toggle { gap: 3px; }
-  #topbar .phase-btn { padding: 6px 11px; font-size: 12px; border-radius: 8px; }
+  #topbar .phase-btn { padding: 9px 14px; font-size: 14px; border-radius: 8px; }
   #topbar #aktiver-tag-anzeige { font-size: 12px; font-weight: 600; white-space: nowrap; }
   #topbar #tag-override-select {
     padding: 6px 8px; background: #2c2c2e; color: #f5f5f7;
     border: 1px solid #3a3a3c; border-radius: 8px; font-size: 12px; cursor: pointer;
   }
   #topbar .mode-btn { width: auto; padding: 6px 10px; font-size: 12px; border-radius: 8px; margin-bottom: 0; }
-  #topbar .sidebar-btn { width: auto; padding: 6px 10px; font-size: 12px; border-radius: 8px; margin-bottom: 0; }
+  #topbar .sidebar-btn { width: auto; padding: 9px 15px; font-size: 14px; border-radius: 8px; margin-bottom: 0; }
   #topbar #ws-status { font-size: 11px; color: #86868b; white-space: nowrap; }
   #topbar #virtual-monitor { font-size: 11px; max-width: 160px; overflow: hidden; }
-  #logout-btn { padding: 6px 12px; border: 1px solid #ef5350; border-radius: 8px;
-    background: transparent; color: #ef9a9a; cursor: pointer; font-size: 12px; flex-shrink: 0; }
+  #logout-btn { padding: 9px 15px; border: 1px solid #ef5350; border-radius: 8px;
+    background: transparent; color: #ef9a9a; cursor: pointer; font-size: 14px; flex-shrink: 0; }
   #logout-btn:hover { background: rgba(239,83,80,0.1); }
   /* Admin-Panel Dropdown */
   #admin-panel {
@@ -129,8 +135,8 @@
   /* ── Tabs ── */
   .tabs { display: flex; gap: 6px; margin-bottom: 20px; background: #d1d1d6; padding: 4px; border-radius: 12px;
           box-shadow: inset 0 1px 3px rgba(0,0,0,0.15); }
-  .tab-btn { padding: 7px 16px; border: none; border-radius: 8px; cursor: pointer;
-             font-size: 13px; font-weight: 500; background: transparent; color: #636366;
+  .tab-btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer;
+             font-size: 15px; font-weight: 500; background: transparent; color: #636366;
              transition: all .15s; }
   .tab-btn:hover { background: rgba(255,255,255,0.5); color: #1d1d1f; }
   .tab-btn.active { background: linear-gradient(180deg,#ffffff 0%,#f5f5f7 100%); color: #1d1d1f; font-weight: 700;
