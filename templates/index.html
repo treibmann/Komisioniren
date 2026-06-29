@@ -906,7 +906,7 @@
 
     <!-- ─── ESP32 Display Simulator ─── -->
     <div id="tab-displays" class="tab-pane">
-      <h2 style="margin-bottom:4px;">🖥 ESP32 Display Simulator</h2>
+      <h2 style="margin-bottom:4px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></svg>ESP32 Display Simulator</h2>
       <p style="color:#666;font-size:13px;margin-bottom:14px;">
         Zeigt in Echtzeit welches Display leuchtet — identisch mit dem was die echten ESP32-Displays anzeigen würden.
       </p>
@@ -921,10 +921,10 @@
       </div>
 
       <div class="display-legend" id="display-legend">
-        <div class="legend-item"><div class="legend-dot active"></div> 🟠 Aktiv – wird gerade gepackt</div>
-        <div class="legend-item"><div class="legend-dot pending"></div> 🔴 Ausstehend – muss noch gepackt werden</div>
-        <div class="legend-item"><div class="legend-dot done"></div> 🟢 Erledigt – abgehakt</div>
-        <div class="legend-item"><div class="legend-dot none"></div> ⬛ Keine Menge für dieses Produkt</div>
+        <div class="legend-item"><div class="legend-dot active"></div> Aktiv – wird gerade gepackt</div>
+        <div class="legend-item"><div class="legend-dot pending"></div> Ausstehend – muss noch gepackt werden</div>
+        <div class="legend-item"><div class="legend-dot done"></div> Erledigt – abgehakt</div>
+        <div class="legend-item"><div class="legend-dot none"></div> Keine Menge für dieses Produkt</div>
       </div>
 
       <div id="displays-grid"></div>
@@ -1211,6 +1211,11 @@ const ICO = {
   pencil: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
   clock: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
   dot: (c) => '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6" fill="' + c + '"/></svg>',
+  check: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  lock: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  undo: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg>',
+  refresh: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>',
+  user: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
 };
 
 function pinKey(d) {
@@ -1241,7 +1246,7 @@ async function submitPin() {
       document.getElementById('pin-overlay').classList.add('hidden');
       document.getElementById('pin-error').textContent = '';
       document.getElementById('pin-cancel-btn').style.display = 'none';
-      if (d.name) zeigToast('👋 Angemeldet als ' + d.name);
+      if (d.name) zeigToast(ICO.user + 'Angemeldet als ' + d.name);
     } else {
       document.getElementById('pin-error').textContent = '\u274C Falscher PIN';
       pinClear();
@@ -1332,7 +1337,7 @@ setInterval(() => {
     const ap = document.getElementById('admin-panel');
     if (ap) ap.classList.add('hidden');   // offenes Admin-Panel schlie\u00dfen
     setRole('mitarbeiter');
-    zeigToast('\ud83d\udd12 Admin-Sitzung nach 1 Min Inaktivit\u00e4t beendet \u2013 zur\u00fcck zu Mitarbeiter');
+    zeigToast(ICO.lock + 'Admin-Sitzung nach 1 Min Inaktivit\u00e4t beendet \u2013 zur\u00fcck zu Mitarbeiter');
   }
 }, 5000);
 
@@ -1499,7 +1504,7 @@ function renderState(s) {
     } else {
       vm.innerHTML = entries.map(([f, m]) =>
         m > 0
-          ? `<div class="display-item display-on">🔴 <b>${f.toUpperCase()}</b>: ${m} Stk</div>`
+          ? `<div class="display-item display-on">${ICO.dot('#ff5252')}<b>${f.toUpperCase()}</b>: ${m} Stk</div>`
           : `<div class="display-item display-off">${f.toUpperCase()}: aus</div>`
       ).join('');
     }
@@ -1630,7 +1635,7 @@ function mpBestaetigen() {
   const f = _mpFiliale;
   _mpFiliale = null;
   sendCmd('bestaetige_filiale', { filiale: f, geliefert_menge: menge });
-  zeigToast(`✓ ${f}: ${menge} Stk eingepackt`);
+  zeigToast(ICO.check + `${f}: ${menge} Stk eingepackt`);
 }
 
 function mpAbbrechen() {
@@ -1650,7 +1655,7 @@ function rgBestaetigen() {
   document.getElementById('rueckgaengig-popup').style.display = 'none';
   if (_rgFiliale) {
     sendCmd('rueckgaengig_filiale', { filiale: _rgFiliale });
-    zeigToast('↩ ' + _rgFiliale + ' zurückgesetzt');
+    zeigToast(ICO.undo + _rgFiliale + ' zurückgesetzt');
   }
   _rgFiliale = null;
 }
@@ -1668,7 +1673,7 @@ function resetAnfordern() {
 function resetBestaetigen() {
   document.getElementById('reset-popup').style.display = 'none';
   sendCmd('reset');
-  zeigToast('🧹 Tag neu gestartet');
+  zeigToast(ICO.refresh + 'Tag neu gestartet');
 }
 
 function resetAbbrechen() {
@@ -1682,10 +1687,10 @@ function zeigToast(msg) {
     t.id = 'toast-msg';
     t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);' +
       'background:#333;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;' +
-      'z-index:99999;pointer-events:none;transition:opacity .3s;';
+      'z-index:99999;pointer-events:none;transition:opacity .3s;display:flex;align-items:center;';
     document.body.appendChild(t);
   }
-  t.textContent = msg;
+  t.innerHTML = msg;
   t.style.opacity = '1';
   clearTimeout(t._timer);
   t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2500);
@@ -2190,7 +2195,7 @@ async function wendeNachlegenAn() {
       });
       const d = await r.json();
       if (d.ok) {
-        zeigToast('✅ Nachlegen übernommen — ' + filialen.length + ' Filialen neu im Pack-Modus');
+        zeigToast(ICO.check + 'Nachlegen übernommen — ' + filialen.length + ' Filialen neu im Pack-Modus');
         document.getElementById('nl-produkt-detail').style.display = 'none';
         document.getElementById('nl-produkt-select').value = '';
         renderNachlegen(state);
@@ -2212,7 +2217,7 @@ async function wendeNachlegenAn() {
       });
       const d = await r.json();
       if (d.ok) {
-        zeigToast('✅ Manuelles Nachlegen übernommen');
+        zeigToast(ICO.check + 'Manuelles Nachlegen übernommen');
         document.getElementById('nl-produkt-detail').style.display = 'none';
         document.getElementById('nl-produkt-select').value = '';
         renderNachlegen(state);
