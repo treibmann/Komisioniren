@@ -89,7 +89,18 @@
   #topbar #upload-status { font-size: 12px; color: #86868b; white-space: nowrap; }
   #topbar .phase-toggle { gap: 3px; }
   #topbar .phase-btn { padding: 16px 24px; font-size: 21px; font-weight: 800; border-radius: 10px; white-space: nowrap; }
-  #topbar #aktiver-tag-anzeige { font-size: 21px; font-weight: 800; white-space: nowrap; }
+  #topbar #aktiver-tag-anzeige { font-size: 42px; font-weight: 800; white-space: nowrap; }
+  /* Header-Menü-Icon + Dropdown (Verbindung, Ebene, Abmelden) */
+  #header-menu-btn { background: rgba(255,255,255,0.12); color: inherit;
+    border: 1px solid rgba(255,255,255,0.35); border-radius: 10px;
+    font-size: 24px; line-height: 1; padding: 10px 16px; cursor: pointer; flex-shrink: 0; }
+  #header-menu { position: absolute; top: 92px; right: 24px; z-index: 10000;
+    background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 12px; padding: 14px;
+    display: flex; flex-direction: column; gap: 10px; min-width: 230px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45); }
+  #header-menu.hidden { display: none; }
+  #header-menu #ws-status { font-size: 13px; color: #86868b; padding: 2px 2px 6px; }
+  #header-menu .sidebar-btn, #header-menu #logout-btn { width: 100%; font-size: 15px; padding: 12px; }
   #topbar #tag-override-select {
     padding: 6px 8px; background: #2c2c2e; color: #f5f5f7;
     border: 1px solid #3a3a3c; border-radius: 8px; font-size: 12px; cursor: pointer;
@@ -587,13 +598,18 @@
     </div>
 
     <div id="topbar-right">
+      <button id="header-menu-btn" onclick="toggleHeaderMenu()" title="Menü">☰</button>
       <div id="aktiver-tag-anzeige" data-hdr="tag">–</div>
-      <span id="ws-status">…</span>
-      <button class="sidebar-btn admin-only" onclick="toggleAdminPanel()" title="Admin-Einstellungen">⚙️ Admin</button>
-      <button class="sidebar-btn" id="elevate-btn" onclick="ebeneWechseln()" title="Ebene wechseln (PIN eingeben)" style="border-color:#5b8def;color:#5b8def;">🔼 Ebene</button>
-      <button id="logout-btn" onclick="doLogout()">🔒 Abmelden</button>
     </div>
   </header>
+
+  <!-- Header-Menü (Verbindung, Ebene, Abmelden) -->
+  <div id="header-menu" class="hidden">
+    <div id="ws-status">…</div>
+    <button class="sidebar-btn admin-only" onclick="toggleHeaderMenu();toggleAdminPanel()" title="Admin-Einstellungen">⚙️ Admin-Einstellungen</button>
+    <button class="sidebar-btn" id="elevate-btn" onclick="toggleHeaderMenu();ebeneWechseln()" style="border-color:#5b8def;color:#5b8def;">🔼 Ebene wechseln</button>
+    <button id="logout-btn" onclick="doLogout()">🔒 Abmelden</button>
+  </div>
 
   <!-- Admin-Panel Dropdown -->
   <div id="admin-panel" class="hidden">
@@ -1337,6 +1353,10 @@ let reconnectTimer = null;
 
 function toggleAdminPanel() {
   document.getElementById('admin-panel').classList.toggle('hidden');
+}
+
+function toggleHeaderMenu() {
+  document.getElementById('header-menu').classList.toggle('hidden');
 }
 
 function connectWS() {
