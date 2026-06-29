@@ -242,6 +242,11 @@
                  transition: transform .08s, box-shadow .08s; }
   #zurueck-btn:hover { box-shadow: 0 3px 0 #cc1a10, 0 4px 8px rgba(200,30,20,0.2); transform: translateY(1px); }
   #zurueck-btn:active { box-shadow: 0 1px 0 #cc1a10; transform: translateY(3px); }
+  /* Aktions-Buttons nebeneinander: Takt Zurück links, BESTÄTIGEN rechts (breiter) */
+  #aktion-row { display: flex; gap: 14px; max-width: 880px; margin: 0 auto; align-items: stretch; }
+  #aktion-row #zurueck-btn { flex: 1; max-width: none; margin: 0; }
+  #aktion-row #bestaetigen-btn,
+  #aktion-row #naechstes-btn { flex: 2; max-width: none; margin: 0; }
 
   /* ── Filial-Vorschau ── */
   #filialen-vorschau { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
@@ -691,14 +696,16 @@
           <div id="sperre-sub" class="hidden">–</div>
         </div>
 
-        <!-- Buttons -->
-        <button id="bestaetigen-btn" onclick="sendCmd('weiter')">
-          Gepackt → BESTÄTIGEN
-        </button>
-        <button id="naechstes-btn" class="hidden" onclick="sendCmd('naechstes_produkt')">
-          🚀 NÄCHSTEN ARTIKEL AN DIE DISPLAYS SENDEN
-        </button>
-        <button id="zurueck-btn" onclick="sendCmd('zurueck')">⬅️ Takt Zurück (Korrektur)</button>
+        <!-- Buttons (nebeneinander: Takt Zurück links, BESTÄTIGEN rechts) -->
+        <div id="aktion-row">
+          <button id="zurueck-btn" onclick="sendCmd('zurueck')">⬅️ Takt Zurück (Korrektur)</button>
+          <button id="bestaetigen-btn" onclick="sendCmd('weiter')">
+            Gepackt → BESTÄTIGEN
+          </button>
+          <button id="naechstes-btn" class="hidden" onclick="sendCmd('naechstes_produkt')">
+            🚀 NÄCHSTEN ARTIKEL AN DIE DISPLAYS SENDEN
+          </button>
+        </div>
 
         <!-- Filial-Vorschau -->
         <div class="card" id="reihenfolge-card" style="margin-top:12px;">
