@@ -258,10 +258,13 @@
   #zurueck-btn:hover { box-shadow: 0 4px 0 #9a1c14, 0 6px 12px rgba(200,30,20,0.3); transform: translateY(2px); }
   #zurueck-btn:active { box-shadow: 0 1px 0 #9a1c14, 0 2px 6px rgba(200,30,20,0.25); transform: translateY(5px); }
   /* Aktions-Buttons nebeneinander: Takt Zurück links, BESTÄTIGEN rechts (breiter) */
-  #aktion-row { display: flex; gap: 14px; max-width: 880px; margin: 0 auto; align-items: stretch; }
-  #aktion-row #zurueck-btn { flex: 1; max-width: none; margin: 0; }
-  #aktion-row #bestaetigen-btn,
-  #aktion-row #naechstes-btn { flex: 2; max-width: none; margin: 0; }
+  /* Pack-Reihe: Takt Zurück | Station (schmaler) | Bestätigen nebeneinander */
+  #pack-row { display: flex; gap: 14px; align-items: stretch; margin-bottom: 14px; }
+  #pack-row #takt-display { flex: 1; margin: 0; }
+  #pack-row #zurueck-btn,
+  #pack-row #bestaetigen-btn,
+  #pack-row #naechstes-btn { width: 240px; max-width: 240px; min-width: 190px; margin: 0; flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 
   /* ── Filial-Vorschau ── */
   #filialen-vorschau { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
@@ -707,18 +710,18 @@
           </select>
         </div>
 
-        <!-- Takt-Display -->
-        <div id="takt-display">
-          <div id="takt-station">Station: <span id="station-name">–</span></div>
-          <div id="takt-menge">–</div>
-          <div id="takt-produkt">–</div>
-          <div id="sperre-title" class="hidden">–</div>
-          <div id="sperre-sub" class="hidden">–</div>
-        </div>
-
-        <!-- Buttons (nebeneinander: Takt Zurück links, BESTÄTIGEN rechts) -->
-        <div id="aktion-row">
+        <!-- Pack-Reihe: Takt Zurück (links) | Station (Mitte, schmaler) | Bestätigen (rechts) -->
+        <div id="pack-row">
           <button id="zurueck-btn" onclick="sendCmd('zurueck')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg>Takt Zurück (Korrektur)</button>
+
+          <div id="takt-display">
+            <div id="takt-station">Station: <span id="station-name">–</span></div>
+            <div id="takt-menge">–</div>
+            <div id="takt-produkt">–</div>
+            <div id="sperre-title" class="hidden">–</div>
+            <div id="sperre-sub" class="hidden">–</div>
+          </div>
+
           <button id="bestaetigen-btn" onclick="sendCmd('weiter')">
             Gepackt → BESTÄTIGEN
           </button>
