@@ -21,7 +21,12 @@
   #sidebar { display: none !important; }
   #main { flex: 1; overflow-y: auto; padding: 28px 36px;
           background: #e7e7ec;
-          box-shadow: inset 0 8px 16px -8px rgba(0,0,0,0.22); }
+          box-shadow: inset 0 8px 16px -8px rgba(0,0,0,0.22);
+          transition: background .25s ease; }
+  /* Innerer Hintergrund je Lieferphase */
+  body.phase-erst #main { background: #ebe1e5; }  /* Rosé-Grau (1. Lieferung) */
+  body.phase-vor  #main { background: #e6e3f0; }  /* Lavendel-Grau (Vorbestellung) */
+  body.phase-zwei #main { background: #ece6d8; }  /* Sand-Grau (2. Lieferung) */
 
   /* ── Top Bar ── */
   #topbar {
@@ -1401,6 +1406,12 @@ function renderState(s) {
     'phase-btn ' + (s.lieferung_phase === 'V'  ? 'active-vor'  : 'inactive');
   document.getElementById('btn-zwei').className =
     'phase-btn ' + (s.lieferung_phase === '2.' ? 'active-zwei' : 'inactive');
+
+  // Body-Klasse je Lieferphase (faerbt den inneren Hintergrund #main)
+  document.body.classList.remove('phase-erst', 'phase-vor', 'phase-zwei');
+  document.body.classList.add(
+    s.lieferung_phase === 'V' ? 'phase-vor' :
+    s.lieferung_phase === '2.' ? 'phase-zwei' : 'phase-erst');
 
   // Virtueller Monitor
   const vm = document.getElementById('virtual-monitor');
