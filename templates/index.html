@@ -91,6 +91,8 @@
   #topbar .phase-btn { padding: 16px 24px; font-size: 21px; font-weight: 800; border-radius: 10px; white-space: nowrap; }
   #topbar #aktiver-tag-anzeige { font-size: 42px; font-weight: 800; white-space: nowrap; text-align: right; line-height: 1.0; }
   #topbar #aktiver-tag-anzeige .tag-quelle { display: block; font-size: 15px; font-weight: 600; opacity: 0.85; margin-top: 2px; }
+  #topbar #tour-anzeige { font-size: 22px; font-weight: 800; white-space: nowrap; text-align: right; line-height: 1.0; color: #cdd8e6; }
+  #topbar #tour-anzeige .tour-quelle { display: block; font-size: 13px; font-weight: 600; opacity: 0.8; margin-top: 2px; }
   /* Header-Menü-Icon + Dropdown (Verbindung, Ebene, Abmelden) */
   #header-menu-btn { background: rgba(255,255,255,0.12); color: inherit;
     border: 1px solid rgba(255,255,255,0.35); border-radius: 10px;
@@ -600,6 +602,7 @@
 
     <div id="topbar-right">
       <button id="header-menu-btn" onclick="toggleHeaderMenu()" title="Menü">☰</button>
+      <div id="tour-anzeige">–</div>
       <div id="aktiver-tag-anzeige" data-hdr="tag">–</div>
     </div>
   </header>
@@ -1022,8 +1025,8 @@
       </div>
 
       <div class="card">
-        <b style="font-size:15px;">📅 Aktiver Tag</b>
-        <p style="color:#666;font-size:13px;margin:8px 0 14px;">Welcher Wochentag wird gepackt? „📄 Aus PDF" nutzt den Tag aus der Versandliste.</p>
+        <b style="font-size:15px;">🚚 Tour-Tag</b>
+        <p style="color:#666;font-size:13px;margin:8px 0 14px;">Bestimmt die <b>Tour</b> (Filialen-Reihenfolge). „📄 Aus PDF" nutzt den Tag der Versandliste; manuell wählt einen anderen Wochentag. Die Datumsanzeige oben rechts bleibt davon unberührt (immer aus PDF).</p>
         <select id="tag-override-select" onchange="setTagOverride(this.value)" style="min-width:220px;font-size:15px;">
           <option value="">📄 Aus PDF</option>
           <option value="Montag">Montag</option>
@@ -1394,22 +1397,22 @@ setInterval(() => { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.str
 function renderState(s) {
   state = s;
 
-  // Aktiver Tag anzeigen + Dropdown synchronisieren
-  if (s.aktiver_tag) {
-    const isFeiertag = s.aktiver_tag === 'Feiertag';
-    let quelle;
-    if (s.tag_override)         quelle = '✏️ manuell';
-    else if (s.pdf_detected_tag) quelle = '📄 aus PDF';
-    else                         quelle = '🕐 Systemuhr';
-    const datum = s.pdf_detected_datum ? ', ' + s.pdf_detected_datum : '';
-    const label = isFeiertag
-      ? '🎉 Feiertag' + datum
-      : '📅 ' + s.aktiver_tag + datum;
-    const el = document.getElementById('aktiver-tag-anzeige');
-    if (el) {
-      el.innerHTML = label + '<span class="tag-quelle">' + quelle + '</span>';
-      el.style.color = isFeiertag ? '#f57f17' : '#fbc02d';
+  // Header rechts: Tag + Datum IMMER aus der PDF (Liefertag der Versandliste)
+  const dateEl = document.getElementById('aktiver-tag-anzeige');
+  if (dateEl) {
+    if (s.pdf_detected_tag) {
+      const datum = s.pdf_detected_datum ? ', ' + s.pdf_detected_datum : '';
+      dateEl.innerHTML = '📅 ' + s.pdf_detected_tag + datum + '<span class="tag-quelle">📄 aus PDF</span>';
+    } else {
+      dateEl.innerHTML = '📅 ' + (s.aktiver_tag || '–') + '<span class="tag-quelle">🕐 Systemuhr</span>';
     }
+    dateEl.style.color = '#fbc02d';
+  }
+  // Links daneben: Tour-Tag (aus PDF bestimmt oder manuell gewählt) – steuert die Filialen-Reihenfolge
+  const tourEl = document.getElementById('tour-anzeige');
+  if (tourEl && s.aktiver_tag) {
+    const tq = s.tag_override ? '✏️ manuell' : (s.pdf_detected_tag ? '📄 aus PDF' : '🕐 Systemuhr');
+    tourEl.innerHTML = '🚚 Tour: ' + s.aktiver_tag + '<span class="tour-quelle">' + tq + '</span>';
   }
   const sel = document.getElementById('tag-override-select');
   if (sel && s.tag_override !== undefined && document.activeElement !== sel) {
