@@ -29,6 +29,18 @@
   body.phase-zwei #main { background: #ece6d8; }  /* Sand-Grau (2. Lieferung) */
   /* Labels direkt auf dunklem Hintergrund (1. Lieferung) hell halten */
   body.phase-erst .filter-row label { color: #e8ece6; }
+  /* Station- + Reihenfolge-Karte in Phasenfarbe (keine weissen Inseln) */
+  body.phase-erst #takt-display:not(.sperre),
+  body.phase-erst #reihenfolge-card { background: #444841; }
+  body.phase-vor  #takt-display:not(.sperre),
+  body.phase-vor  #reihenfolge-card { background: #e6e3f0; }
+  body.phase-zwei #takt-display:not(.sperre),
+  body.phase-zwei #reihenfolge-card { background: #ece6d8; }
+  /* Dunkle 1.-Lieferung: Texte in den Karten hell halten */
+  body.phase-erst #takt-display:not(.sperre) #takt-station { color: #b0b5aa; }
+  body.phase-erst #takt-display:not(.sperre) #takt-station span { color: #ffffff; }
+  body.phase-erst #takt-display:not(.sperre) #takt-produkt { color: #c2c7bc; }
+  body.phase-erst #reihenfolge-card .reihenfolge-label { color: #e8ece6 !important; }
 
   /* ── Top Bar ── */
   #topbar {
@@ -669,8 +681,8 @@
         <button id="zurueck-btn" onclick="sendCmd('zurueck')">⬅️ Takt Zurück (Korrektur)</button>
 
         <!-- Filial-Vorschau -->
-        <div class="card" style="margin-top:12px;">
-          <div style="font-size:13px; color:#666; margin-bottom:6px;">Reihenfolge für diesen Artikel:</div>
+        <div class="card" id="reihenfolge-card" style="margin-top:12px;">
+          <div class="reihenfolge-label" style="font-size:13px; color:#666; margin-bottom:6px;">Reihenfolge für diesen Artikel:</div>
           <div id="filialen-vorschau"></div>
         </div>
 
