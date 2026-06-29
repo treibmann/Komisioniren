@@ -82,15 +82,14 @@
     border-radius: 6px; vertical-align: middle; margin-left: 6px;
   }
   .topbar-sep { width: 1px; height: 28px; background: #3a3a3c; flex-shrink: 0; margin: 0 4px; }
-  #topbar-center { display: flex; align-items: center; gap: 8px; flex: 1; flex-wrap: nowrap; min-width: 0; }
-  #topbar #aktiver-tag-anzeige { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  #topbar-center { display: flex; align-items: center; gap: 8px; flex: 0 1 auto; flex-wrap: nowrap; }
   #topbar-right  { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto; }
   #topbar #pdf-reload-btn { display: inline-block; width: auto; padding: 10px 18px;
     font-size: 14px; border-radius: 10px; white-space: nowrap; }
   #topbar #upload-status { font-size: 12px; color: #86868b; white-space: nowrap; }
   #topbar .phase-toggle { gap: 3px; }
-  #topbar .phase-btn { padding: 16px 40px; font-size: 21px; font-weight: 800; border-radius: 10px; white-space: nowrap; }
-  #topbar #aktiver-tag-anzeige { font-size: 12px; font-weight: 600; white-space: nowrap; }
+  #topbar .phase-btn { padding: 16px 24px; font-size: 21px; font-weight: 800; border-radius: 10px; white-space: nowrap; }
+  #topbar #aktiver-tag-anzeige { font-size: 21px; font-weight: 800; white-space: nowrap; }
   #topbar #tag-override-select {
     padding: 6px 8px; background: #2c2c2e; color: #f5f5f7;
     border: 1px solid #3a3a3c; border-radius: 8px; font-size: 12px; cursor: pointer;
@@ -585,11 +584,10 @@
         <button class="phase-btn inactive"    id="btn-vor"  onclick="setPhase('V')">Vorb.</button>
         <button class="phase-btn inactive"    id="btn-zwei" onclick="setPhase('2.')">2. Lief.</button>
       </div>
-      <div class="topbar-sep"></div>
-      <div id="aktiver-tag-anzeige" data-hdr="tag">–</div>
     </div>
 
     <div id="topbar-right">
+      <div id="aktiver-tag-anzeige" data-hdr="tag">–</div>
       <span id="ws-status">…</span>
       <button class="sidebar-btn admin-only" onclick="toggleAdminPanel()" title="Admin-Einstellungen">⚙️ Admin</button>
       <button class="sidebar-btn" id="elevate-btn" onclick="ebeneWechseln()" title="Ebene wechseln (PIN eingeben)" style="border-color:#5b8def;color:#5b8def;">🔼 Ebene</button>
@@ -1384,8 +1382,8 @@ function renderState(s) {
     else                         quelle = '🕐 Systemuhr';
     const datum = s.pdf_detected_datum ? ', ' + s.pdf_detected_datum : '';
     const label = isFeiertag
-      ? '🎉 Feiertag' + datum + '  (✏️ manuell)'
-      : '📅 ' + s.aktiver_tag + datum + '  (' + quelle + ')';
+      ? '🎉 Feiertag' + datum
+      : '📅 ' + s.aktiver_tag + datum;
     const el = document.getElementById('aktiver-tag-anzeige');
     if (el) { el.textContent = label; el.style.color = isFeiertag ? '#f57f17' : '#fbc02d'; }
   }
