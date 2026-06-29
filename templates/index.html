@@ -173,25 +173,6 @@
                                      0 0 0 4px rgba(52,199,89,0.08),
                                      0 8px 32px rgba(52,199,89,0.15),
                                      0 2px 8px rgba(0,0,0,0.06); }
-  /* Station-Karte je Lieferphase (greift nicht im Sperre/Fertig-Zustand) */
-  body.phase-erst #takt-display:not(.sperre) {
-    border-color: #c2899b;
-    background: linear-gradient(180deg,#ffffff 0%,#f7eef1 100%);
-    box-shadow: 0 1px 0 rgba(255,255,255,1) inset, 0 0 0 4px rgba(194,137,155,0.14),
-                0 8px 32px rgba(194,137,155,0.22), 0 2px 8px rgba(0,0,0,0.06); }
-  body.phase-erst #takt-display:not(.sperre) #takt-menge { color: #a35d75; }
-  body.phase-vor #takt-display:not(.sperre) {
-    border-color: #9488bf;
-    background: linear-gradient(180deg,#ffffff 0%,#f1eef8 100%);
-    box-shadow: 0 1px 0 rgba(255,255,255,1) inset, 0 0 0 4px rgba(148,136,191,0.14),
-                0 8px 32px rgba(148,136,191,0.22), 0 2px 8px rgba(0,0,0,0.06); }
-  body.phase-vor #takt-display:not(.sperre) #takt-menge { color: #6b5fa0; }
-  body.phase-zwei #takt-display:not(.sperre) {
-    border-color: #b3a06a;
-    background: linear-gradient(180deg,#ffffff 0%,#f7f3e8 100%);
-    box-shadow: 0 1px 0 rgba(255,255,255,1) inset, 0 0 0 4px rgba(179,160,106,0.14),
-                0 8px 32px rgba(179,160,106,0.22), 0 2px 8px rgba(0,0,0,0.06); }
-  body.phase-zwei #takt-display:not(.sperre) #takt-menge { color: #8a7430; }
   #takt-station { font-size: 52px; font-weight: 700; color: #86868b; letter-spacing: -0.5px; }
   #takt-station span { color: #1d1d1f; font-weight: 800; }
   #takt-menge { font-size: 80px; font-weight: 800; margin: 4px 0; color: #e67e00; letter-spacing: -2px; }
@@ -1420,12 +1401,6 @@ function renderState(s) {
     'phase-btn ' + (s.lieferung_phase === 'V'  ? 'active-vor'  : 'inactive');
   document.getElementById('btn-zwei').className =
     'phase-btn ' + (s.lieferung_phase === '2.' ? 'active-zwei' : 'inactive');
-
-  // Body-Klasse je Lieferphase (faerbt die Station-Karte)
-  document.body.classList.remove('phase-erst', 'phase-vor', 'phase-zwei');
-  document.body.classList.add(
-    s.lieferung_phase === 'V' ? 'phase-vor' :
-    s.lieferung_phase === '2.' ? 'phase-zwei' : 'phase-erst');
 
   // Virtueller Monitor
   const vm = document.getElementById('virtual-monitor');
