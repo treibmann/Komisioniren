@@ -271,7 +271,7 @@ async def reload_pdf():
     if not os.path.exists(PDF_PATH):
         raise HTTPException(404, f"PDF nicht gefunden: {PDF_PATH}")
     try:
-        df_all, _, pdf_tag = parse_baeckerei_pdf(PDF_PATH)
+        df_all, _, pdf_tag, pdf_datum = parse_baeckerei_pdf(PDF_PATH)
     except Exception as exc:
         raise HTTPException(500, f"PDF-Parse-Fehler: {exc}")
 
@@ -282,15 +282,16 @@ async def reload_pdf():
         state.load_pdf_data(df, alle_filialen, standard_filialen=std_filialen)
         if pdf_tag:
             state.pdf_detected_tag = pdf_tag
+        state.pdf_detected_datum = pdf_datum or ""
 
     filialen_heute = get_filialen_heute()
     target = state.get_current_display_target(filialen_heute)
     if target:
         send_display(target[0], target[1])
 
-    db_module.log_aktion("pdf_geladen", {"pfad": PDF_PATH, "filialen": alle_filialen, "zeilen": len(df), "tag": pdf_tag})
+    db_module.log_aktion("pdf_geladen", {"pfad": PDF_PATH, "filialen": alle_filialen, "zeilen": len(df), "tag": pdf_tag, "datum": pdf_datum})
     await push_state()
-    return {"ok": True, "filialen": alle_filialen, "std_filialen": std_filialen, "zeilen": len(df), "pdf_path": PDF_PATH, "tag": pdf_tag}
+    return {"ok": True, "filialen": alle_filialen, "std_filialen": std_filialen, "zeilen": len(df), "pdf_path": PDF_PATH, "tag": pdf_tag, "datum": pdf_datum}
 
 
 # ---------------------------------------------------------------------------
@@ -301,7 +302,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(400, "Nur PDF-Dateien erlaubt.")
     try:
-        df_all, _, pdf_tag = parse_baeckerei_pdf(file.file)
+        df_all, _, pdf_tag, pdf_datum = parse_baeckerei_pdf(file.file)
     except Exception as exc:
         raise HTTPException(500, f"PDF-Parse-Fehler: {exc}")
 
@@ -312,15 +313,16 @@ async def upload_pdf(file: UploadFile = File(...)):
         state.load_pdf_data(df, alle_filialen, standard_filialen=std_filialen)
         if pdf_tag:
             state.pdf_detected_tag = pdf_tag
+        state.pdf_detected_datum = pdf_datum or ""
 
     filialen_heute = get_filialen_heute()
     target = state.get_current_display_target(filialen_heute)
     if target:
         send_display(target[0], target[1])
 
-    db_module.log_aktion("pdf_upload", {"datei": file.filename, "filialen": alle_filialen, "zeilen": len(df), "tag": pdf_tag})
+    db_module.log_aktion("pdf_upload", {"datei": file.filename, "filialen": alle_filialen, "zeilen": len(df), "tag": pdf_tag, "datum": pdf_datum})
     await push_state()
-    return {"ok": True, "filialen": alle_filialen, "std_filialen": std_filialen, "zeilen": len(df), "tag": pdf_tag}
+    return {"ok": True, "filialen": alle_filialen, "std_filialen": std_filialen, "zeilen": len(df), "tag": pdf_tag, "datum": pdf_datum}
 
 
 # ---------------------------------------------------------------------------
@@ -1270,7 +1272,7 @@ async def debug_raw(nr: str):
     """Zeigt alle Roh-Zeilen (pre-merge) für eine Artikelnummer."""
     if not os.path.exists(PDF_PATH):
         return {"error": "PDF nicht gefunden"}
-    rows, _ = parse_baeckerei_pdf(PDF_PATH, debug_nr=nr)
+    rows, _, _, _ = parse_baeckerei_pdf(PDF_PATH, debug_nr=nr)
     return {"nr": nr, "zeilen": len(rows), "rows": rows}
 
 

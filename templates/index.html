@@ -28,7 +28,12 @@
     background: #1d1d1f; color: #f5f5f7;
     border-bottom: 1px solid #3a3a3c;
     position: sticky; top: 0; z-index: 100;
+    transition: background .25s ease;
   }
+  /* Header-Farbe je Rolle (neue Farben, sonst nirgends verwendet) */
+  #topbar.role-mitarbeiter { background: #0d6e63; }  /* Petrol/Teal */
+  #topbar.role-admin       { background: #3f3a8c; }  /* Indigo */
+  #topbar.role-superadmin  { background: #7a1f3d; }  /* Bordeaux */
   #topbar-logo {
     font-size: 17px; font-weight: 800; white-space: nowrap;
     letter-spacing: -0.3px; margin-right: 8px; flex-shrink: 0;
@@ -550,7 +555,7 @@
 
   <!-- Admin-Panel Dropdown -->
   <div id="admin-panel" class="hidden">
-    <div>
+    <div class="superadmin-only" style="flex-direction:column;">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:8px;">Hardware-Modus</div>
       <div style="display:flex;gap:6px;">
         <button class="mode-btn active-virtual" id="btn-virtual" onclick="setMode('VIRTUAL')">🖥 Virtual</button>
@@ -561,7 +566,7 @@
         <div id="virtual-monitor"><span style="color:#546e7a;font-size:11px;">– kein PDF –</span></div>
       </div>
     </div>
-    <div style="width:1px;background:#3a3a3c;align-self:stretch;"></div>
+    <div class="superadmin-only" style="width:1px;background:#3a3a3c;align-self:stretch;"></div>
     <div>
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:8px;">Sprach-Steuerung</div>
       <button class="sidebar-btn" id="speech-toggle-btn" onclick="toggleSpeech()">🎤 Sprache starten</button>
@@ -1110,6 +1115,9 @@ function applyRole(role) {
   }
   const isAdmin = role === 'admin' || role === 'superadmin';
   const isSuperAdmin = role === 'superadmin';
+  // Header-Farbe je Rolle setzen (leer = Standard-Dunkel beim Logout)
+  const topbarEl = document.getElementById('topbar');
+  if (topbarEl) topbarEl.className = role ? 'role-' + role : '';
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.setProperty('display', isAdmin ? 'flex' : 'none', 'important');
   });
@@ -1215,9 +1223,10 @@ function renderState(s) {
     if (s.tag_override)         quelle = '✏️ manuell';
     else if (s.pdf_detected_tag) quelle = '📄 aus PDF';
     else                         quelle = '🕐 Systemuhr';
+    const datum = s.pdf_detected_datum ? ', ' + s.pdf_detected_datum : '';
     const label = isFeiertag
-      ? '🎉 Feiertag  (✏️ manuell)'
-      : '📅 ' + s.aktiver_tag + '  (' + quelle + ')';
+      ? '🎉 Feiertag' + datum + '  (✏️ manuell)'
+      : '📅 ' + s.aktiver_tag + datum + '  (' + quelle + ')';
     const el = document.getElementById('aktiver-tag-anzeige');
     if (el) { el.textContent = label; el.style.color = isFeiertag ? '#f57f17' : '#fbc02d'; }
   }

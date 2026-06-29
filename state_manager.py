@@ -37,6 +37,7 @@ class AppState:
     # --- Tages-Override ---
     tag_override: str = ""       # manuell gesetzt (Dropdown), leer = aus PDF oder Systemuhr
     pdf_detected_tag: str = ""   # aus PDF gelesen, bleibt auch wenn Dropdown auf "auto" steht
+    pdf_detected_datum: str = ""  # Datum aus PDF-Header (z.B. '16.06.2026'), leer wenn nicht gefunden
 
     # --- Hardware-Modus ---
     hardware_mode: str = "VIRTUAL"   # "VIRTUAL" | "MQTT"
@@ -491,6 +492,7 @@ class AppState:
             "filialen_heute": filialen_heute,
             "tag_override": self.tag_override,
             "pdf_detected_tag": self.pdf_detected_tag,
+            "pdf_detected_datum": self.pdf_detected_datum,
         }
 
 

@@ -352,16 +352,29 @@ def _detect_tag_from_top_text(top_text: str):
     return _TAG_LANG.get(found) or _TAG_KURZ.get(found)
 
 
+_DATUM_RE = re.compile(r'\b(\d{2}\.\d{2}\.\d{4})\b')
+
+def _detect_datum_from_top_text(top_text: str):
+    """
+    Sucht im Header-Text nach einem Datum im Format TT.MM.JJJJ (z.B. '16.06.2026').
+    Gibt den Datums-String zurück oder None wenn nichts gefunden.
+    """
+    m = _DATUM_RE.search(top_text)
+    return m.group(1) if m else None
+
+
 def parse_baeckerei_pdf(file_path_or_buffer, debug_nr: str = None):
     """
     Liest eine Bäckerei-Versandliste (PDF) ein.
-    Gibt (df, filialen_liste, erkannter_tag) zurück.
+    Gibt (df, filialen_liste, erkannter_tag, erkanntes_datum) zurück.
     erkannter_tag ist z.B. 'Dienstag' oder None wenn nicht im PDF gefunden.
+    erkanntes_datum ist z.B. '16.06.2026' oder None wenn nicht im PDF gefunden.
     Wenn debug_nr gesetzt, werden alle Roh-Zeilen für diese Nr zurückgegeben (pre-merge).
     """
     all_rows = []
     global_filialen = set()
     erkannter_tag = None
+    erkanntes_datum = None
 
     with pdfplumber.open(file_path_or_buffer) as pdf:
         for page_idx, page in enumerate(pdf.pages):
@@ -369,9 +382,11 @@ def parse_baeckerei_pdf(file_path_or_buffer, debug_nr: str = None):
             if not words:
                 continue
             top_text = ' '.join(w['text'] for w in words if w['top'] < 20)
-            # Tag aus erstem Treffer übernehmen
+            # Tag + Datum aus erstem Treffer übernehmen
             if erkannter_tag is None:
                 erkannter_tag = _detect_tag_from_top_text(top_text)
+            if erkanntes_datum is None:
+                erkanntes_datum = _detect_datum_from_top_text(top_text)
             if 'Sonstige' in top_text:
                 _, page_rows = _parse_sonstige_page(page, global_filialen)
             else:
@@ -382,11 +397,11 @@ def parse_baeckerei_pdf(file_path_or_buffer, debug_nr: str = None):
             all_rows.extend(page_rows)
 
     if debug_nr:
-        return [r for r in all_rows if r.get('Nr') == debug_nr], [], None
+        return [r for r in all_rows if r.get('Nr') == debug_nr], [], None, None
 
     df = pd.DataFrame(all_rows)
     if not df.empty:
         df = df.fillna(0.0)
         df = _merge_same_artikel(df)
 
-    return df, sorted(list(global_filialen)), erkannter_tag
+    return df, sorted(list(global_filialen)), erkannter_tag, erkanntes_datum
