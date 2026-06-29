@@ -614,7 +614,7 @@
   <!-- Header-Menü (Verbindung, Ebene, Abmelden) -->
   <div id="header-menu" class="hidden">
     <div id="ws-status">…</div>
-    <button class="sidebar-btn admin-only" onclick="toggleHeaderMenu();toggleAdminPanel()" title="Admin-Einstellungen">⚙️ Admin-Einstellungen</button>
+    <button class="sidebar-btn admin-only" onclick="toggleHeaderMenu();toggleAdminPanel()" title="Admin-Einstellungen"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Admin-Einstellungen</button>
     <button class="sidebar-btn" id="elevate-btn" onclick="toggleHeaderMenu();ebeneWechseln()" style="border-color:#5b8def;color:#5b8def;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>Ebene wechseln</button>
     <button id="logout-btn" onclick="doLogout()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>Abmelden</button>
   </div>
@@ -624,8 +624,8 @@
     <div class="superadmin-only" style="flex-direction:column;">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:8px;">Hardware-Modus</div>
       <div style="display:flex;gap:6px;">
-        <button class="mode-btn active-virtual" id="btn-virtual" onclick="setMode('VIRTUAL')">🖥 Virtual</button>
-        <button class="mode-btn inactive" id="btn-mqtt" onclick="setMode('MQTT')">📡 MQTT</button>
+        <button class="mode-btn active-virtual" id="btn-virtual" onclick="setMode('VIRTUAL')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Virtual</button>
+        <button class="mode-btn inactive" id="btn-mqtt" onclick="setMode('MQTT')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12a7 7 0 0 1 14 0M2 8.82a12 12 0 0 1 20 0M8.5 16a4 4 0 0 1 7 0M12 20h.01"/></svg>MQTT</button>
       </div>
       <div id="virtual-monitor-wrap" style="margin-top:8px;">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:4px;">Virtueller Monitor</div>
@@ -635,27 +635,27 @@
     <div class="superadmin-only" style="width:1px;background:#3a3a3c;align-self:stretch;"></div>
     <div>
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:8px;">Sprach-Steuerung</div>
-      <button class="sidebar-btn" id="speech-toggle-btn" onclick="toggleSpeech()">🎤 Sprache starten</button>
+      <button class="sidebar-btn" id="speech-toggle-btn" onclick="toggleSpeech()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10a7 7 0 0 1-14 0M12 19v3"/></svg>Sprache starten</button>
       <div id="speech-status" style="font-size:12px;color:#86868b;margin-top:4px;">Inaktiv</div>
     </div>
     <div style="width:1px;background:#3a3a3c;align-self:stretch;"></div>
     <div>
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:8px;">Optionen</div>
-      <button class="sidebar-btn" onclick="resetAnfordern()" style="border-color:#ff9f0a;color:#ff9f0a;">🧹 Morgen zurücksetzen</button>
+      <button class="sidebar-btn" onclick="resetAnfordern()" style="border-color:#ff9f0a;color:#ff9f0a;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>Morgen zurücksetzen</button>
     </div>
     <div style="width:1px;background:#3a3a3c;align-self:stretch;"></div>
     <div>
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:8px;">Mitarbeiter-PIN</div>
       <div class="pin-change-row">
         <input type="password" id="new-pin-ma" maxlength="4" placeholder="Neuer PIN" inputmode="numeric">
-        <button class="pin-save-btn" onclick="savePin('mitarbeiter')">💾</button>
+        <button class="pin-save-btn" onclick="savePin('mitarbeiter')"><svg class="ico" style="margin:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></button>
       </div>
     </div>
     <div>
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#86868b;margin-bottom:8px;">Admin-PIN</div>
       <div class="pin-change-row">
         <input type="password" id="new-pin-ad" maxlength="4" placeholder="Neuer PIN" inputmode="numeric">
-        <button class="pin-save-btn" onclick="savePin('admin')">💾</button>
+        <button class="pin-save-btn" onclick="savePin('admin')"><svg class="ico" style="margin:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></button>
       </div>
     </div>
     <div id="pin-save-msg" style="font-size:12px;color:#86868b;"></div>
@@ -743,7 +743,7 @@
       </p>
       <div class="woche-grid" id="woche-grid"></div>
       <button id="touren-save-btn" onclick="saveTourenConfig()">
-        💾 Reihenfolge dauerhaft speichern
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Reihenfolge dauerhaft speichern
       </button>
       <div id="touren-save-msg"></div>
     </div>
@@ -777,11 +777,11 @@
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
           <button id="menge-berechnen-btn" onclick="berechneKuerzung()"
             style="padding:12px 24px;background:#1565c0;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">
-            ⚖️ Berechnen
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>Berechnen
           </button>
           <button id="anwenden-btn" onclick="wendeKuerzungAn()" disabled
             style="padding:12px 24px;background:#ccc;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:not-allowed;">
-            ✅ In Pack-Modus übernehmen
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>In Pack-Modus übernehmen
           </button>
           <span id="menge-hint" style="font-size:12px;color:#666;">Ist-Mengen eingeben → Berechnen → Übernehmen</span>
         </div>
@@ -811,7 +811,7 @@
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
           <b><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 14h6M9 18h6"/></svg>Berechnungs-History</b>
           <div style="display:flex;gap:8px;">
-            <button onclick="ladeHistory()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:13px;">🔄 Aktualisieren</button>
+            <button onclick="ladeHistory()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:13px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>Aktualisieren</button>
           </div>
         </div>
         <div id="history-wrap" style="font-size:13px;max-height:400px;overflow-y:auto;">
@@ -828,7 +828,7 @@
       </p>
 
       <div id="nl-no-pdf" class="card" style="color:#d32f2f;font-weight:600;">
-        ⚠️ Bitte zuerst links auf "📄 Versandliste einlesen" klicken.
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>Bitte zuerst im Einstellung-Tab „Versandliste einlesen" klicken.
       </div>
 
       <div id="nl-inhalt" style="display:none;">
@@ -864,8 +864,8 @@
           <div style="margin-bottom:16px;">
             <!-- Modus-Umschalter -->
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-              <button id="nl-mode-auto-btn" class="nl-mode-btn active" onclick="setNlMode('auto')">⚖️ Automatisch</button>
-              <button id="nl-mode-manuell-btn" class="nl-mode-btn" onclick="setNlMode('manuell')">✏️ Manuell</button>
+              <button id="nl-mode-auto-btn" class="nl-mode-btn active" onclick="setNlMode('auto')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>Automatisch</button>
+              <button id="nl-mode-manuell-btn" class="nl-mode-btn" onclick="setNlMode('manuell')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Manuell</button>
             </div>
 
           <!-- AUTO: Gesamt-Menge + Checkboxen -->
@@ -874,7 +874,7 @@
               <b style="font-size:14px;">Filialen auswählen:</b>
               <button onclick="alleNlFilialen(true)"
                 style="padding:4px 12px;border:1px solid #555;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;">
-                ✅ Alle
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Alle
               </button>
               <button onclick="alleNlFilialen(false)"
                 style="padding:4px 12px;border:1px solid #555;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;">
@@ -896,7 +896,7 @@
             <button id="nl-anwenden-btn" onclick="wendeNachlegenAn()"
               style="padding:14px 36px;background:#f57f17;color:#fff;border:none;
                      border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;">
-              📦 Nachlegen
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>Nachlegen
             </button>
           </div>
         </div>
@@ -916,7 +916,7 @@
         <div>Aktive Station: <b id="disp-station">–</b></div>
         <div>Menge: <b id="disp-menge">–</b></div>
         <div id="disp-sperre-info" style="color:#81c784;font-weight:700;display:none;">
-          ✅ Produkt fertig – warte auf Bestätigung
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Produkt fertig – warte auf Bestätigung
         </div>
       </div>
 
@@ -946,7 +946,7 @@
         <button onclick="ladeAuswertung(document.getElementById('ausw-datum-select').value)"
           style="padding:8px 16px;border:none;border-radius:10px;background:linear-gradient(180deg,#1a8cff,#0060cc);
                  color:#fff;font-weight:600;cursor:pointer;font-size:14px;
-                 box-shadow:0 4px 0 #004499;">🔄 Laden</button>
+                 box-shadow:0 4px 0 #004499;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>Laden</button>
       </div>
 
       <!-- Statistik-Karten -->
@@ -1023,7 +1023,7 @@
       <div class="card" style="margin-bottom:16px;">
         <b style="font-size:15px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Versandliste</b>
         <p style="color:#666;font-size:13px;margin:8px 0 14px;">Aktuelle Versandliste aus dem Netzwerkordner einlesen.</p>
-        <button id="pdf-reload-btn" onclick="reloadPdf()">📄 Versandliste einlesen</button>
+        <button id="pdf-reload-btn" onclick="reloadPdf()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Versandliste einlesen</button>
         <input id="pdf-input" type="file" accept=".pdf" style="display:none;">
       </div>
 
@@ -1066,7 +1066,7 @@
                    box-shadow:0 4px 0 #1a7a30;transition:transform .08s,box-shadow .08s;"
             onmousedown="this.style.transform='translateY(2px)';this.style.boxShadow='0 2px 0 #1a7a30'"
             onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #1a7a30'">
-            💾 Speichern
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Speichern
           </button>
         </div>
         <div id="sa-role-matrix" style="overflow-x:auto;"></div>
@@ -1080,12 +1080,12 @@
           <div style="display:flex;gap:8px;">
             <label style="padding:9px 18px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;
                           background:linear-gradient(180deg,#1a8cff,#0060cc);color:#fff;box-shadow:0 3px 0 #004499;">
-              ⬆️ Datei wählen
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg>Datei wählen
               <input type="file" id="personal-file" accept=".csv,.xlsx,.xls" style="display:none;" onchange="uploadPersonal(this)">
             </label>
             <button onclick="clearPersonal()"
               style="padding:9px 16px;border:1px solid #ff3b30;border-radius:10px;cursor:pointer;font-size:13px;
-                     font-weight:600;background:#fff;color:#ff3b30;">🗑 Leeren</button>
+                     font-weight:600;background:#fff;color:#ff3b30;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Leeren</button>
           </div>
         </div>
         <p style="color:#666;font-size:12px;margin-bottom:14px;">
@@ -1103,7 +1103,7 @@
           <button onclick="speichereHeaderConfig()"
             style="padding:10px 24px;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;
                    background:linear-gradient(180deg,#43d86a,#28a745);color:#fff;box-shadow:0 4px 0 #1a7a30;">
-            💾 Speichern
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Speichern
           </button>
         </div>
         <p style="color:#666;font-size:12px;margin-bottom:14px;">Welche Elemente sollen oben im Header erscheinen?</p>
@@ -1141,7 +1141,7 @@
      z-index:10000;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:14px;padding:28px 32px;min-width:320px;max-width:400px;
               box-shadow:0 8px 32px rgba(0,0,0,.4);text-align:center;">
-    <div style="font-size:32px;margin-bottom:10px;">🧹</div>
+    <div style="margin-bottom:10px;color:#ff9f0a;"><svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg></div>
     <div style="font-size:18px;font-weight:700;margin-bottom:10px;color:#222;">Tag wirklich neu starten?</div>
     <div style="font-size:13px;color:#666;margin-bottom:8px;">
       Alle bisher gepackten Mengen werden auf <b>0</b> gesetzt und der Pack-Modus beginnt von vorne.
@@ -1155,7 +1155,7 @@
                background:#f5f5f5;cursor:pointer;font-weight:600;">Abbrechen</button>
       <button onclick="resetBestaetigen()"
         style="flex:1;padding:12px;font-size:15px;border:none;border-radius:8px;
-               background:#ff9f0a;color:#fff;cursor:pointer;font-weight:700;">🧹 Neu starten</button>
+               background:#ff9f0a;color:#fff;cursor:pointer;font-weight:700;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>Neu starten</button>
     </div>
   </div>
 </div>
@@ -1178,7 +1178,7 @@
                background:#f5f5f5;cursor:pointer;font-weight:600;">Abbrechen</button>
       <button onclick="mpBestaetigen()"
         style="flex:2;padding:12px;font-size:15px;border:none;border-radius:8px;
-               background:#1976d2;color:#fff;cursor:pointer;font-weight:700;">✓ Bestätigen</button>
+               background:#1976d2;color:#fff;cursor:pointer;font-weight:700;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Bestätigen</button>
     </div>
   </div>
 </div>
@@ -1216,7 +1216,24 @@ const ICO = {
   undo: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg>',
   refresh: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>',
   user: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  rocket: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>',
+  scale: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>',
+  box: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
+  monitor: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+  chart: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-3M12 16V8M17 16v-6"/></svg>',
+  gear: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  shield: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  crown: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zM2 20h20"/></svg>',
+  save: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>',
+  upload: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg>',
+  trash: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  mic: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10a7 7 0 0 1-14 0M12 19v3"/></svg>',
+  antenna: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12a7 7 0 0 1 14 0M2 8.82a12 12 0 0 1 20 0M8.5 16a4 4 0 0 1 7 0M12 20h.01"/></svg>',
+  warn: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
+  x: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
 };
+const TAB_ICO = { pack: ICO.rocket, menge: ICO.scale, nachlegen: ICO.box, tour: ICO.calendar, displays: ICO.monitor, auswertung: ICO.chart, einstellung: ICO.gear, superadmin: ICO.shield };
+const ROLE_ICO = { mitarbeiter: ICO.user, admin: ICO.crown, superadmin: ICO.shield };
 
 function pinKey(d) {
   if (pinBuffer.length >= 4) return;
@@ -1715,7 +1732,7 @@ function switchTab(tab, btn) {
 // PDF laden
 // ═══════════════════════════════════════════════════════════
 async function reloadPdf() {
-  document.getElementById('pdf-reload-btn').textContent = '⏳ Lädt…';
+  document.getElementById('pdf-reload-btn').innerHTML = ICO.refresh + 'Lädt…';
   try {
     const r = await fetch('/reload-pdf');
     const d = await r.json();
@@ -1724,7 +1741,7 @@ async function reloadPdf() {
   } catch(e) {
     document.getElementById('upload-status').textContent = '⚠ Verbindungsfehler';
   }
-  document.getElementById('pdf-reload-btn').textContent = '📄 Versandliste einlesen';
+  document.getElementById('pdf-reload-btn').innerHTML = ICO.file + 'Versandliste einlesen';
 }
 
 document.getElementById('pdf-input').addEventListener('change', async function() {
@@ -1967,7 +1984,7 @@ async function berechneKuerzung() {
     if (!isNaN(val)) ist_mengen[inp.dataset.nr] = val;
   });
   const btn = document.getElementById('menge-berechnen-btn');
-  btn.textContent = '⏳ Berechne…'; btn.disabled = true;
+  btn.innerHTML = ICO.refresh + 'Berechne…'; btn.disabled = true;
   try {
     const r = await fetch('/api/kuerzung/berechnen', {
       method: 'POST', headers: {'Content-Type':'application/json'},
@@ -1982,7 +1999,7 @@ async function berechneKuerzung() {
     anwBtn.style.cssText = 'padding:12px 24px;background:#388e3c;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;';
     document.getElementById('menge-hint').textContent = '✅ Berechnung fertig – prüfen und übernehmen';
   } finally {
-    btn.textContent = '⚖️ Berechnen'; btn.disabled = false;
+    btn.innerHTML = ICO.scale + 'Berechnen'; btn.disabled = false;
   }
 }
 
@@ -2187,7 +2204,7 @@ async function wendeNachlegenAn() {
     const filialen = [];
     document.querySelectorAll('#nl-filialen-grid input[type=checkbox]:checked').forEach(cb => filialen.push(cb.value));
     if (!filialen.length) { alert('Bitte mindestens eine Filiale auswählen'); return; }
-    btn.textContent = '⏳ Wird verteilt...'; btn.disabled = true;
+    btn.innerHTML = ICO.refresh + 'Wird verteilt...'; btn.disabled = true;
     try {
       const r = await fetch('/api/nachlegen/anwenden', {
         method: 'POST', headers: {'Content-Type':'application/json'},
@@ -2200,7 +2217,7 @@ async function wendeNachlegenAn() {
         document.getElementById('nl-produkt-select').value = '';
         renderNachlegen(state);
       }
-    } finally { btn.textContent = '📦 Nachlegen'; btn.disabled = false; }
+    } finally { btn.innerHTML = ICO.box + 'Nachlegen'; btn.disabled = false; }
 
   } else {
     const mengen = {};
@@ -2209,7 +2226,7 @@ async function wendeNachlegenAn() {
       if (val > 0) mengen[inp.dataset.filiale] = val;
     });
     if (!Object.keys(mengen).length) { alert('Bitte mindestens eine Menge eingeben'); return; }
-    btn.textContent = '⏳ Wird verteilt...'; btn.disabled = true;
+    btn.innerHTML = ICO.refresh + 'Wird verteilt...'; btn.disabled = true;
     try {
       const r = await fetch('/api/nachlegen/anwenden-manuell', {
         method: 'POST', headers: {'Content-Type':'application/json'},
@@ -2222,7 +2239,7 @@ async function wendeNachlegenAn() {
         document.getElementById('nl-produkt-select').value = '';
         renderNachlegen(state);
       }
-    } finally { btn.textContent = '📦 Nachlegen'; btn.disabled = false; }
+    } finally { btn.innerHTML = ICO.box + 'Nachlegen'; btn.disabled = false; }
   }
 }
 
@@ -2542,7 +2559,7 @@ async function ladeSaPins() {
   const d = await r.json();
   const grid = document.getElementById('sa-pin-grid');
   const rollen = ['mitarbeiter', 'admin', 'superadmin'];
-  const labels = { mitarbeiter: '👷 Mitarbeiter', admin: '👑 Admin', superadmin: '🔐 Super Admin' };
+  const labels = { mitarbeiter: ROLE_ICO.mitarbeiter + 'Mitarbeiter', admin: ROLE_ICO.admin + 'Admin', superadmin: ROLE_ICO.superadmin + 'Super Admin' };
   const farben = { mitarbeiter: '#0071e3', admin: '#ff9f0a', superadmin: '#ff3b30' };
   grid.innerHTML = rollen.map(rolle => {
     const sterne = d[rolle] || '****';
@@ -2554,7 +2571,7 @@ async function ladeSaPins() {
       + '  style="width:110px;padding:8px;border:2px solid #d1d1d6;border-radius:8px;font-size:14px;text-align:center;">'
       + '<button onclick="saPinSpeichern(\'' + rolle + '\')"'
       + '  style="padding:8px 14px;border:none;border-radius:8px;background:linear-gradient(180deg,#1a8cff,#0060cc);'
-      + '  color:#fff;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #004499;font-size:13px;">💾</button>'
+      + '  color:#fff;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #004499;font-size:13px;"><svg class="ico" style="margin:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></button>'
       + '</div></div>';
   }).join('');
 }
@@ -2584,7 +2601,7 @@ async function ladeSaRoleConfig() {
 
 function renderSaMatrix() {
   const rollen = ['mitarbeiter', 'admin', 'superadmin'];
-  const labels = { mitarbeiter: '👷 Mitarbeiter', admin: '👑 Admin', superadmin: '🔐 Super Admin' };
+  const labels = { mitarbeiter: ROLE_ICO.mitarbeiter + 'Mitarbeiter', admin: ROLE_ICO.admin + 'Admin', superadmin: ROLE_ICO.superadmin + 'Super Admin' };
   let t = '<table style="border-collapse:collapse;width:100%;font-size:13px;">';
   t += '<thead><tr>';
   t += '<th style="padding:10px 14px;text-align:left;background:#f5f5f7;border-radius:8px 0 0 0;">Modul</th>';
@@ -2595,14 +2612,14 @@ function renderSaMatrix() {
   saAllTabs.forEach((tab, i) => {
     const bg = i % 2 === 0 ? '#fff' : '#fafafa';
     t += '<tr style="background:' + bg + ';">';
-    t += '<td style="padding:10px 14px;font-weight:600;">' + tab.label + '</td>';
+    t += '<td style="padding:10px 14px;font-weight:600;">' + (TAB_ICO[tab.id] || '') + tab.label.replace(/^\S+\s+/, '') + '</td>';
     rollen.forEach(rolle => {
       const isSuperAdmin = rolle === 'superadmin';
       const checked = isSuperAdmin || (saRoleConfig[rolle] || []).includes(tab.id);
       const locked = tab.locked || isSuperAdmin;
       t += '<td style="padding:10px;text-align:center;">';
       if (locked) {
-        t += '<span style="font-size:18px;">✅</span>';
+        t += '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#34c759" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M20 6 9 17l-5-5"/></svg>';
       } else {
         t += '<input type="checkbox" data-rolle="' + rolle + '" data-tab="' + tab.id + '"'
           + (checked ? ' checked' : '')
