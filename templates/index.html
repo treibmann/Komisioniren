@@ -1548,6 +1548,12 @@ function renderState(s) {
     s.lieferung_phase === 'V' ? 'phase-vor' :
     s.lieferung_phase === '2.' ? 'phase-zwei' : 'phase-erst');
 
+  // Mengenkorrektur bei Phasenwechsel neu laden (wenn Tab gerade aktiv)
+  const mengePane = document.getElementById('tab-menge');
+  if (mengePane && mengePane.classList.contains('active') && _mengePhase !== s.lieferung_phase) {
+    renderMengenkorrektur(s);
+  }
+
   // Virtueller Monitor
   const vm = document.getElementById('virtual-monitor');
   if (s.hardware_mode === 'VIRTUAL' && s.virtual_displays) {
@@ -1953,9 +1959,11 @@ let kuerzLocal = {};
 
 let mengeArtikel = [];
 let mengeKuerzResult = null;
+let _mengePhase = null;
 
 function renderMengenkorrektur(s) {
   if (!s || !s.pdf_loaded) return;
+  _mengePhase = s.lieferung_phase;
   Promise.all([
     fetch('/api/alle-artikel').then(r => r.json()),
     fetch('/api/kuerzung/config').then(r => r.json())

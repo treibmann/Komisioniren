@@ -794,6 +794,9 @@ async def get_alle_artikel():
     if state.df is None:
         return {"artikel": [], "kategorien": []}
     df = state.df
+    phase = (state.lieferung_phase or "").strip()  # "1." / "V" / "2."
+    if phase and "Typ" in df.columns:
+        df = df[df["Typ"] == phase]
     seen = set()
     artikel = []
     for _, row in df.iterrows():
@@ -814,8 +817,8 @@ async def get_alle_artikel():
             "kat": str(row["Kat"]),
             "soll_gesamt": soll,
         })
-    kategorien = sorted(df["Kat"].unique().tolist())
-    return {"artikel": artikel, "kategorien": kategorien}
+    kategorien = sorted(df["Kat"].unique().tolist()) if not df.empty else []
+    return {"artikel": artikel, "kategorien": kategorien, "phase": phase}
 
 
 @app.get("/api/touren-config")
