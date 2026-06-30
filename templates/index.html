@@ -293,6 +293,12 @@
   .filter-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
   .filter-row label { font-size: 26px; font-weight: 600; color: #666; white-space: nowrap; }
   .filter-row select { font-size: 26px; padding: 18px 18px; }
+  /* Fortschritt (links) + Bereich/Produkt-Auswahl (rechts) in einer Reihe */
+  #pack-toprow { display: flex; gap: 16px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  #pack-toprow #fortschritt-wrap { flex: 1 1 300px; min-width: 280px; margin: 0; }
+  #pack-toprow .filter-row { margin: 0; flex-shrink: 0; }
+  #pack-toprow .filter-row #kat-select { width: 170px; }
+  #pack-toprow .filter-row #posten-select { width: 430px; }
 
   /* ── Tourenplan ── */
   .woche-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -692,7 +698,8 @@
 
       <div id="pack-content" class="hidden">
 
-        <!-- Fortschrittsbalken -->
+        <!-- Fortschritt (links) + Bereich/Produkt-Auswahl (rechts) in einer Reihe -->
+        <div id="pack-toprow">
         <div id="fortschritt-wrap">
           <div id="fortschritt-text">
             <span id="fortschritt-label">Artikel <b id="fp-aktuell">0</b> von <b id="fp-gesamt">0</b> erledigt</span>
@@ -709,6 +716,7 @@
           <label style="margin-left:12px;">Produkt:</label>
           <select id="posten-select" onchange="sendCmd('set_posten', {idx: parseInt(this.value)})">
           </select>
+        </div>
         </div>
 
         <!-- Pack-Reihe: Takt Zurück (links) | Station (Mitte, schmaler) | Bestätigen (rechts) -->
