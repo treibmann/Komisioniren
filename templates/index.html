@@ -275,8 +275,9 @@
 
   /* ── Filial-Vorschau ── */
   #filialen-vorschau { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
-  .filiale-chip { padding: 26px 34px; border-radius: 18px; font-size: 30px; font-weight: 600;
-                  min-width: 230px; text-align: center; transition: all .15s; }
+  .filiale-chip { padding: 22px 18px; border-radius: 18px; font-size: 30px; font-weight: 600;
+                  width: 240px; min-height: 120px; box-sizing: border-box;
+                  text-align: center; transition: all .15s; }
   .chip-done    { background: rgba(52,199,89,0.1);  border: 3px solid #34c759; color: #1a7f37; }
   .chip-active  { background: rgba(255,159,10,0.12); border: 3px solid #ff9f0a; color: #c87000; }
   .chip-pending { background: rgba(255,59,48,0.08); border: 3px solid #ff3b30; color: #c0392b; }
@@ -2199,7 +2200,7 @@ function ladeNlProdukt() {
     const soll = f.soll_erst + f.soll_vor;
     const geliefert = (f.geliefert_erst || 0) + (f.geliefert_vor || 0);
     const lbl = document.createElement('label');
-    lbl.style.cssText = 'display:flex;align-items:center;gap:14px;padding:20px 28px;border-radius:16px;border:3px solid #0071e3;background:#f0f7ff;cursor:pointer;min-width:230px;transition:border-color .15s;';
+    lbl.style.cssText = 'display:flex;align-items:center;gap:14px;padding:20px 24px;border-radius:16px;border:3px solid #0071e3;background:#f0f7ff;cursor:pointer;width:300px;box-sizing:border-box;transition:border-color .15s;';
     const cb = document.createElement('input');
     cb.type = 'checkbox'; cb.value = f.name; cb.checked = true;
     cb.style.cssText = 'width:28px;height:28px;cursor:pointer;flex-shrink:0;';
