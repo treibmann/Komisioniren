@@ -280,16 +280,30 @@
   #pack-row #naechstes-btn { width: 360px; max-width: 360px; min-width: 280px; margin: 0; flex-shrink: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
   /* Block-Leiste (Block-Kommissionierung) */
-  #block-bar { display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
-    padding: 12px 18px; border-radius: 14px; background: linear-gradient(180deg,#ffffff,#eef3fa);
-    border: 2px solid #0071e3; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+  #block-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 14px;
+    padding: 14px 18px; border-radius: 16px;
+    background: linear-gradient(180deg,#0d2440,#0a1c33); border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
   #block-bar.hidden { display: none; }
-  #block-info { flex: 1; text-align: center; font-size: 22px; font-weight: 700; color: #1d1d1f; }
-  #block-prev, #block-next { padding: 14px 24px; border: none; border-radius: 10px;
-    font-size: 20px; font-weight: 800; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-  #block-prev { background: linear-gradient(180deg,#8aa0b5,#647588); color: #fff; box-shadow: 0 3px 0 #4a5563; }
-  #block-next { background: linear-gradient(180deg,#34c759,#1a9e44); color: #fff; box-shadow: 0 3px 0 #137a32; }
-  #block-prev:disabled, #block-next:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+  #block-info { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .block-line1 { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .block-bereich-badge { background: linear-gradient(180deg,#1a8cff,#0060cc); color: #fff;
+    font-size: 16px; font-weight: 800; padding: 5px 14px; border-radius: 999px; letter-spacing: .3px; }
+  .block-num { font-size: 26px; font-weight: 900; color: #fff; }
+  .block-num-tot { color: #8aa9c9; font-weight: 700; }
+  .block-dots { display: flex; gap: 7px; align-items: center; }
+  .block-dot { width: 13px; height: 13px; border-radius: 50%; background: rgba(255,255,255,0.22); transition: all .15s; }
+  .block-dot.done { background: #34c759; }
+  .block-dot.active { background: #ffb300; box-shadow: 0 0 0 4px rgba(255,179,0,0.25); transform: scale(1.15); }
+  .block-fil { display: flex; flex-wrap: wrap; gap: 8px; }
+  .block-fil-chip { background: rgba(255,255,255,0.10); color: #dce6f2; border: 1px solid rgba(255,255,255,0.18);
+    font-size: 17px; font-weight: 700; padding: 6px 14px; border-radius: 10px; }
+  #block-prev, #block-next { border: none; border-radius: 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    font-weight: 800; transition: filter .12s, transform .08s; }
+  #block-prev { padding: 16px 20px; font-size: 22px; background: linear-gradient(180deg,#6b7b8c,#4a5563); color: #fff; box-shadow: 0 3px 0 #353e47; }
+  #block-next { padding: 16px 28px; font-size: 21px; background: linear-gradient(180deg,#34c759,#1a9e44); color: #fff; box-shadow: 0 4px 0 #137a32; }
+  #block-prev:hover, #block-next:hover { filter: brightness(1.1); }
+  #block-prev:disabled, #block-next:disabled { opacity: 0.35; cursor: default; box-shadow: none; filter: none; }
   #block-prev:active, #block-next:active { transform: translateY(2px); }
 
   /* ── Filial-Vorschau ── */
@@ -1596,14 +1610,21 @@ function renderState(s) {
   if (bb) {
     if (s.block_aktiv) {
       bb.classList.remove('hidden');
-      const fil = (s.block_filialen || []).join(', ');
+      const cur = s.block_idx || 0, cnt = s.block_anzahl || 1;
+      let dots = '';
+      for (let i = 0; i < cnt; i++) dots += '<span class="block-dot' + (i < cur ? ' done' : i === cur ? ' active' : '') + '"></span>';
+      const chips = (s.block_filialen || []).map(f => '<span class="block-fil-chip">' + f + '</span>').join('');
       document.getElementById('block-info').innerHTML =
-        'Bereich <b>' + (s.block_bereich || 'Alle') + '</b> · Block <b>' + ((s.block_idx || 0) + 1) +
-        ' / ' + (s.block_anzahl || 1) + '</b>' + (fil ? ' · <span style="font-weight:600;color:#0071e3;">' + fil + '</span>' : '');
-      document.getElementById('block-prev').disabled = (s.block_idx || 0) <= 0;
+        '<div class="block-line1">' +
+          '<span class="block-bereich-badge">' + (s.block_bereich || 'Alle') + '</span>' +
+          '<span class="block-num">Block ' + (cur + 1) + '<span class="block-num-tot"> / ' + cnt + '</span></span>' +
+          '<span class="block-dots">' + dots + '</span>' +
+        '</div>' +
+        '<div class="block-fil">' + chips + '</div>';
+      document.getElementById('block-prev').disabled = cur <= 0;
       const next = document.getElementById('block-next');
-      const last = (s.block_idx || 0) >= (s.block_anzahl || 1) - 1;
-      next.textContent = last ? '✓ Letzter Block' : 'Block fertig ▶';
+      const last = cur >= cnt - 1;
+      next.innerHTML = last ? '✓ Letzter Block' : 'Block fertig ▶';
       next.disabled = last;
     } else {
       bb.classList.add('hidden');
@@ -1898,9 +1919,11 @@ function buildTourenGrid(alle_filialen) {
         ? '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.5 2.3 7.1-6.3-4.6L5.7 21l2.3-7.1-6-4.5h7.6z"/></svg>'
         : ICO.calendar) + tag + '</h3>' +
       (isFeiertag ? '<p style="font-size:11px;color:#f57f17;margin:0 0 6px;">Eigene Tour für Feiertage</p>' : '') +
-      '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#555;margin:0 0 8px;">Block-Größe (Displays):' +
+      '<label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#0071e3;margin:0 0 8px;background:#eaf3ff;border:1px solid #b9d9ff;border-radius:8px;padding:6px 10px;">' +
+        '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>' +
+        'Blöcke à' +
         '<input type="number" min="0" step="1" value="' + (blockLocal[tag] || 0) + '" onchange="setBlockGroesse(\'' + tag + '\',this.value)" ' +
-        'style="width:60px;padding:4px 6px;border:1px solid #ccc;border-radius:6px;font-size:13px;" title="0 = keine Blöcke (ganze Tour auf einmal)"></label>' +
+        'style="width:56px;padding:5px 6px;border:1px solid #0071e3;border-radius:6px;font-size:15px;font-weight:700;text-align:center;" title="0 = keine Blöcke"> Displays (0 = aus)</label>' +
       '<ul class="drag-list" id="list-' + tag + '" data-tag="' + tag + '"></ul>' +
       '<div id="checks-' + tag + '" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>';
     grid.appendChild(card);
