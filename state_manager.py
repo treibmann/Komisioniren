@@ -103,10 +103,12 @@ class AppState:
             return []
         return sorted(self.df["Kat"].unique().tolist())
 
+    TYP_LABELS = {"1.": "Erstlieferung", "V": "Vorbestellung", "2.": "2. Lieferung"}
+
     def get_posten_labels(self, df_gefiltert: pd.DataFrame) -> list[str]:
         labels = []
         for _, r in df_gefiltert.iterrows():
-            typ_str = "Erstlieferung" if r["Typ"] == "1." else "Vorbestellung"
+            typ_str = self.TYP_LABELS.get(str(r["Typ"]), str(r["Typ"]))
             labels.append(f"Nr. {r['Nr']} - {r['Name']} [{typ_str}]")
         return labels
 
