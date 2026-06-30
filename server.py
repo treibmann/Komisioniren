@@ -628,7 +628,16 @@ async def websocket_endpoint(ws: WebSocket):
                         if tag in new_config:
                             state.touren_config[tag] = new_config[tag]
                     state.save_touren_config()
-                    db_module.log_aktion("touren_gespeichert", {"config": new_config})
+                    new_bloecke = msg.get("bloecke")
+                    if isinstance(new_bloecke, dict):
+                        for tag in ALLE_TAGE:
+                            if tag in new_bloecke:
+                                try:
+                                    state.block_groessen[tag] = max(0, int(new_bloecke[tag] or 0))
+                                except Exception:
+                                    state.block_groessen[tag] = 0
+                        state.save_block_config()
+                    db_module.log_aktion("touren_gespeichert", {"config": new_config, "bloecke": new_bloecke})
                     result = {"event": "touren_gespeichert"}
 
                 elif cmd == "set_tag_override":

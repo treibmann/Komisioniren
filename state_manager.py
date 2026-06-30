@@ -14,6 +14,7 @@ import os as _os
 _DATA_DIR = _os.getenv("DATA_DIR", "data")
 _os.makedirs(_DATA_DIR, exist_ok=True)
 CONFIG_FILE = _os.path.join(_DATA_DIR, "touren_config.json")
+BLOCK_FILE = _os.path.join(_DATA_DIR, "block_config.json")
 WOCHENTAGE = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
 ALLE_TAGE = WOCHENTAGE + ["Feiertag"]   # Feiertag = eigene Tour-Konfiguration
 
@@ -47,6 +48,9 @@ class AppState:
 
     # --- Touren-Konfiguration ---
     touren_config: dict[str, list[str]] = field(default_factory=lambda: {t: [] for t in ALLE_TAGE})
+    # --- Block-Kommissionierung: Blockgröße je Tag (Anzahl Displays); 0 = keine Blöcke ---
+    block_groessen: dict[str, int] = field(default_factory=lambda: {t: 0 for t in ALLE_TAGE})
+    current_block_idx: int = 0   # welcher Block gerade bearbeitet wird
 
     # --- Intern ---
     _lock: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False)
@@ -72,6 +76,30 @@ class AppState:
     def save_touren_config(self) -> None:
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(self.touren_config, f, ensure_ascii=False, indent=4)
+
+    def load_block_config(self) -> None:
+        if os.path.exists(BLOCK_FILE):
+            try:
+                with open(BLOCK_FILE, "r", encoding="utf-8") as f:
+                    loaded = json.load(f)
+                for tag in ALLE_TAGE:
+                    self.block_groessen[tag] = int(loaded.get(tag, 0) or 0)
+                return
+            except Exception:
+                pass
+        self.block_groessen = {t: 0 for t in ALLE_TAGE}
+
+    def save_block_config(self) -> None:
+        with open(BLOCK_FILE, "w", encoding="utf-8") as f:
+            json.dump(self.block_groessen, f, ensure_ascii=False, indent=4)
+
+    def get_bloecke(self, tag: str, filialen: list[str]) -> list[list[str]]:
+        """Teilt die (bereits geordneten) Filialen in Blöcke der konfigurierten Größe.
+        Blockgröße 0/None -> ein einziger Block mit allen Filialen."""
+        size = int(self.block_groessen.get(tag, 0) or 0)
+        if size <= 0 or not filialen:
+            return [list(filialen)]
+        return [filialen[i:i + size] for i in range(0, len(filialen), size)]
 
     # ------------------------------------------------------------------ #
     # Helfer: gefilterte Daten
@@ -583,6 +611,8 @@ class AppState:
             "filialen_status": filialen_status,
             "virtual_displays": self.virtual_displays,
             "touren_config": self.touren_config,
+            "block_groessen": self.block_groessen,
+            "current_block_idx": self.current_block_idx,
             "filialen_liste": self.filialen_liste,
             "filialen_heute": filialen_heute,
             "tag_override": self.tag_override,
@@ -600,4 +630,5 @@ def get_state() -> AppState:
     if _state is None:
         _state = AppState()
         _state.load_touren_config()
+        _state.load_block_config()
     return _state

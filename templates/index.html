@@ -1833,9 +1833,11 @@ const WOCHENTAGE = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samst
 const ALLE_TAGE  = [...WOCHENTAGE, 'Feiertag'];
 let tourenLocal  = {};
 
+let blockLocal = {};
 function renderTourenplan(s) {
   if (!s.touren_config) return;
   tourenLocal = JSON.parse(JSON.stringify(s.touren_config));
+  blockLocal = JSON.parse(JSON.stringify(s.block_groessen || {}));
   buildTourenGrid(s.filialen_liste || []);
 }
 
@@ -1851,6 +1853,9 @@ function buildTourenGrid(alle_filialen) {
         ? '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.5 2.3 7.1-6.3-4.6L5.7 21l2.3-7.1-6-4.5h7.6z"/></svg>'
         : ICO.calendar) + tag + '</h3>' +
       (isFeiertag ? '<p style="font-size:11px;color:#f57f17;margin:0 0 6px;">Eigene Tour für Feiertage</p>' : '') +
+      '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#555;margin:0 0 8px;">Block-Größe (Displays):' +
+        '<input type="number" min="0" step="1" value="' + (blockLocal[tag] || 0) + '" onchange="setBlockGroesse(\'' + tag + '\',this.value)" ' +
+        'style="width:60px;padding:4px 6px;border:1px solid #ccc;border-radius:6px;font-size:13px;" title="0 = keine Blöcke (ganze Tour auf einmal)"></label>' +
       '<ul class="drag-list" id="list-' + tag + '" data-tag="' + tag + '"></ul>' +
       '<div id="checks-' + tag + '" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>';
     grid.appendChild(card);
@@ -1864,7 +1869,14 @@ function renderDragList(tag) {
   const ul = document.getElementById('list-' + tag);
   if (!ul) return;
   ul.innerHTML = '';
+  const blockSize = parseInt(blockLocal[tag] || 0) || 0;
   (tourenLocal[tag] || []).forEach((f, i) => {
+    if (blockSize > 0 && i % blockSize === 0) {
+      const sep = document.createElement('li');
+      sep.style.cssText = 'list-style:none;font-size:11px;font-weight:700;color:#0071e3;background:#eaf3ff;border:1px solid #b9d9ff;border-radius:6px;padding:3px 8px;margin:6px 0 2px;text-align:center;';
+      sep.textContent = '▸ Block ' + (Math.floor(i / blockSize) + 1);
+      ul.appendChild(sep);
+    }
     const li = document.createElement('li');
     li.className = 'drag-item'; li.draggable = true;
     li.dataset.idx = i; li.dataset.tag = tag;
@@ -1902,6 +1914,11 @@ function toggleFiliale(tag, f, add) {
   renderDragList(tag);
 }
 
+function setBlockGroesse(tag, val) {
+  blockLocal[tag] = Math.max(0, parseInt(val) || 0);
+  renderDragList(tag);
+}
+
 function removeFiliale(tag, f) {
   tourenLocal[tag] = (tourenLocal[tag] || []).filter(x => x !== f);
   renderDragList(tag);
@@ -1934,7 +1951,7 @@ function setupDragList(tag) {
 }
 
 function saveTourenConfig() {
-  sendCmd('save_touren', { config: tourenLocal });
+  sendCmd('save_touren', { config: tourenLocal, bloecke: blockLocal });
   const msg = document.getElementById('touren-save-msg');
   msg.innerHTML = ICO.ok + 'Gespeichert!';
   setTimeout(() => msg.textContent = '', 3000);
