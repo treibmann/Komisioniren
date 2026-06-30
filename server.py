@@ -812,11 +812,33 @@ async def get_alle_artikel():
                 soll += float(val)
             except Exception:
                 pass
+        # Gepackt/Offen relativ zur heutigen Tour (passt zur 'fertig'-Logik)
+        soll_heute = 0.0
+        geliefert_heute = 0.0
+        for f in filialen_heute:
+            if f not in df.columns:
+                continue
+            try:
+                sv = float(df.at[idx, f])
+                if sv == sv:
+                    soll_heute += sv
+            except Exception:
+                pass
+            gc = f"{f}_Geliefert"
+            if gc in df.columns:
+                try:
+                    g = float(df.at[idx, gc])
+                    if g == g:
+                        geliefert_heute += g
+                except Exception:
+                    pass
         artikel.append({
             "nr": str(nr),
             "name": str(row["Name"]),
             "kat": str(row["Kat"]),
             "soll_gesamt": soll,
+            "soll_heute": soll_heute,
+            "geliefert_gesamt": geliefert_heute,
             "fertig": state.zeile_fertig(idx, filialen_heute),
         })
     kategorien = sorted(df["Kat"].unique().tolist()) if not df.empty else []
