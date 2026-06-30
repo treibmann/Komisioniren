@@ -932,61 +932,61 @@ async def get_nachlegen_info():
         return {"produkte": [], "kategorien": []}
 
     df = state.df
-    filialen = state.filialen_liste
-    filialen_heute = get_filialen_heute()
-    seen_nr: set[str] = set()
-    produkte = []
+    filialen = [f for f in state.filialen_liste if f in df.columns]
+    filialen_heute = [f for f in get_filialen_heute() if f in df.columns]
 
-    for _, row in df.iterrows():
+    def _sf(v) -> float:
+        try:
+            v = float(v)
+            return 0.0 if v != v else v  # NaN -> 0
+        except Exception:
+            return 0.0
+
+    # Einmaliger Durchlauf: pro Artikel-Nr die Zeilen-Indizes je Typ + Reihenfolge
+    rows_by_nr: dict[str, dict[str, object]] = {}
+    order: list[tuple[str, str, str]] = []
+    for idx, row in df.iterrows():
         nr = str(row["Nr"])
-        if nr in seen_nr:
-            continue
-        seen_nr.add(nr)
+        if nr not in rows_by_nr:
+            rows_by_nr[nr] = {}
+            order.append((nr, str(row["Name"]), str(row["Kat"])))
+        rows_by_nr[nr][str(row["Typ"])] = idx
+
+    produkte = []
+    for nr, name, kat in order:
+        typ_rows = rows_by_nr[nr]
+        idx_erst = typ_rows.get("1.")
+        idx_vor  = typ_rows.get("V")
 
         filialen_info = []
         for f in filialen:
-            geliefert_col = f"{f}_Geliefert"
-            nachlege_col  = f"{f}_Nachlege"
-            soll_erst = soll_vor = geliefert_erst = geliefert_vor = 0.0
-
-            mask_erst = (df["Nr"] == nr) & (df["Typ"] == "1.")
-            if mask_erst.any() and f in df.columns:
-                try: soll_erst = float(df.loc[mask_erst, f].iloc[0] or 0)
-                except Exception: pass
-                if geliefert_col in df.columns:
-                    try: geliefert_erst = float(df.loc[mask_erst, geliefert_col].iloc[0] or 0)
-                    except Exception: pass
-
-            mask_vor = (df["Nr"] == nr) & (df["Typ"] == "V")
-            if mask_vor.any() and f in df.columns:
-                try: soll_vor = float(df.loc[mask_vor, f].iloc[0] or 0)
-                except Exception: pass
-                if geliefert_col in df.columns:
-                    try: geliefert_vor = float(df.loc[mask_vor, geliefert_col].iloc[0] or 0)
-                    except Exception: pass
-
+            gc = f"{f}_Geliefert"
+            has_gc = gc in df.columns
+            soll_erst = _sf(df.at[idx_erst, f]) if idx_erst is not None else 0.0
+            soll_vor  = _sf(df.at[idx_vor,  f]) if idx_vor  is not None else 0.0
+            geliefert_erst = _sf(df.at[idx_erst, gc]) if (idx_erst is not None and has_gc) else 0.0
+            geliefert_vor  = _sf(df.at[idx_vor,  gc]) if (idx_vor  is not None and has_gc) else 0.0
             soll_gesamt = soll_erst + soll_vor
-            geliefert_gesamt = geliefert_erst + geliefert_vor
             if soll_gesamt > 0:
                 filialen_info.append({
                     "name": f,
                     "soll": soll_gesamt,
                     "soll_erst": soll_erst,
                     "soll_vor": soll_vor,
-                    "geliefert": geliefert_gesamt,
+                    "geliefert": geliefert_erst + geliefert_vor,
                     "geliefert_erst": geliefert_erst,
                     "geliefert_vor": geliefert_vor,
                 })
 
         # fertig = alle heutigen Filialen-Zeilen dieser Nr fertig kommissioniert
-        rows_nr = [i for i in df.index[df["Nr"] == nr]
-                   if any(float(df.at[i, f] or 0) > 0 for f in filialen_heute if f in df.columns)]
-        fertig = bool(rows_nr) and all(state.zeile_fertig(i, filialen_heute) for i in rows_nr)
+        rel_rows = [i for i in typ_rows.values()
+                    if any(_sf(df.at[i, f]) > 0 for f in filialen_heute)]
+        fertig = bool(rel_rows) and all(state.zeile_fertig(i, filialen_heute) for i in rel_rows)
 
         produkte.append({
             "nr": nr,
-            "name": str(row["Name"]),
-            "kat": str(row["Kat"]),
+            "name": name,
+            "kat": kat,
             "filialen": filialen_info,
             "fertig": fertig,
         })
