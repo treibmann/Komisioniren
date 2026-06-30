@@ -113,8 +113,9 @@ class AppState:
         return labels
 
     def zeile_fertig(self, idx, filialen: list[str]) -> bool:
-        """True, wenn ALLE relevanten Filialen (Soll>0) dieser df-Zeile fertig
-        kommissioniert sind (geliefert>0 und kein offenes Nachlegen)."""
+        """True, wenn ALLE relevanten Filialen (Soll>0) dieser df-Zeile geliefert
+        sind. Beim Nachlegen wird _Geliefert auf 0 gesetzt -> nicht mehr fertig;
+        nach erneutem Packen ist _Geliefert wieder >0 -> wieder fertig (gruen)."""
         if self.df is None or idx not in self.df.index:
             return False
         row = self.df.loc[idx]
@@ -123,14 +124,10 @@ class AppState:
             return False
         for f in rel:
             gc = f"{f}_Geliefert"
-            nc = f"{f}_Nachlege"
             gel = float(self.df.at[idx, gc]) if gc in self.df.columns else 0.0
             if gel != gel:  # NaN
                 gel = 0.0
-            nl = float(self.df.at[idx, nc]) if nc in self.df.columns else 0.0
-            if nl != nl:
-                nl = 0.0
-            if not (gel > 0 and nl == 0):
+            if gel <= 0:
                 return False
         return True
 

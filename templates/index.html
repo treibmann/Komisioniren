@@ -1968,8 +1968,8 @@ function renderMengenkorrektur(s) {
   if (!s || !s.pdf_loaded) return;
   _mengePhase = s.lieferung_phase;
   Promise.all([
-    fetch('/api/alle-artikel').then(r => r.json()),
-    fetch('/api/kuerzung/config').then(r => r.json())
+    fetch('/api/alle-artikel', {cache:'no-store'}).then(r => r.json()),
+    fetch('/api/kuerzung/config', {cache:'no-store'}).then(r => r.json())
   ]).then(([data, cfg]) => {
     kuerzLocal = cfg;
     mengeArtikel = data.artikel || [];
@@ -2099,7 +2099,7 @@ async function wendeKuerzungAn() {
 
 let _historyData = [];
 async function ladeHistory() {
-  const r = await fetch('/api/kuerzung/history');
+  const r = await fetch('/api/kuerzung/history', {cache:'no-store'});
   _historyData = await r.json();
   // Such-Dropdown mit den vorkommenden Produkten befuellen
   const sel = document.getElementById('history-filter');
@@ -2159,7 +2159,7 @@ let nlArtikel = [];
 
 function renderNachlegen(s) {
   if (!s || !s.pdf_loaded) return;
-  fetch('/api/nachlegen/info').then(r => r.json()).then(data => {
+  fetch('/api/nachlegen/info', {cache:'no-store'}).then(r => r.json()).then(data => {
     nlArtikel = (data.produkte || []).map(p => ({ nr: p.nr, name: p.name, kat: p.kat, filialen: p.filialen, fertig: p.fertig }));
     const kats = data.kategorien || [...new Set(nlArtikel.map(a => a.kat))];
     const katSel = document.getElementById('nl-kat-select');
