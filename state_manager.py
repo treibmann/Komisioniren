@@ -165,6 +165,78 @@ class AppState:
         self.current_filiale_idx = 0
         self.produkt_fertig_sperre = False
         self.virtual_displays = {}
+
+    # ------------------------------------------------------------------ #
+    # Laufzeit-Persistenz (Fortschritt übersteht Server-Neustart)
+    # ------------------------------------------------------------------ #
+    def export_runtime(self) -> dict:
+        """Serialisiert den Kommissionier-Fortschritt (Geliefert/Nachlege + Position)."""
+        rows = []
+        if self.df is not None:
+            has_q = "Quelle" in self.df.columns
+            for idx, r in self.df.iterrows():
+                fil = {}
+                for f in self.filialen_liste:
+                    gc, nc = f"{f}_Geliefert", f"{f}_Nachlege"
+                    g = float(self.df.at[idx, gc]) if gc in self.df.columns else 0.0
+                    n = float(self.df.at[idx, nc]) if nc in self.df.columns else 0.0
+                    if g != g:
+                        g = 0.0
+                    if n != n:
+                        n = 0.0
+                    if g or n:
+                        fil[f] = [g, n]
+                if fil:
+                    rows.append({
+                        "nr": str(r["Nr"]), "typ": str(r["Typ"]),
+                        "quelle": str(r["Quelle"]) if has_q else "",
+                        "fil": fil,
+                    })
+        return {
+            "rows": rows,
+            "selected_posten_idx": self.selected_posten_idx,
+            "current_filiale_idx": self.current_filiale_idx,
+            "produkt_fertig_sperre": self.produkt_fertig_sperre,
+            "lieferung_phase": self.lieferung_phase,
+            "kat_filter": self.kat_filter,
+            "tag_override": self.tag_override,
+            "hardware_mode": self.hardware_mode,
+        }
+
+    def restore_runtime(self, data: dict) -> None:
+        """Wendet einen zuvor gespeicherten Fortschritt auf das (frisch geladene) df an."""
+        if self.df is None or not data:
+            return
+        has_q = "Quelle" in self.df.columns
+        lookup = {}
+        for idx, r in self.df.iterrows():
+            key = (str(r["Nr"]), str(r["Typ"]), str(r["Quelle"]) if has_q else "")
+            lookup.setdefault(key, idx)
+        for row in data.get("rows", []):
+            key = (str(row.get("nr")), str(row.get("typ")),
+                   str(row.get("quelle", "")) if has_q else "")
+            idx = lookup.get(key)
+            if idx is None:  # Fallback ohne Quelle
+                for (n, t, _q), i in lookup.items():
+                    if n == str(row.get("nr")) and t == str(row.get("typ")):
+                        idx = i
+                        break
+            if idx is None:
+                continue
+            for f, gn in row.get("fil", {}).items():
+                g, n = (gn + [0, 0])[:2] if isinstance(gn, list) else (gn, 0)
+                gc, nc = f"{f}_Geliefert", f"{f}_Nachlege"
+                if gc in self.df.columns:
+                    self.df.at[idx, gc] = float(g)
+                if nc in self.df.columns:
+                    self.df.at[idx, nc] = float(n)
+        self.selected_posten_idx = int(data.get("selected_posten_idx", 0) or 0)
+        self.current_filiale_idx = int(data.get("current_filiale_idx", 0) or 0)
+        self.produkt_fertig_sperre = bool(data.get("produkt_fertig_sperre", False))
+        self.lieferung_phase = data.get("lieferung_phase", self.lieferung_phase)
+        self.kat_filter = data.get("kat_filter", self.kat_filter)
+        self.tag_override = data.get("tag_override", self.tag_override)
+        self.hardware_mode = data.get("hardware_mode", self.hardware_mode)
         self.kat_filter = "Alle"
         self.lieferung_phase = "1."
 

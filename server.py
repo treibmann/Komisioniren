@@ -57,6 +57,7 @@ import db as db_module
 DATA_DIR = os.getenv("DATA_DIR", "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 HISTORY_FILE = os.path.join(DATA_DIR, "kuerzungs_history.json")
+RUNTIME_STATE_FILE = os.path.join(DATA_DIR, "runtime_state.json")
 PIN_CONFIG_FILE = os.path.join(DATA_DIR, "pin_config.json")
 
 _DEFAULT_PINS = {"mitarbeiter": "1234", "admin": "9999", "superadmin": "0000"}
@@ -326,6 +327,18 @@ def send_display(filiale: str, menge: int) -> None:
         mqtt_send(filiale, menge)
 
 
+def save_runtime_state() -> None:
+    """Sichert den Kommissionier-Fortschritt auf Platte (übersteht Neustart)."""
+    try:
+        state = get_state()
+        if state.df is None:
+            return
+        with open(RUNTIME_STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(state.export_runtime(), f, ensure_ascii=False)
+    except Exception as exc:
+        print("[State] Speichern fehlgeschlagen:", exc)
+
+
 async def push_state() -> None:
     """Erzeugt Snapshot und sendet ihn an alle Clients."""
     state = get_state()
@@ -333,6 +346,7 @@ async def push_state() -> None:
     snapshot = state.to_ui_snapshot(filialen)
     snapshot["aktiver_tag"] = get_heute_tag()
     await manager.broadcast(snapshot)
+    save_runtime_state()
 
 
 # ---------------------------------------------------------------------------
@@ -343,7 +357,27 @@ async def lifespan(app: FastAPI):
     print("[Server] Bäckerei Pick-by-Light startet...")
     db_module.init_db()
     print("[DB] SQLite bereit.")
+    # PDF automatisch laden + Fortschritt wiederherstellen
+    try:
+        if os.path.exists(PDF_PATH):
+            df_all, _, pdf_tag, pdf_datum = parse_baeckerei_pdf(PDF_PATH)
+            df, alle_filialen, std_filialen = _prepare_filialen(df_all)
+            state = get_state()
+            state.load_pdf_data(df, alle_filialen, standard_filialen=std_filialen)
+            if pdf_tag:
+                state.pdf_detected_tag = pdf_tag
+            state.pdf_detected_datum = pdf_datum or ""
+            print(f"[PDF] Auto-geladen: {len(df)} Zeilen, {len(alle_filialen)} Filialen.")
+            if os.path.exists(RUNTIME_STATE_FILE):
+                with open(RUNTIME_STATE_FILE, "r", encoding="utf-8") as f:
+                    state.restore_runtime(json.load(f))
+                print("[State] Fortschritt wiederhergestellt.")
+        else:
+            print(f"[PDF] Kein PDF unter {PDF_PATH} – manuell laden.")
+    except Exception as exc:
+        print("[Startup] PDF/State-Wiederherstellung fehlgeschlagen:", exc)
     yield
+    save_runtime_state()
     print("[Server] Shutdown.")
 
 

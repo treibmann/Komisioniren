@@ -21,6 +21,7 @@ kuerzungs_history.json
 pdf/*.pdf
 data/personal.json
 data/header_config.json
+data/runtime_state.json
 
 # Test-Artefakte (Playwright MCP)
 .playwright-mcp/
