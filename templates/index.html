@@ -857,22 +857,22 @@
 
       <div id="nl-inhalt" style="display:none;">
         <!-- Filter -->
-        <div class="card" style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-bottom:0;">
-          <div style="flex:1 1 0;min-width:140px;">
-            <label style="font-size:26px;color:#666;display:block;margin-bottom:4px;">Bereich</label>
-            <select id="nl-kat-select" onchange="filterNlProdukte()" style="width:100%;">
+        <div class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:0;">
+          <div style="flex:1 1 0;min-width:200px;display:flex;align-items:center;gap:10px;">
+            <label style="font-size:26px;color:#666;white-space:nowrap;">Bereich</label>
+            <select id="nl-kat-select" onchange="filterNlProdukte()" style="flex:1;min-width:0;">
               <option value="Alle">Alle</option>
             </select>
           </div>
-          <div style="flex:2 1 0;min-width:240px;">
-            <label style="font-size:26px;color:#666;display:block;margin-bottom:4px;">Produkt</label>
-            <select id="nl-produkt-select" onchange="ladeNlProdukt()" style="width:100%;">
+          <div style="flex:2 1 0;min-width:300px;display:flex;align-items:center;gap:10px;">
+            <label style="font-size:26px;color:#666;white-space:nowrap;">Produkt</label>
+            <select id="nl-produkt-select" onchange="ladeNlProdukt()" style="flex:1;min-width:0;">
               <option value="">– Produkt wählen –</option>
             </select>
           </div>
-          <div style="flex:1 1 0;min-width:240px;">
-            <label style="font-size:26px;color:#666;display:block;margin-bottom:4px;">Modus</label>
-            <div style="display:flex;gap:8px;">
+          <div style="flex:1 1 0;min-width:300px;display:flex;align-items:center;gap:10px;">
+            <label style="font-size:26px;color:#666;white-space:nowrap;">Modus</label>
+            <div style="display:flex;gap:8px;flex:1;min-width:0;">
               <button id="nl-mode-auto-btn" class="nl-mode-btn active" onclick="setNlMode('auto')" style="flex:1;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>Automatisch</button>
               <button id="nl-mode-manuell-btn" class="nl-mode-btn" onclick="setNlMode('manuell')" style="flex:1;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Manuell</button>
             </div>
@@ -1979,7 +1979,7 @@ function buildMengeTbody(artikel, cfg) {
     const r = rund[a.nr] !== undefined ? rund[a.nr] : (rund['default'] || 1);
     return '<tr data-nr="' + a.nr + '" data-kat="' + a.kat + '">' +
       '<td style="white-space:nowrap">' + a.nr + '</td>' +
-      '<td>' + a.name + '</td>' +
+      '<td style="font-size:26px;font-weight:600;">' + a.name + '</td>' +
       '<td style="text-align:right">' + a.soll_gesamt + '</td>' +
       '<td><input type="number" class="ist-input" data-nr="' + a.nr + '" value="' + a.soll_gesamt + '" min="0" step="' + r + '" style="width:75px;padding:4px;border:1px solid #bbb;border-radius:4px;font-size:13px;" oninput="updateMengeDiff(this,' + a.soll_gesamt + ')"></td>' +
       '<td class="diff-null" id="mdiff-' + a.nr + '">0</td>' +
