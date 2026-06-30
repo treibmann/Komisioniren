@@ -263,7 +263,7 @@
   #pack-row #takt-display { flex: 1; margin: 0; }
   #pack-row #zurueck-btn,
   #pack-row #bestaetigen-btn,
-  #pack-row #naechstes-btn { width: 240px; max-width: 240px; min-width: 190px; margin: 0; flex-shrink: 0;
+  #pack-row #naechstes-btn { width: 360px; max-width: 360px; min-width: 280px; margin: 0; flex-shrink: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 
   /* ── Filial-Vorschau ── */
@@ -291,7 +291,8 @@
 
   /* ── Filter ── */
   .filter-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-  .filter-row label { font-size: 17px; font-weight: 600; color: #666; white-space: nowrap; }
+  .filter-row label { font-size: 26px; font-weight: 600; color: #666; white-space: nowrap; }
+  .filter-row select { font-size: 26px; padding: 18px 18px; }
 
   /* ── Tourenplan ── */
   .woche-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -1025,8 +1026,12 @@
 
       <div class="card" style="margin-bottom:16px;">
         <b style="font-size:15px;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Versandliste</b>
-        <p style="color:#666;font-size:13px;margin:8px 0 14px;">Aktuelle Versandliste aus dem Netzwerkordner einlesen.</p>
-        <button id="pdf-reload-btn" onclick="reloadPdf()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Versandliste einlesen</button>
+        <p style="color:#666;font-size:13px;margin:8px 0 14px;">Aus dem Netzwerkordner einlesen <b>oder</b> eine PDF-Datei manuell hochladen.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
+          <button id="pdf-reload-btn" onclick="reloadPdf()" style="flex:1;min-width:220px;width:auto;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Aus Ordner einlesen</button>
+          <button id="pdf-upload-btn" onclick="document.getElementById('pdf-input').click()" style="flex:1;min-width:220px;width:auto;background:#1976d2;"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg>Manuell hochladen (PDF)</button>
+        </div>
+        <div id="pdf-upload-status" style="margin-top:12px;font-size:14px;font-weight:600;color:#666;"></div>
         <input id="pdf-input" type="file" accept=".pdf" style="display:none;">
       </div>
 
@@ -1743,26 +1748,26 @@ async function reloadPdf() {
   try {
     const r = await fetch('/reload-pdf');
     const d = await r.json();
-    document.getElementById('upload-status').innerHTML =
-      d.ok ? ICO.ok + d.filialen.length + ' Filialen' : ICO.err + 'Fehler';
+    document.getElementById('pdf-upload-status').innerHTML =
+      d.ok ? ICO.ok + d.filialen.length + ' Filialen geladen' : ICO.err + 'Fehler';
   } catch(e) {
-    document.getElementById('upload-status').innerHTML = ICO.warnC + 'Verbindungsfehler';
+    document.getElementById('pdf-upload-status').innerHTML = ICO.warnC + 'Verbindungsfehler';
   }
-  document.getElementById('pdf-reload-btn').innerHTML = ICO.file + 'Versandliste einlesen';
+  document.getElementById('pdf-reload-btn').innerHTML = ICO.file + 'Aus Ordner einlesen';
 }
 
 document.getElementById('pdf-input').addEventListener('change', async function() {
   if (!this.files[0]) return;
   const fd = new FormData();
   fd.append('file', this.files[0]);
-  document.getElementById('upload-status').innerHTML = ICO.refresh + 'Wird verarbeitet…';
+  document.getElementById('pdf-upload-status').innerHTML = ICO.refresh + 'Wird verarbeitet…';
   try {
     const r = await fetch('/upload-pdf', { method: 'POST', body: fd });
     const d = await r.json();
-    document.getElementById('upload-status').innerHTML =
-      d.ok ? ICO.ok + d.filialen.length + ' Filialen' : ICO.err + (d.detail || 'Fehler');
+    document.getElementById('pdf-upload-status').innerHTML =
+      d.ok ? ICO.ok + d.filialen.length + ' Filialen geladen' : ICO.err + (d.detail || 'Fehler');
   } catch(e) {
-    document.getElementById('upload-status').innerHTML = ICO.warnC + 'Verbindungsfehler';
+    document.getElementById('pdf-upload-status').innerHTML = ICO.warnC + 'Verbindungsfehler';
   }
   this.value = '';
 });
