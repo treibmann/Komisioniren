@@ -1580,10 +1580,11 @@ function renderState(s) {
     s.kategorien.map(k => `<option value="${k}" ${k===s.kat_filter?'selected':''}>${k}</option>`).join('');
   if (s.kat_filter !== prevKat) katSel.value = s.kat_filter;
 
-  // Posten-Select
+  // Posten-Select (fertig kommissionierte Produkte gruen hinterlegt)
   const postSel = document.getElementById('posten-select');
+  const pDone = s.posten_done || [];
   postSel.innerHTML = s.posten_labels.map((l, i) =>
-    `<option value="${i}" ${i===s.selected_posten_idx?'selected':''}>${l}</option>`
+    `<option value="${i}" ${i===s.selected_posten_idx?'selected':''}${pDone[i]?' style="background:#c8f7d0;color:#1a7f37;font-weight:700;"':''}>${pDone[i]?'✓ ':''}${l}</option>`
   ).join('');
 
   // Takt-Display
@@ -1978,7 +1979,7 @@ function renderMengenkorrektur(s) {
       kategorien.map(k => '<option value="' + k + '">' + k + '</option>').join('');
     const prodSel = document.getElementById('menge-produkt-select');
     if (prodSel) prodSel.innerHTML = '<option value="">Alle anzeigen</option>' +
-      mengeArtikel.map(a => '<option value="' + a.nr + '">' + a.nr + ' – ' + a.name + '</option>').join('');
+      mengeArtikel.map(a => '<option value="' + a.nr + '"' + (a.fertig ? ' style="background:#c8f7d0;color:#1a7f37;font-weight:700;"' : '') + '>' + (a.fertig ? '✓ ' : '') + a.nr + ' – ' + a.name + '</option>').join('');
     buildMengeTbody(mengeArtikel, cfg);
     ladeHistory();
   });
@@ -2159,7 +2160,7 @@ let nlArtikel = [];
 function renderNachlegen(s) {
   if (!s || !s.pdf_loaded) return;
   fetch('/api/nachlegen/info').then(r => r.json()).then(data => {
-    nlArtikel = (data.produkte || []).map(p => ({ nr: p.nr, name: p.name, kat: p.kat, filialen: p.filialen }));
+    nlArtikel = (data.produkte || []).map(p => ({ nr: p.nr, name: p.name, kat: p.kat, filialen: p.filialen, fertig: p.fertig }));
     const kats = data.kategorien || [...new Set(nlArtikel.map(a => a.kat))];
     const katSel = document.getElementById('nl-kat-select');
     if (!katSel) return;
@@ -2173,7 +2174,7 @@ function filterNlProdukte() {
   const gef = kat === 'Alle' ? nlArtikel : nlArtikel.filter(a => a.kat === kat);
   document.getElementById('nl-produkt-select').innerHTML =
     '<option value="">– Produkt wählen –</option>' +
-    gef.map(a => '<option value="' + a.nr + '">' + a.nr + ' – ' + a.name + '</option>').join('');
+    gef.map(a => '<option value="' + a.nr + '"' + (a.fertig ? ' style="background:#c8f7d0;color:#1a7f37;font-weight:700;"' : '') + '>' + (a.fertig ? '✓ ' : '') + a.nr + ' – ' + a.name + '</option>').join('');
   document.getElementById('nl-produkt-detail').style.display = 'none';
 }
 

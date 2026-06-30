@@ -112,6 +112,28 @@ class AppState:
             labels.append(f"Nr. {r['Nr']} - {r['Name']} [{typ_str}]")
         return labels
 
+    def zeile_fertig(self, idx, filialen: list[str]) -> bool:
+        """True, wenn ALLE relevanten Filialen (Soll>0) dieser df-Zeile fertig
+        kommissioniert sind (geliefert>0 und kein offenes Nachlegen)."""
+        if self.df is None or idx not in self.df.index:
+            return False
+        row = self.df.loc[idx]
+        rel = [f for f in filialen if float(row.get(f, 0) or 0) > 0]
+        if not rel:
+            return False
+        for f in rel:
+            gc = f"{f}_Geliefert"
+            nc = f"{f}_Nachlege"
+            gel = float(self.df.at[idx, gc]) if gc in self.df.columns else 0.0
+            if gel != gel:  # NaN
+                gel = 0.0
+            nl = float(self.df.at[idx, nc]) if nc in self.df.columns else 0.0
+            if nl != nl:
+                nl = 0.0
+            if not (gel > 0 and nl == 0):
+                return False
+        return True
+
     # ------------------------------------------------------------------ #
     # Takt-Logik
     # ------------------------------------------------------------------ #
@@ -410,6 +432,7 @@ class AppState:
         """
         df_gef = self.get_df_gefiltert()
         posten_labels = self.get_posten_labels(df_gef)
+        posten_done = [self.zeile_fertig(idx, filialen_heute) for idx in df_gef.index]
         kategorien = self.get_kategorien()
 
         current_row_data = {}
@@ -480,6 +503,7 @@ class AppState:
             "lieferung_phase": self.lieferung_phase,
             "kategorien": kategorien,
             "posten_labels": posten_labels,
+            "posten_done": posten_done,
             "selected_posten_idx": self.selected_posten_idx,
             "current_filiale_idx": self.current_filiale_idx,
             "produkt_fertig_sperre": self.produkt_fertig_sperre,

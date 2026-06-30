@@ -797,9 +797,10 @@ async def get_alle_artikel():
     phase = (state.lieferung_phase or "").strip()  # "1." / "V" / "2."
     if phase and "Typ" in df.columns:
         df = df[df["Typ"] == phase]
+    filialen_heute = get_filialen_heute()
     seen = set()
     artikel = []
-    for _, row in df.iterrows():
+    for idx, row in df.iterrows():
         nr = row["Nr"]
         if nr in seen:
             continue
@@ -816,6 +817,7 @@ async def get_alle_artikel():
             "name": str(row["Name"]),
             "kat": str(row["Kat"]),
             "soll_gesamt": soll,
+            "fertig": state.zeile_fertig(idx, filialen_heute),
         })
     kategorien = sorted(df["Kat"].unique().tolist()) if not df.empty else []
     return {"artikel": artikel, "kategorien": kategorien, "phase": phase}
@@ -931,6 +933,7 @@ async def get_nachlegen_info():
 
     df = state.df
     filialen = state.filialen_liste
+    filialen_heute = get_filialen_heute()
     seen_nr: set[str] = set()
     produkte = []
 
@@ -975,11 +978,17 @@ async def get_nachlegen_info():
                     "geliefert_vor": geliefert_vor,
                 })
 
+        # fertig = alle heutigen Filialen-Zeilen dieser Nr fertig kommissioniert
+        rows_nr = [i for i in df.index[df["Nr"] == nr]
+                   if any(float(df.at[i, f] or 0) > 0 for f in filialen_heute if f in df.columns)]
+        fertig = bool(rows_nr) and all(state.zeile_fertig(i, filialen_heute) for i in rows_nr)
+
         produkte.append({
             "nr": nr,
             "name": str(row["Name"]),
             "kat": str(row["Kat"]),
             "filialen": filialen_info,
+            "fertig": fertig,
         })
 
     kategorien = sorted(df["Kat"].unique().tolist())
