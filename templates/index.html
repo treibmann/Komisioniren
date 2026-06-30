@@ -184,12 +184,15 @@
             border-bottom: 1px solid rgba(0,0,0,0.35);
             box-shadow: 0 4px 10px rgba(0,0,0,0.25); position: relative; z-index: 50; }
   .tabs { display: flex; gap: 8px; margin-bottom: 0; background: transparent; padding: 0; flex-wrap: wrap; }
-  .tab-btn { padding: 13px 26px; border: none; border-radius: 10px; cursor: pointer;
-             font-size: 17px; font-weight: 600; background: rgba(255,255,255,0.06); color: #c2c8d2;
-             transition: all .15s; }
-  .tab-btn:hover { background: rgba(255,255,255,0.16); color: #ffffff; }
-  .tab-btn.active { background: linear-gradient(180deg,#ffffff 0%,#eef0f4 100%); color: #1d1d1f; font-weight: 800;
-                    box-shadow: 0 3px 8px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.9) inset; }
+  /* Modul-Buttons im Stil der Phasen-Buttons (1. Lief. / Vorbestellung / 2. Lief.) */
+  .tab-btn { padding: 16px 24px; border: 2px solid #37474f; border-radius: 10px; cursor: pointer;
+             font-size: 21px; font-weight: 800; white-space: nowrap;
+             background: linear-gradient(180deg,#546e7a,#37474f); color: #cfd8dc;
+             box-shadow: 0 3px 0 #263238; transition: all .12s; }
+  .tab-btn:hover { filter: brightness(1.12); color: #ffffff; }
+  .tab-btn.active { background: linear-gradient(180deg,#78909c,#455a64); color: #ffffff; border-color: #2f3e46;
+                    box-shadow: 0 3px 0 #2a363c, 0 4px 8px rgba(0,0,0,0.35); }
+  .tab-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #000 !important; }
   .tab-pane { display: none; }
   .tab-pane.active { display: block; }
 
