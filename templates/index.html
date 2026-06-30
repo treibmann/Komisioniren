@@ -838,6 +838,9 @@
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
           <b><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 14h6M9 18h6"/></svg>Berechnungs-History</b>
           <div style="display:flex;gap:8px;align-items:center;">
+            <select id="history-kat-filter" onchange="onHistoryKatChange()" style="padding:8px 12px;border:1px solid #ccc;border-radius:8px;font-size:16px;min-width:150px;">
+              <option value="">Alle Bereiche</option>
+            </select>
             <select id="history-filter" onchange="renderHistoryFiltered()" style="padding:8px 12px;border:1px solid #ccc;border-radius:8px;font-size:16px;min-width:240px;max-width:380px;">
               <option value="">Alle Produkte</option>
             </select>
@@ -1974,12 +1977,16 @@ function renderMengenkorrektur(s) {
     kuerzLocal = cfg;
     mengeArtikel = data.artikel || [];
     const kategorien = data.kategorien || [];
+    mengeArtikel.forEach(a => { _nrKat[a.nr] = a.kat; });  // nr -> Bereich (für History-Filter)
     const katSel = document.getElementById('menge-kat-select');
     if (katSel) katSel.innerHTML = '<option value="Alle">Alle</option>' +
       kategorien.map(k => '<option value="' + k + '">' + k + '</option>').join('');
-    const prodSel = document.getElementById('menge-produkt-select');
-    if (prodSel) prodSel.innerHTML = '<option value="">Alle anzeigen</option>' +
-      mengeArtikel.map(a => '<option value="' + a.nr + '"' + (a.fertig ? ' style="background:#c8f7d0;color:#1a7f37;font-weight:700;"' : '') + '>' + (a.fertig ? '✓ ' : '') + a.nr + ' – ' + a.name + '</option>').join('');
+    const hkSel = document.getElementById('history-kat-filter');
+    if (hkSel) { const cur = hkSel.value;
+      hkSel.innerHTML = '<option value="">Alle Bereiche</option>' +
+        kategorien.map(k => '<option value="' + k + '">' + k + '</option>').join('');
+      hkSel.value = cur; }
+    buildMengeProduktSelect();
     buildMengeTbody(mengeArtikel, cfg);
     ladeHistory();
   });
@@ -2021,9 +2028,19 @@ function filterMengeTbody() {
   });
 }
 
-// Bereich gewechselt: Produktauswahl zuruecksetzen, dann filtern
+// Produkt-Dropdown auf den gewählten Bereich einschränken
+function buildMengeProduktSelect() {
+  const prodSel = document.getElementById('menge-produkt-select');
+  if (!prodSel) return;
+  const kat = document.getElementById('menge-kat-select').value;
+  const list = (kat === 'Alle') ? mengeArtikel : mengeArtikel.filter(a => a.kat === kat);
+  prodSel.innerHTML = '<option value="">Alle anzeigen</option>' +
+    list.map(a => '<option value="' + a.nr + '"' + (a.fertig ? ' style="background:#c8f7d0;color:#1a7f37;font-weight:700;"' : '') + '>' + (a.fertig ? '✓ ' : '') + a.nr + ' – ' + a.name + '</option>').join('');
+}
+
+// Bereich gewechselt: Produkt-Auswahl auf Bereich einschränken (setzt zurück), dann Tabelle filtern
 function onMengeKatChange() {
-  document.getElementById('menge-produkt-select').value = '';
+  buildMengeProduktSelect();
   filterMengeTbody();
 }
 
@@ -2098,19 +2115,36 @@ async function wendeKuerzungAn() {
 }
 
 let _historyData = [];
+let _nrKat = {};  // Artikelnummer -> Bereich (für History-Filter)
+
 async function ladeHistory() {
   const r = await fetch('/api/kuerzung/history', {cache:'no-store'});
   _historyData = await r.json();
-  // Such-Dropdown mit den vorkommenden Produkten befuellen
+  buildHistoryProduktSelect();
+  renderHistoryFiltered();
+}
+
+// Produkt-Dropdown der History auf den gewählten Bereich einschränken
+function buildHistoryProduktSelect() {
   const sel = document.getElementById('history-filter');
-  if (sel) {
-    const seen = new Map();
-    _historyData.forEach(h => { const nr = h.produkt_nr || ''; if (nr && !seen.has(nr)) seen.set(nr, (h.produkt_name || h.name || '')); });
-    const cur = sel.value;
-    sel.innerHTML = '<option value="">Alle Produkte (' + _historyData.length + ')</option>' +
-      [...seen.entries()].map(([nr, nm]) => '<option value="' + nr + '">' + nr + ' – ' + nm + '</option>').join('');
-    sel.value = cur;
-  }
+  if (!sel) return;
+  const katFilt = (document.getElementById('history-kat-filter') || {}).value || '';
+  const seen = new Map();
+  _historyData.forEach(h => {
+    const nr = h.produkt_nr || '';
+    if (!nr || seen.has(nr)) return;
+    if (katFilt && (_nrKat[nr] || '') !== katFilt) return;
+    seen.set(nr, (h.produkt_name || h.name || ''));
+  });
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Alle Produkte</option>' +
+    [...seen.entries()].map(([nr, nm]) => '<option value="' + nr + '">' + nr + ' – ' + nm + '</option>').join('');
+  sel.value = seen.has(cur) ? cur : '';
+}
+
+// Bereich gewechselt: Produkt-Auswahl einschränken (ggf. zurücksetzen), dann anzeigen
+function onHistoryKatChange() {
+  buildHistoryProduktSelect();
   renderHistoryFiltered();
 }
 
@@ -2118,9 +2152,11 @@ function renderHistoryFiltered() {
   const wrap = document.getElementById('history-wrap');
   if (!wrap) return;
   const filt = (document.getElementById('history-filter') || {}).value || '';
+  const katFilt = (document.getElementById('history-kat-filter') || {}).value || '';
   let history = _historyData;
+  if (katFilt) history = history.filter(h => (_nrKat[h.produkt_nr] || '') === katFilt);
   if (filt) history = history.filter(h => (h.produkt_nr || '') == filt);
-  if (!history.length) { wrap.innerHTML = '<div style="color:#999;">' + (_historyData.length ? 'Keine Eintraege fuer dieses Produkt.' : 'Noch keine Berechnungen gespeichert.') + '</div>'; return; }
+  if (!history.length) { wrap.innerHTML = '<div style="color:#999;">' + (_historyData.length ? 'Keine Einträge für diese Auswahl.' : 'Noch keine Berechnungen gespeichert.') + '</div>'; return; }
   wrap.innerHTML = history.slice(0,50).map(h => {
     const diff = h.differenz !== undefined ? h.differenz : '';
     const diffTxt = typeof diff === 'number' ? ' <span class="' + (diff>0?'diff-plus':diff<0?'diff-minus':'diff-null') + '">' + (diff>0?'+':'') + Math.round(diff*10)/10 + '</span>' : '';
