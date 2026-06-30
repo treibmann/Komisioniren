@@ -316,7 +316,26 @@ def get_heute_tag() -> str:
 
 def get_filialen_heute(use_tour: bool = True) -> list[str]:
     state = get_state()
-    return state.get_filialen_geordnet(get_heute_tag(), use_tour)
+    tag = get_heute_tag()
+    tour = state.get_filialen_geordnet(tag, use_tour)
+    block_size = int(state.block_groessen.get(tag, 0) or 0)
+    return state.get_aktive_filialen(tour, block_size)
+
+
+def get_block_meta() -> dict:
+    """Block-Metadaten für den Snapshot (Anzahl Blöcke, aktueller Block, Bereich)."""
+    state = get_state()
+    tag = get_heute_tag()
+    tour = state.get_filialen_geordnet(tag, True)
+    block_size = int(state.block_groessen.get(tag, 0) or 0)
+    bloecke, idx = state.get_block_info(tour, block_size)
+    return {
+        "block_aktiv": block_size > 0 and len(bloecke) > 1,
+        "block_anzahl": len(bloecke),
+        "block_idx": idx,
+        "block_filialen": bloecke[idx] if bloecke else [],
+        "block_bereich": state.kat_filter,
+    }
 
 
 def send_display(filiale: str, menge: int) -> None:
@@ -345,6 +364,7 @@ async def push_state() -> None:
     filialen = get_filialen_heute()
     snapshot = state.to_ui_snapshot(filialen)
     snapshot["aktiver_tag"] = get_heute_tag()
+    snapshot.update(get_block_meta())
     await manager.broadcast(snapshot)
     save_runtime_state()
 
@@ -599,6 +619,7 @@ async def websocket_endpoint(ws: WebSocket):
                     state.selected_posten_idx = 0
                     state.current_filiale_idx = 0
                     state.produkt_fertig_sperre = False
+                    state.current_block_idx = 0
                     db_module.log_aktion("filter_kategorie", {"kat": kat})
                     result = {"event": "state_update"}
 
@@ -608,7 +629,20 @@ async def websocket_endpoint(ws: WebSocket):
                     state.selected_posten_idx = 0
                     state.current_filiale_idx = 0
                     state.produkt_fertig_sperre = False
+                    state.current_block_idx = 0
                     db_module.log_aktion("filter_phase", {"phase": phase})
+                    result = {"event": "state_update"}
+
+                elif cmd == "set_block":
+                    state.current_block_idx = max(0, int(msg.get("idx", 0) or 0))
+                    state.selected_posten_idx = 0
+                    state.current_filiale_idx = 0
+                    state.produkt_fertig_sperre = False
+                    filialen = get_filialen_heute()
+                    target = state.get_current_display_target(filialen)
+                    if target:
+                        send_display(target[0], target[1])
+                    db_module.log_aktion("block_gewechselt", {"idx": state.current_block_idx})
                     result = {"event": "state_update"}
 
                 elif cmd == "set_hardware_mode":

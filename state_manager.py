@@ -101,6 +101,31 @@ class AppState:
             return [list(filialen)]
         return [filialen[i:i + size] for i in range(0, len(filialen), size)]
 
+    def get_block_info(self, tour_filialen: list[str], block_size: int):
+        """Gibt (liste_der_bloecke, aktueller_idx) zurück.
+        Ein Block = Filialen-Slice der für den AKTUELLEN Bereich (kat_filter+Phase)
+        relevanten Filialen (Soll>0), in Tour-Reihenfolge. block_size<=0 -> ein Block."""
+        if not block_size or block_size <= 0:
+            return [list(tour_filialen)], 0
+        relevant = list(tour_filialen)
+        if self.df is not None:
+            df_gef = self.get_df_gefiltert()
+            if not df_gef.empty:
+                rel = [f for f in tour_filialen
+                       if f in df_gef.columns and (df_gef[f] > 0).any()]
+                if rel:
+                    relevant = rel
+        bloecke = [relevant[i:i + block_size] for i in range(0, len(relevant), block_size)]
+        if not bloecke:
+            bloecke = [[]]
+        idx = max(0, min(self.current_block_idx, len(bloecke) - 1))
+        return bloecke, idx
+
+    def get_aktive_filialen(self, tour_filialen: list[str], block_size: int) -> list[str]:
+        """Filialen des gerade aktiven Blocks (oder ganze Tour, wenn keine Blöcke)."""
+        bloecke, idx = self.get_block_info(tour_filialen, block_size)
+        return bloecke[idx]
+
     # ------------------------------------------------------------------ #
     # Helfer: gefilterte Daten
     # ------------------------------------------------------------------ #
@@ -192,6 +217,7 @@ class AppState:
         self.selected_posten_idx = 0
         self.current_filiale_idx = 0
         self.produkt_fertig_sperre = False
+        self.current_block_idx = 0
         self.virtual_displays = {}
 
     # ------------------------------------------------------------------ #
@@ -224,6 +250,7 @@ class AppState:
             "rows": rows,
             "selected_posten_idx": self.selected_posten_idx,
             "current_filiale_idx": self.current_filiale_idx,
+            "current_block_idx": self.current_block_idx,
             "produkt_fertig_sperre": self.produkt_fertig_sperre,
             "lieferung_phase": self.lieferung_phase,
             "kat_filter": self.kat_filter,
@@ -260,6 +287,7 @@ class AppState:
                     self.df.at[idx, nc] = float(n)
         self.selected_posten_idx = int(data.get("selected_posten_idx", 0) or 0)
         self.current_filiale_idx = int(data.get("current_filiale_idx", 0) or 0)
+        self.current_block_idx = int(data.get("current_block_idx", 0) or 0)
         self.produkt_fertig_sperre = bool(data.get("produkt_fertig_sperre", False))
         self.lieferung_phase = data.get("lieferung_phase", self.lieferung_phase)
         self.kat_filter = data.get("kat_filter", self.kat_filter)

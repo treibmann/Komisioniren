@@ -279,6 +279,18 @@
   #pack-row #bestaetigen-btn,
   #pack-row #naechstes-btn { width: 360px; max-width: 360px; min-width: 280px; margin: 0; flex-shrink: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  /* Block-Leiste (Block-Kommissionierung) */
+  #block-bar { display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
+    padding: 12px 18px; border-radius: 14px; background: linear-gradient(180deg,#ffffff,#eef3fa);
+    border: 2px solid #0071e3; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+  #block-bar.hidden { display: none; }
+  #block-info { flex: 1; text-align: center; font-size: 22px; font-weight: 700; color: #1d1d1f; }
+  #block-prev, #block-next { padding: 14px 24px; border: none; border-radius: 10px;
+    font-size: 20px; font-weight: 800; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  #block-prev { background: linear-gradient(180deg,#8aa0b5,#647588); color: #fff; box-shadow: 0 3px 0 #4a5563; }
+  #block-next { background: linear-gradient(180deg,#34c759,#1a9e44); color: #fff; box-shadow: 0 3px 0 #137a32; }
+  #block-prev:disabled, #block-next:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+  #block-prev:active, #block-next:active { transform: translateY(2px); }
 
   /* ── Filial-Vorschau ── */
   #filialen-vorschau { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
@@ -737,6 +749,13 @@
           <select id="posten-select" onchange="sendCmd('set_posten', {idx: parseInt(this.value)})">
           </select>
         </div>
+        </div>
+
+        <!-- Block-Leiste (nur wenn Blöcke aktiv) -->
+        <div id="block-bar" class="hidden">
+          <button id="block-prev" onclick="blockWechsel(-1)" title="Vorheriger Block">◀</button>
+          <div id="block-info">Block</div>
+          <button id="block-next" onclick="blockWechsel(1)" title="Nächster Block">Block fertig ▶</button>
         </div>
 
         <!-- Pack-Reihe: Takt Zurück (links) | Station (Mitte, schmaler) | Bestätigen (rechts) -->
@@ -1572,6 +1591,25 @@ function renderState(s) {
     renderMengenkorrektur(s);
   }
 
+  // Block-Leiste (Block-Kommissionierung)
+  const bb = document.getElementById('block-bar');
+  if (bb) {
+    if (s.block_aktiv) {
+      bb.classList.remove('hidden');
+      const fil = (s.block_filialen || []).join(', ');
+      document.getElementById('block-info').innerHTML =
+        'Bereich <b>' + (s.block_bereich || 'Alle') + '</b> · Block <b>' + ((s.block_idx || 0) + 1) +
+        ' / ' + (s.block_anzahl || 1) + '</b>' + (fil ? ' · <span style="font-weight:600;color:#0071e3;">' + fil + '</span>' : '');
+      document.getElementById('block-prev').disabled = (s.block_idx || 0) <= 0;
+      const next = document.getElementById('block-next');
+      const last = (s.block_idx || 0) >= (s.block_anzahl || 1) - 1;
+      next.textContent = last ? '✓ Letzter Block' : 'Block fertig ▶';
+      next.disabled = last;
+    } else {
+      bb.classList.add('hidden');
+    }
+  }
+
   // Virtueller Monitor
   const vm = document.getElementById('virtual-monitor');
   if (s.hardware_mode === 'VIRTUAL' && s.virtual_displays) {
@@ -1825,6 +1863,13 @@ document.getElementById('pdf-input').addEventListener('change', async function()
 // Lieferphase
 // ═══════════════════════════════════════════════════════════
 function setPhase(phase) { sendCmd('set_lieferung_phase', { phase }); }
+
+function blockWechsel(delta) {
+  const cur = (state && state.block_idx) || 0;
+  const cnt = (state && state.block_anzahl) || 1;
+  const next = Math.max(0, Math.min(cnt - 1, cur + delta));
+  if (next !== cur) sendCmd('set_block', { idx: next });
+}
 
 // ═══════════════════════════════════════════════════════════
 // Tourenplanung
