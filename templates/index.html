@@ -359,7 +359,7 @@
     padding: 14px 12px; text-align: left; position: sticky; top: 0; font-size: 22px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
   .menge-table td { padding: 12px 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
-  .menge-table tr:hover td { background: #f9f9f9; }
+  .menge-table tr:hover td { background: rgba(0,0,0,0.04); }
   .menge-table input[type=number] { width: 120px; padding: 10px 10px; border: 1px solid #bbb;
                                     border-radius: 8px; font-size: 26px; }
   .diff-plus  { color: #388e3c; font-weight: 700; }
@@ -2008,12 +2008,13 @@ function buildMengeTbody(artikel, cfg) {
     // grün = vollständig kommissioniert (heute), orange = teilweise, grau = noch nichts
     const fertig = sollH > 0 && gepackt >= sollH;
     const gepacktCol = fertig ? '#1a7f37' : (gepackt > 0 ? '#e67e22' : '#999');
-    const gepacktBg  = fertig ? 'background:#e3f7e8;' : (gepackt > 0 ? 'background:#fff3e0;' : '');
-    return '<tr data-nr="' + a.nr + '" data-kat="' + a.kat + '">' +
+    // ganze Zeile einfärben: grün=fertig, orange=teilweise, sonst neutral
+    const rowBg = fertig ? 'background:#d8f3df;' : (gepackt > 0 ? 'background:#ffe9cc;' : '');
+    return '<tr data-nr="' + a.nr + '" data-kat="' + a.kat + '" style="' + rowBg + '">' +
       '<td style="white-space:nowrap">' + a.nr + '</td>' +
       '<td style="font-size:26px;font-weight:600;">' + a.name + '</td>' +
       '<td style="text-align:right">' + soll + '</td>' +
-      '<td style="text-align:right;font-weight:700;color:' + gepacktCol + ';' + gepacktBg + '">' + gepackt + '</td>' +
+      '<td style="text-align:right;font-weight:700;color:' + gepacktCol + ';">' + gepackt + '</td>' +
       '<td style="text-align:right;color:' + (offen > 0 ? '#c0392b' : '#999') + ';font-weight:' + (offen > 0 ? '700' : '400') + ';">' + offen + '</td>' +
       '<td><input type="number" class="ist-input" data-nr="' + a.nr + '" value="' + a.soll_gesamt + '" min="0" step="' + r + '" style="width:120px;padding:10px;border:1px solid #bbb;border-radius:8px;font-size:26px;" oninput="updateMengeDiff(this,' + a.soll_gesamt + ')"></td>' +
       '<td class="diff-null" id="mdiff-' + a.nr + '">0</td>' +
