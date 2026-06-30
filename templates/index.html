@@ -353,14 +353,14 @@
   .superadmin-only { display: none !important; }
 
   /* ── Mengenkorrektur ── */
-  .menge-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .menge-table { width: 100%; border-collapse: collapse; font-size: 26px; }
   .menge-table th { background: linear-gradient(180deg,#37474f,#263238); color: #eceff1;
-    padding: 9px 10px; text-align: left; position: sticky; top: 0;
+    padding: 14px 12px; text-align: left; position: sticky; top: 0; font-size: 22px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-  .menge-table td { padding: 7px 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
+  .menge-table td { padding: 12px 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
   .menge-table tr:hover td { background: #f9f9f9; }
-  .menge-table input[type=number] { width: 80px; padding: 4px 6px; border: 1px solid #bbb;
-                                    border-radius: 4px; font-size: 13px; }
+  .menge-table input[type=number] { width: 120px; padding: 10px 10px; border: 1px solid #bbb;
+                                    border-radius: 8px; font-size: 26px; }
   .diff-plus  { color: #388e3c; font-weight: 700; }
   .diff-minus { color: #d32f2f; font-weight: 700; }
   .diff-null  { color: #999; }
@@ -807,7 +807,7 @@
             style="padding:12px 24px;background:#ccc;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:not-allowed;">
             <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>In Pack-Modus übernehmen
           </button>
-          <span id="menge-hint" style="font-size:12px;color:#666;">Ist-Mengen eingeben → Berechnen → Übernehmen</span>
+          <span id="menge-hint" style="font-size:18px;color:#666;">Ist-Mengen eingeben → Berechnen → Übernehmen</span>
         </div>
         <table class="menge-table">
           <thead>
@@ -1981,9 +1981,9 @@ function buildMengeTbody(artikel, cfg) {
       '<td style="white-space:nowrap">' + a.nr + '</td>' +
       '<td style="font-size:26px;font-weight:600;">' + a.name + '</td>' +
       '<td style="text-align:right">' + a.soll_gesamt + '</td>' +
-      '<td><input type="number" class="ist-input" data-nr="' + a.nr + '" value="' + a.soll_gesamt + '" min="0" step="' + r + '" style="width:75px;padding:4px;border:1px solid #bbb;border-radius:4px;font-size:13px;" oninput="updateMengeDiff(this,' + a.soll_gesamt + ')"></td>' +
+      '<td><input type="number" class="ist-input" data-nr="' + a.nr + '" value="' + a.soll_gesamt + '" min="0" step="' + r + '" style="width:120px;padding:10px;border:1px solid #bbb;border-radius:8px;font-size:26px;" oninput="updateMengeDiff(this,' + a.soll_gesamt + ')"></td>' +
       '<td class="diff-null" id="mdiff-' + a.nr + '">0</td>' +
-      '<td style="color:#888;font-size:12px;">×' + r + '</td>' +
+      '<td style="color:#888;font-size:22px;">×' + r + '</td>' +
     '</tr>';
   }).join('');
 }
