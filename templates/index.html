@@ -2188,9 +2188,13 @@ function ladeNlProdukt() {
   mGrid.innerHTML = '';
   relevant.forEach(f => {
     const soll = f.soll_erst + f.soll_vor;
+    const geliefert = (f.geliefert_erst || 0) + (f.geliefert_vor || 0);
+    const statusTxt = geliefert > 0
+      ? ' <span style="color:#34c759;font-size:15px;font-weight:600;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> gepackt</span>'
+      : ' <span style="color:#86868b;font-size:15px;font-weight:600;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg> offen</span>';
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:16px;padding:18px 24px;border-radius:16px;border:3px solid #eee;background:#f9f9f9;';
-    row.innerHTML = '<div style="min-width:180px;font-weight:700;font-size:28px;">' + f.name + '</div>'
+    row.innerHTML = '<div style="min-width:180px;font-weight:700;font-size:28px;">' + f.name + statusTxt + '</div>'
       + '<div style="font-size:17px;color:#86868b;min-width:100px;">Soll: ' + soll + '</div>';
     const inp = document.createElement('input');
     inp.type = 'number'; inp.className = 'nl-manuell-input'; inp.dataset.filiale = f.name;
