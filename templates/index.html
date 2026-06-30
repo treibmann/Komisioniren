@@ -302,10 +302,13 @@
   .filter-row select, .auswahl-group select { font-size: 26px; padding: 18px 18px; }
   /* Fortschritt 25% | Bereich 25% | Produkt 50% in einer Reihe */
   #pack-toprow { display: flex; gap: 16px; align-items: center; margin-bottom: 10px; }
-  #pack-toprow #fortschritt-wrap { flex: 1 1 0; min-width: 0; margin: 0; }
+  #pack-toprow #fortschritt-wrap { flex: 1 1 0; min-width: 0; margin: 0; order: 3; }
   #pack-toprow .auswahl-group { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 8px; }
   #pack-toprow .auswahl-group.produkt { flex: 2 1 0; }
   #pack-toprow .auswahl-group select { flex: 1; min-width: 0; width: auto; }
+  /* Pack-Schriftgroesse auch in Mengenkorrektur + Nachlegen */
+  #menge-kat-select, #menge-produkt-select,
+  #nl-kat-select, #nl-produkt-select { font-size: 26px; padding: 14px 16px; }
 
   /* ── Tourenplan ── */
   .woche-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -779,13 +782,13 @@
       <div class="card" style="margin-bottom:10px;">
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:6px;">
-            <label style="font-size:13px;color:#666;white-space:nowrap;">Bereich:</label>
+            <label style="font-size:26px;color:#666;white-space:nowrap;">Bereich:</label>
             <select id="menge-kat-select" onchange="filterMengeTbody()" style="width:auto;">
               <option value="Alle">Alle</option>
             </select>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex:1;">
-            <label style="font-size:13px;color:#666;white-space:nowrap;">Produkt:</label>
+            <label style="font-size:26px;color:#666;white-space:nowrap;">Produkt:</label>
             <select id="menge-produkt-select" onchange="scrollToProdukt()" style="width:100%;">
               <option value="">Alle anzeigen</option>
             </select>
@@ -856,13 +859,13 @@
         <!-- Filter -->
         <div class="card" style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-bottom:0;">
           <div>
-            <label style="font-size:13px;color:#666;display:block;margin-bottom:4px;">Bereich</label>
+            <label style="font-size:26px;color:#666;display:block;margin-bottom:4px;">Bereich</label>
             <select id="nl-kat-select" onchange="filterNlProdukte()" style="width:180px;">
               <option value="Alle">Alle</option>
             </select>
           </div>
           <div style="flex:1;min-width:240px;">
-            <label style="font-size:13px;color:#666;display:block;margin-bottom:4px;">Produkt</label>
+            <label style="font-size:26px;color:#666;display:block;margin-bottom:4px;">Produkt</label>
             <select id="nl-produkt-select" onchange="ladeNlProdukt()" style="width:100%;">
               <option value="">– Produkt wählen –</option>
             </select>
