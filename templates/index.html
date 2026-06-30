@@ -28,7 +28,8 @@
   body.phase-vor  #main { background: #7b1fa2; }  /* Lila (Vorbestellung) */
   body.phase-zwei #main { background: #4e3527; }  /* Espresso-Braun (2. Lieferung) */
   /* Labels auf dem farbigen Hintergrund hell halten (alle Phasen) */
-  body[class*="phase-"] .filter-row label { color: #e8ece6; }
+  body[class*="phase-"] .filter-row label,
+  body[class*="phase-"] .auswahl-group label { color: #e8ece6; }
   /* Station-, Reihenfolge- + Fortschritts-Karte in Phasenfarbe (keine weissen Inseln) */
   body.phase-erst #takt-display:not(.sperre),
   body.phase-erst #reihenfolge-card,
@@ -291,14 +292,14 @@
 
   /* ── Filter ── */
   .filter-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-  .filter-row label { font-size: 26px; font-weight: 600; color: #666; white-space: nowrap; }
-  .filter-row select { font-size: 26px; padding: 18px 18px; }
-  /* Fortschritt (links) + Bereich/Produkt-Auswahl (rechts) in einer Reihe */
-  #pack-toprow { display: flex; gap: 16px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
-  #pack-toprow #fortschritt-wrap { flex: 0 0 340px; min-width: 0; margin: 0; }
-  #pack-toprow .filter-row { margin: 0; flex-shrink: 0; }
-  #pack-toprow .filter-row #kat-select { width: 170px; }
-  #pack-toprow .filter-row #posten-select { width: 430px; }
+  .filter-row label, .auswahl-group label { font-size: 26px; font-weight: 600; color: #666; white-space: nowrap; }
+  .filter-row select, .auswahl-group select { font-size: 26px; padding: 18px 18px; }
+  /* Fortschritt 25% | Bereich 25% | Produkt 50% in einer Reihe */
+  #pack-toprow { display: flex; gap: 16px; align-items: center; margin-bottom: 10px; }
+  #pack-toprow #fortschritt-wrap { flex: 1 1 0; min-width: 0; margin: 0; }
+  #pack-toprow .auswahl-group { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 8px; }
+  #pack-toprow .auswahl-group.produkt { flex: 2 1 0; }
+  #pack-toprow .auswahl-group select { flex: 1; min-width: 0; width: auto; }
 
   /* ── Tourenplan ── */
   .woche-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -708,12 +709,14 @@
           <div id="fortschritt-bar-bg"><div id="fortschritt-bar" style="width:0%"></div></div>
         </div>
 
-        <div class="filter-row">
+        <div class="auswahl-group">
           <label>Bereich:</label>
           <select id="kat-select" onchange="sendCmd('set_kat_filter', {kat: this.value})">
             <option value="Alle">Alle</option>
           </select>
-          <label style="margin-left:12px;">Produkt:</label>
+        </div>
+        <div class="auswahl-group produkt">
+          <label>Produkt:</label>
           <select id="posten-select" onchange="sendCmd('set_posten', {idx: parseInt(this.value)})">
           </select>
         </div>
