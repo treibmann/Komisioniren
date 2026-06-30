@@ -783,13 +783,13 @@
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:6px;">
             <label style="font-size:26px;color:#666;white-space:nowrap;">Bereich:</label>
-            <select id="menge-kat-select" onchange="filterMengeTbody()" style="width:auto;">
+            <select id="menge-kat-select" onchange="onMengeKatChange()" style="width:auto;">
               <option value="Alle">Alle</option>
             </select>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex:1;">
             <label style="font-size:26px;color:#666;white-space:nowrap;">Produkt:</label>
-            <select id="menge-produkt-select" onchange="scrollToProdukt()" style="width:100%;">
+            <select id="menge-produkt-select" onchange="filterMengeTbody()" style="width:100%;">
               <option value="">Alle anzeigen</option>
             </select>
           </div>
@@ -2010,16 +2010,18 @@ function updateMengeDiff(input, soll) {
 
 function filterMengeTbody() {
   const kat = document.getElementById('menge-kat-select').value;
+  const nr  = document.getElementById('menge-produkt-select').value;
   document.querySelectorAll('#menge-tbody tr').forEach(row => {
-    row.style.display = (kat === 'Alle' || row.dataset.kat === kat) ? '' : 'none';
+    const katOk = (kat === 'Alle' || row.dataset.kat === kat);
+    const nrOk  = (!nr || row.dataset.nr === nr);
+    row.style.display = (katOk && nrOk) ? '' : 'none';
   });
 }
 
-function scrollToProdukt() {
-  const nr = document.getElementById('menge-produkt-select').value;
-  if (!nr) return;
-  const row = document.querySelector('#menge-tbody tr[data-nr="' + nr + '"]');
-  if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+// Bereich gewechselt: Produktauswahl zuruecksetzen, dann filtern
+function onMengeKatChange() {
+  document.getElementById('menge-produkt-select').value = '';
+  filterMengeTbody();
 }
 
 async function berechneKuerzung() {
