@@ -27,6 +27,10 @@
   body.phase-erst #main { background: #1b3b6b; }  /* Dunkelblau (1. Lieferung) */
   body.phase-vor  #main { background: #7b1fa2; }  /* Lila (Vorbestellung) */
   body.phase-zwei #main { background: #4e3527; }  /* Espresso-Braun (2. Lieferung) */
+  /* Modul-Leiste in Phasenfarbe -> kein dunkler Balken, verschmilzt mit #main */
+  body.phase-erst #tabbar { background: #1b3b6b; }
+  body.phase-vor  #tabbar { background: #7b1fa2; }
+  body.phase-zwei #tabbar { background: #4e3527; }
   /* Labels auf dem farbigen Hintergrund hell halten (alle Phasen) */
   body[class*="phase-"] .filter-row label,
   body[class*="phase-"] .auswahl-group label { color: #e8ece6; }
@@ -180,9 +184,8 @@
   /* ── Tabs ── */
   /* Modul-Leiste haengt fix direkt unter dem Header */
   /* Modul-Leiste: dunkel, integriert unter dem Header */
-  #tabbar { flex-shrink: 0; padding: 10px 24px; background: #23262b;
-            border-bottom: 1px solid rgba(0,0,0,0.35);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.25); position: relative; z-index: 50; }
+  #tabbar { flex-shrink: 0; padding: 10px 24px; background: transparent;
+            position: relative; z-index: 50; }
   .tabs { display: flex; gap: 8px; margin-bottom: 0; background: transparent; padding: 0; flex-wrap: wrap; }
   /* Modul-Buttons im Stil der Phasen-Buttons (1. Lief. / Vorbestellung / 2. Lief.) */
   .tab-btn { padding: 16px 24px; border: 2px solid #37474f; border-radius: 10px; cursor: pointer;
@@ -190,8 +193,8 @@
              background: linear-gradient(180deg,#546e7a,#37474f); color: #cfd8dc;
              box-shadow: 0 3px 0 #263238; transition: all .12s; }
   .tab-btn:hover { filter: brightness(1.12); color: #ffffff; }
-  .tab-btn.active { background: linear-gradient(180deg,#78909c,#455a64); color: #ffffff; border-color: #2f3e46;
-                    box-shadow: 0 3px 0 #2a363c, 0 4px 8px rgba(0,0,0,0.35); }
+  .tab-btn.active { background: linear-gradient(180deg,#ffffff,#eef0f4); color: #1d1d1f; border-color: #d9dee3;
+                    box-shadow: 0 3px 0 #b8c0c8, 0 4px 8px rgba(0,0,0,0.3); }
   .tab-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #000 !important; }
   .tab-pane { display: none; }
   .tab-pane.active { display: block; }
