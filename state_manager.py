@@ -138,6 +138,12 @@ class AppState:
             df = df[df["Kat"] == self.kat_filter]
         # Lieferungs-Phasen-Filter
         df = df[df["Typ"] == self.lieferung_phase]
+        # Fremdkunden/Verkaufsautos gehoeren nicht in den Touren-Pack-Modus:
+        # sie stehen nie in Touren (ihre Spalten sind fuer Tour-Filialen 0) und
+        # erzeugen sonst Doppel-Artikel (gleiche Nr+Typ, nur andere Quelle) im
+        # Dropdown und verfaelschen den Fortschritts-Zaehler.
+        if "Quelle" in df.columns:
+            df = df[df["Quelle"] == "standard"]
         return df
 
     def get_filialen_geordnet(self, heute_tag: str, use_tour: bool = True) -> list[str]:
