@@ -1544,7 +1544,8 @@ function renderState(s) {
   // Fortschrittsbalken aktualisieren
   if (s.pdf_loaded && s.posten_labels) {
     const gesamt = s.posten_labels.length;
-    const aktuell = s.selected_posten_idx || 0;
+    // "erledigt" = tatsächlich fertige Artikel (alle Filialen gepackt), NICHT die Cursor-Position
+    const aktuell = (s.posten_done || []).filter(Boolean).length;
     const prozent = gesamt > 0 ? Math.round((aktuell / gesamt) * 100) : 0;
     const fpEl = document.getElementById('fortschritt-bar');
     const fpText = document.getElementById('fp-aktuell');
