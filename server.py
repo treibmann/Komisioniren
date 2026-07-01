@@ -335,6 +335,9 @@ def get_block_meta() -> dict:
         "block_idx": idx,
         "block_filialen": bloecke[idx] if bloecke else [],
         "block_bereich": state.kat_filter,
+        # Volle Tour-Reihenfolge (NICHT block-beschraenkt) – u.a. fuer Nachlegen,
+        # das die ganze Tour betreffen soll, nicht nur den aktiven Block.
+        "tour_filialen": tour,
     }
 
 
@@ -495,6 +498,7 @@ async def websocket_endpoint(ws: WebSocket):
     filialen = get_filialen_heute()
     init_snap = state.to_ui_snapshot(filialen)
     init_snap["aktiver_tag"] = get_heute_tag()
+    init_snap.update(get_block_meta())
     await ws.send_text(json.dumps(init_snap, ensure_ascii=False))
 
     try:
@@ -835,7 +839,10 @@ async def api_set_role_config(cfg: dict):
 async def api_state():
     state = get_state()
     filialen = get_filialen_heute()
-    return state.to_ui_snapshot(filialen)
+    snap = state.to_ui_snapshot(filialen)
+    snap["aktiver_tag"] = get_heute_tag()
+    snap.update(get_block_meta())
+    return snap
 
 
 class CmdBody(BaseModel):

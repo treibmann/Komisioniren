@@ -2335,10 +2335,13 @@ function ladeNlProdukt() {
   document.getElementById('nl-menge').value = '';
   document.getElementById('nl-produkt-detail').style.display = 'block';
 
-  // Nur Filialen aus dem heutigen Tourplan die dieses Produkt bestellt haben
-  const filialen_heute = state.filialen_heute || [];
+  // Nur Filialen aus dem heutigen Tourplan die dieses Produkt bestellt haben.
+  // WICHTIG: volle Tour (tour_filialen), NICHT der aktive Block (filialen_heute) –
+  // sonst zeigt Nachlegen bei aktiven Bloecken nur die 4 Block-Filialen.
+  const tour = (state.tour_filialen && state.tour_filialen.length)
+    ? state.tour_filialen : (state.filialen_heute || []);
   const relevant = (artikel.filialen || []).filter(f =>
-    filialen_heute.includes(f.name) && (f.soll_erst + f.soll_vor) > 0
+    tour.includes(f.name) && (f.soll_erst + f.soll_vor) > 0
   );
 
   // Auto-Modus: Checkboxen (via createElement um Quote-Probleme zu vermeiden)
