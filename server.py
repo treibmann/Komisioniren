@@ -254,6 +254,11 @@ MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 PDF_PATH = os.getenv("PDF_PATH", "/pdf/Drucke_Artikel-Versandliste.pdf")
 
 
+# Merkt sich den zuletzt beleuchteten Platz, damit beim Stationswechsel
+# genau EIN Display leuchtet (Pick-by-Light): der alte Platz wird auf "0" gesetzt.
+_last_display_platz: int | None = None
+
+
 def mqtt_send(filiale: str, menge: int) -> None:
     """Sendet an das Display am PLATZ der Filiale (positions-basiert).
 
@@ -262,7 +267,11 @@ def mqtt_send(filiale: str, menge: int) -> None:
     Tour-Reihenfolge, 1-basiert.
     Topic:   baeckerei/display/<platz>        (z.B. baeckerei/display/1)
     Payload: "<Filialname>|<Menge>"  bzw. "0" wenn aus.
+
+    Beim Wechsel auf einen anderen Platz wird der zuvor aktive Platz
+    ausgeschaltet, damit immer nur ein Display leuchtet.
     """
+    global _last_display_platz
     if not MQTT_AVAILABLE:
         return
     try:
@@ -274,12 +283,16 @@ def mqtt_send(filiale: str, menge: int) -> None:
         client = mqtt_lib.Client(mqtt_lib.CallbackAPIVersion.VERSION2)
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
         client.loop_start()          # Netzwerk-Loop: ohne ihn geht die Nachricht vor dem disconnect verloren
+        # Vorherigen Platz ausschalten, falls die aktive Station gewechselt hat
+        if _last_display_platz is not None and _last_display_platz != platz:
+            client.publish(f"baeckerei/display/{_last_display_platz}", "0", qos=1, retain=True)
         topic = f"baeckerei/display/{platz}"
         payload = f"{filiale}|{menge}" if menge > 0 else "0"
         info = client.publish(topic, payload, qos=1, retain=True)  # retain: ESP zeigt nach Reconnect den aktuellen Stand
         info.wait_for_publish(timeout=2.0)   # sicherstellen, dass sie wirklich raus ist
         client.loop_stop()
         client.disconnect()
+        _last_display_platz = platz if menge > 0 else None
     except Exception as exc:
         print(f"[MQTT] Fehler: {exc}")
 
