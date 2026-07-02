@@ -26,6 +26,9 @@ data/runtime_state.json
 # Test-Artefakte (Playwright MCP)
 .playwright-mcp/
 
+# ESP32-Firmware bleibt lokal (enthaelt echte WLAN-Zugangsdaten)
+firmware/
+
 # OS
 .DS_Store
 Thumbs.db
