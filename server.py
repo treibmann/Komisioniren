@@ -265,9 +265,10 @@ def mqtt_broadcast_displays(snapshot: dict) -> None:
       p = offen  (rot),  a = aktiv (orange),  d = erledigt (gruen, durchgestrichen).
     Platznummer = Position der Filiale in der vollen Tour, 1-basiert.
     Topic:   baeckerei/display/<platz>
-    Payload: "<Name>|<Menge>|<p|a|d>|<Nachlege>"  bzw. "0" wenn diese Filiale
+    Payload: "<Name>|<Menge>|<p|a|d>|<Nachlege>|<Typ>"  bzw. "0" wenn diese Filiale
              fuer das aktuelle Produkt nichts zu packen hat (Kiste aus).
              Nachlege > 0  -> Kiste zeigt (Menge-Nachlege) gruen + "+Nachlege" rot.
+             Typ (Namensfarbe): 1=Erstlieferung(blau), V=Vorbestellung(lila), 2=2.Lieferung(braun).
     """
     state = get_state()
     if not MQTT_AVAILABLE or state.hardware_mode != "MQTT":
@@ -276,6 +277,7 @@ def mqtt_broadcast_displays(snapshot: dict) -> None:
     if not tour:
         return
     status_map = {f["name"]: f for f in snapshot.get("filialen_status", [])}
+    typ_code = {"1.": "1", "V": "V", "2.": "2"}.get(snapshot.get("lieferung_phase", "1."), "1")
     try:
         client = mqtt_lib.Client(mqtt_lib.CallbackAPIVersion.VERSION2)
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
@@ -285,7 +287,7 @@ def mqtt_broadcast_displays(snapshot: dict) -> None:
             st = status_map.get(filiale)
             if st and st.get("menge", 0) > 0:
                 payload = (f"{filiale}|{st['menge']}|{_STATUS_CODE.get(st.get('status'), 'p')}"
-                           f"|{st.get('nachlege', 0)}")
+                           f"|{st.get('nachlege', 0)}|{typ_code}")
             else:
                 payload = "0"        # keine Bestellung fuer dieses Produkt -> Kiste aus
             last_info = client.publish(f"baeckerei/display/{i + 1}", payload, qos=1, retain=True)
