@@ -190,6 +190,28 @@ class AppState:
                 return False
         return True
 
+    def zeile_angefangen(self, idx, filialen: list[str]) -> bool:
+        """True, wenn mind. eine relevante Filiale (Soll>0) geliefert ist, aber
+        NICHT alle -> Produkt begonnen, aber noch nicht fertig (orange)."""
+        if self.df is None or idx not in self.df.index:
+            return False
+        row = self.df.loc[idx]
+        rel = [f for f in filialen if float(row.get(f, 0) or 0) > 0]
+        if not rel:
+            return False
+        any_done = False
+        all_done = True
+        for f in rel:
+            gc = f"{f}_Geliefert"
+            gel = float(self.df.at[idx, gc]) if gc in self.df.columns else 0.0
+            if gel != gel:  # NaN
+                gel = 0.0
+            if gel > 0:
+                any_done = True
+            else:
+                all_done = False
+        return any_done and not all_done
+
     # ------------------------------------------------------------------ #
     # Takt-Logik
     # ------------------------------------------------------------------ #
@@ -564,6 +586,7 @@ class AppState:
         df_gef = self.get_df_gefiltert()
         posten_labels = self.get_posten_labels(df_gef)
         posten_done = [self.zeile_fertig(idx, filialen_heute) for idx in df_gef.index]
+        posten_angefangen = [self.zeile_angefangen(idx, filialen_heute) for idx in df_gef.index]
         kategorien = self.get_kategorien()
 
         current_row_data = {}
@@ -635,6 +658,7 @@ class AppState:
             "kategorien": kategorien,
             "posten_labels": posten_labels,
             "posten_done": posten_done,
+            "posten_angefangen": posten_angefangen,
             "selected_posten_idx": self.selected_posten_idx,
             "current_filiale_idx": self.current_filiale_idx,
             "produkt_fertig_sperre": self.produkt_fertig_sperre,

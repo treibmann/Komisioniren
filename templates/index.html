@@ -656,6 +656,28 @@
     #pack-row #naechstes-btn { width: 180px; max-width: 180px; min-width: 150px;
       padding: 12px 10px; font-size: 17px; }
   }
+
+  /* ── Bildschirm-Ziffernblock (fuer Tablets ohne System-Tastatur) ── */
+  #num-keypad {
+    position: fixed; right: 24px; bottom: 24px; z-index: 10001;
+    background: #1d1d1f; border: 1px solid #3a3a3c; border-radius: 16px;
+    padding: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    display: grid; grid-template-columns: repeat(3, 78px); gap: 8px;
+    user-select: none; touch-action: manipulation;
+  }
+  #num-keypad.hidden { display: none; }
+  #num-keypad .kp {
+    font-size: 30px; font-weight: 800; height: 66px; border-radius: 12px;
+    border: none; cursor: pointer; color: #f5f5f7;
+    background: linear-gradient(180deg,#3a3a3c,#2c2c2e); box-shadow: 0 3px 0 #1c1c1e;
+    transition: filter .1s, transform .05s;
+  }
+  #num-keypad .kp:active { transform: translateY(2px); box-shadow: 0 1px 0 #1c1c1e; }
+  #num-keypad .kp:hover { filter: brightness(1.12); }
+  #num-keypad .kp-back { background: linear-gradient(180deg,#8a5a2b,#6b4420); box-shadow: 0 3px 0 #4a2f16; }
+  #num-keypad .kp-clear { background: linear-gradient(180deg,#b03636,#8a2727); box-shadow: 0 3px 0 #5f1b1b; }
+  #num-keypad .kp-done { grid-column: span 3; background: linear-gradient(180deg,#34c759,#1a9e44);
+    box-shadow: 0 3px 0 #137a32; color: #fff; }
 </style>
 </head>
 <body>
@@ -988,7 +1010,7 @@
             <span id="nl-produkt-name" style="font-size:24px;font-weight:700;flex:1;"></span>
             <div style="display:flex;align-items:center;gap:12px;">
               <label style="font-size:22px;font-weight:600;">Nachlege-Menge:</label>
-              <input type="number" id="nl-menge" min="0.5" step="0.5" placeholder="0"
+              <input type="text" inputmode="decimal" id="nl-menge" placeholder="0"
                      style="width:140px;padding:14px;font-size:28px;font-weight:700;
                             border:2px solid #f57f17;border-radius:10px;text-align:center;">
               <span style="font-size:20px;color:#666;">Stück</span>
@@ -1711,12 +1733,14 @@ function renderState(s) {
     s.kategorien.map(k => `<option value="${k}" ${k===s.kat_filter?'selected':''}>${k}</option>`).join('');
   if (s.kat_filter !== prevKat) katSel.value = s.kat_filter;
 
-  // Posten-Select (fertig kommissionierte Produkte gruen hinterlegt)
+  // Posten-Select: gruen = komplett fertig, orange = angefangen
   const postSel = document.getElementById('posten-select');
   const pDone = s.posten_done || [];
-  postSel.innerHTML = s.posten_labels.map((l, i) =>
-    `<option value="${i}" ${i===s.selected_posten_idx?'selected':''}${pDone[i]?' style="background:#c8f7d0;color:#1a7f37;font-weight:700;"':''}>${pDone[i]?'✓ ':''}${l}</option>`
-  ).join('');
+  const pStarted = s.posten_angefangen || [];
+  postSel.innerHTML = s.posten_labels.map((l, i) => {
+    const st = pDone[i] ? 'done' : (pStarted[i] ? 'started' : null);
+    return `<option value="${i}" ${i===s.selected_posten_idx?'selected':''}${statusStyle(st)}>${statusPrefix(st)}${l}</option>`;
+  }).join('');
 
   // Takt-Display
   const taktDiv = document.getElementById('takt-display');
@@ -2168,7 +2192,7 @@ function buildMengeTbody(artikel, cfg) {
       '<td style="text-align:right">' + soll + '</td>' +
       '<td style="text-align:right;font-weight:700;color:' + gepacktCol + ';">' + gepackt + '</td>' +
       '<td style="text-align:right;color:' + (offen > 0 ? '#c0392b' : '#999') + ';font-weight:' + (offen > 0 ? '700' : '400') + ';">' + offen + '</td>' +
-      '<td><input type="number" class="ist-input" data-nr="' + a.nr + '" value="' + a.soll_gesamt + '" min="0" step="' + r + '" style="width:120px;padding:10px;border:1px solid #bbb;border-radius:8px;font-size:26px;" oninput="updateMengeDiff(this,' + a.soll_gesamt + ')"></td>' +
+      '<td><input type="text" inputmode="decimal" class="ist-input" data-nr="' + a.nr + '" value="' + a.soll_gesamt + '" style="width:120px;padding:10px;border:1px solid #bbb;border-radius:8px;font-size:26px;" oninput="updateMengeDiff(this,' + a.soll_gesamt + ')"></td>' +
       '<td class="diff-null" id="mdiff-' + a.nr + '">0</td>' +
       '<td style="color:#888;font-size:22px;">×' + r + '</td>' +
     '</tr>';
@@ -2194,14 +2218,45 @@ function filterMengeTbody() {
   });
 }
 
+// Einheitliche Farb-Kennzeichnung fuer alle Produkt-Dropdowns:
+// EXAKT wie im Pack-Modus-Dropdown. Quelle = Pack-State (posten_done/angefangen),
+// gemappt pro Artikel-Nr. So sind Pack, Mengenkorrektur und Nachlegen identisch.
+function packStatusByNr() {
+  const map = {};
+  const labels  = (typeof state !== 'undefined' && state && state.posten_labels)     || [];
+  const done    = (typeof state !== 'undefined' && state && state.posten_done)        || [];
+  const started = (typeof state !== 'undefined' && state && state.posten_angefangen)  || [];
+  const rank = { started: 1, done: 2 };
+  labels.forEach((l, i) => {
+    const m = String(l).match(/Nr\.\s*(\w+)/);
+    if (!m) return;
+    const nr = m[1];
+    const st = done[i] ? 'done' : (started[i] ? 'started' : null);
+    if (!st) return;
+    if (!map[nr] || rank[st] > rank[map[nr]]) map[nr] = st;  // staerksten Status behalten
+  });
+  return map;
+}
+function statusStyle(st) {
+  return st === 'done'    ? ' style="background:#c8f7d0;color:#1a7f37;font-weight:700;"'
+       : st === 'started' ? ' style="background:#ffe0b2;color:#e67e22;font-weight:700;"' : '';
+}
+function statusPrefix(st) {
+  return st === 'done' ? '✓ ' : (st === 'started' ? '▶ ' : '');
+}
+
 // Produkt-Dropdown auf den gewählten Bereich einschränken
 function buildMengeProduktSelect() {
   const prodSel = document.getElementById('menge-produkt-select');
   if (!prodSel) return;
   const kat = document.getElementById('menge-kat-select').value;
   const list = (kat === 'Alle') ? mengeArtikel : mengeArtikel.filter(a => a.kat === kat);
+  const stMap = packStatusByNr();
   prodSel.innerHTML = '<option value="">Alle anzeigen</option>' +
-    list.map(a => '<option value="' + a.nr + '"' + (a.fertig ? ' style="background:#c8f7d0;color:#1a7f37;font-weight:700;"' : '') + '>' + (a.fertig ? '✓ ' : '') + a.nr + ' – ' + a.name + '</option>').join('');
+    list.map(a => {
+      const st = stMap[a.nr];
+      return '<option value="' + a.nr + '"' + statusStyle(st) + '>' + statusPrefix(st) + a.nr + ' – ' + a.name + '</option>';
+    }).join('');
 }
 
 // Bereich gewechselt: Produkt-Auswahl auf Bereich einschränken (setzt zurück), dann Tabelle filtern
@@ -2374,9 +2429,13 @@ function renderNachlegen(s) {
 function filterNlProdukte() {
   const kat = document.getElementById('nl-kat-select').value;
   const gef = kat === 'Alle' ? nlArtikel : nlArtikel.filter(a => a.kat === kat);
+  const stMap = packStatusByNr();  // gleiche Farbe wie im Pack-Modus-Dropdown
   document.getElementById('nl-produkt-select').innerHTML =
     '<option value="">– Produkt wählen –</option>' +
-    gef.map(a => '<option value="' + a.nr + '"' + (a.fertig ? ' style="background:#c8f7d0;color:#1a7f37;font-weight:700;"' : '') + '>' + (a.fertig ? '✓ ' : '') + a.nr + ' – ' + a.name + '</option>').join('');
+    gef.map(a => {
+      const st = stMap[a.nr];
+      return '<option value="' + a.nr + '"' + statusStyle(st) + '>' + statusPrefix(st) + a.nr + ' – ' + a.name + '</option>';
+    }).join('');
   document.getElementById('nl-produkt-detail').style.display = 'none';
 }
 
@@ -2453,8 +2512,8 @@ function ladeNlProdukt() {
     row.innerHTML = '<div style="min-width:180px;font-weight:700;font-size:28px;">' + f.name + statusTxt + '</div>'
       + '<div style="font-size:17px;color:#86868b;min-width:100px;">Soll: ' + soll + '</div>';
     const inp = document.createElement('input');
-    inp.type = 'number'; inp.className = 'nl-manuell-input'; inp.dataset.filiale = f.name;
-    inp.value = '0'; inp.min = '0'; inp.step = '0.5';
+    inp.type = 'text'; inp.inputMode = 'decimal'; inp.className = 'nl-manuell-input'; inp.dataset.filiale = f.name;
+    inp.value = '0';
     inp.style.cssText = 'width:130px;padding:14px;font-size:26px;font-weight:700;border:2px solid #d1d1d6;border-radius:10px;text-align:center;';
     inp.oninput = function() {
       this.style.borderColor = this.value > 0 ? '#f57f17' : '#d1d1d6';
@@ -2963,10 +3022,62 @@ document.getElementById('filialen-vorschau').addEventListener('click', function(
   if (action === 'rueckgaengig') rueckgaengigFiliale(name);
 });
 
+// ── Bildschirm-Ziffernblock ──────────────────────────────────────────
+// Erscheint beim Antippen eines Mengen-Feldes (Tablet ohne System-Tastatur).
+const KB_SELECTOR = '.ist-input, #nl-menge, .nl-manuell-input';
+let kbTarget = null;
+function kbShow() { document.getElementById('num-keypad').classList.remove('hidden'); }
+function kbHide() { document.getElementById('num-keypad').classList.add('hidden'); kbTarget = null; }
+function kbKey(k) {
+  if (!kbTarget) return;
+  let v = String(kbTarget.value || '');
+  if (k === 'back')       v = v.slice(0, -1);
+  else if (k === 'clear') v = '';
+  else if (k === '.')     { if (!v.includes('.')) v = (v === '' ? '0' : v) + '.'; }
+  else                    v = (v === '0' ? k : v + k);   // fuehrende 0 ersetzen
+  kbTarget.value = v;
+  kbTarget.dispatchEvent(new Event('input', { bubbles: true }));
+}
+function kbDone() {
+  if (kbTarget) kbTarget.dispatchEvent(new Event('change', { bubbles: true }));
+  kbHide();
+}
+document.addEventListener('focusin', function (e) {
+  const el = e.target;
+  if (el && el.matches && el.matches(KB_SELECTOR)) {
+    kbTarget = el;
+    el.setAttribute('inputmode', 'none');   // System-Tastatur unterdruecken
+    try { el.select(); } catch (_) {}
+    kbShow();
+    // aktives Feld in den sichtbaren Bereich holen (Ziffernblock deckt unten ab)
+    setTimeout(() => { try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {} }, 60);
+  } else if (!document.getElementById('num-keypad').classList.contains('hidden')) {
+    kbHide();   // Fokus auf etwas anderes -> Ziffernblock schliessen
+  }
+});
+
 // Header-Anzeige-Konfiguration beim Start laden und anwenden (gilt für alle Rollen)
 ladeHeaderConfig();
 
 
 </script>
+
+<!-- Bildschirm-Ziffernblock (erscheint beim Antippen eines Mengen-Feldes) -->
+<div id="num-keypad" class="hidden">
+  <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('7')">7</button>
+  <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('8')">8</button>
+  <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('9')">9</button>
+  <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('4')">4</button>
+  <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('5')">5</button>
+  <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('6')">6</button>
+  <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('1')">1</button>
+  <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('2')">2</button>
+  <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('3')">3</button>
+  <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('.')">,</button>
+  <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('0')">0</button>
+  <button type="button" class="kp kp-back" onmousedown="event.preventDefault()" onclick="kbKey('back')">⌫</button>
+  <button type="button" class="kp kp-clear" onmousedown="event.preventDefault()" onclick="kbKey('clear')">C</button>
+  <button type="button" class="kp kp-done" onmousedown="event.preventDefault()" onclick="kbDone()">✓ Fertig</button>
+</div>
 </body>
 </html>
