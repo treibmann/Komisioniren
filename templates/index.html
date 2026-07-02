@@ -643,6 +643,12 @@
     #tabbar { padding: 6px 14px; }                   /* Modus-Leiste dicht an Header + Inhalt */
     .tabs { gap: 5px; }
     #main { padding: 10px 14px; }                    /* wenig Abstand zum Rand */
+    /* Nachlegen-/Mengenkorrektur-Filterzeile kompakter,
+       sonst wird der "Manuell"-Button rechts abgeschnitten */
+    #menge-kat-select, #menge-produkt-select,
+    #nl-kat-select, #nl-produkt-select { font-size: 18px; padding: 11px 14px; }
+    #tab-nachlegen .card label { font-size: 18px !important; }
+    .nl-mode-btn { font-size: 15px; padding: 11px 14px; gap: 5px; }
   }
 </style>
 </head>
@@ -2390,13 +2396,24 @@ function ladeNlProdukt() {
   const relevant = tour.map(name => nlByName[name] ||
     { name: name, soll_erst: 0, soll_vor: 0, geliefert_erst: 0, geliefert_vor: 0 });
 
+  // Anhaken + angezeigtes Soll richten sich nach der AKTUELLEN Lieferphase:
+  // "1. Lieferung" -> Erstlieferungs-Menge, "Vorbestellung" -> Vorbestell-Menge.
+  // (Fuer "2. Lieferung" gibt es keine eigene PDF-Menge -> Erst+Vorb. kombiniert.)
+  const nlPhase = state.lieferung_phase;
+  const phaseSoll = f => nlPhase === 'V'  ? (f.soll_vor || 0)
+                       : nlPhase === '2.' ? ((f.soll_erst || 0) + (f.soll_vor || 0))
+                       :                     (f.soll_erst || 0);
+  const phaseGeliefert = f => nlPhase === 'V'  ? (f.geliefert_vor || 0)
+                            : nlPhase === '2.' ? ((f.geliefert_erst || 0) + (f.geliefert_vor || 0))
+                            :                     (f.geliefert_erst || 0);
+
   // Auto-Modus: Checkboxen (via createElement um Quote-Probleme zu vermeiden)
   const grid = document.getElementById('nl-filialen-grid');
   grid.innerHTML = '';
   relevant.forEach(f => {
-    const soll = f.soll_erst + f.soll_vor;
-    const geliefert = (f.geliefert_erst || 0) + (f.geliefert_vor || 0);
-    const hatBestellung = (f.soll_erst + f.soll_vor) > 0;
+    const soll = phaseSoll(f);
+    const geliefert = phaseGeliefert(f);
+    const hatBestellung = soll > 0;
     const lbl = document.createElement('label');
     lbl.style.cssText = 'display:flex;align-items:center;gap:14px;padding:20px 24px;border-radius:16px;border:3px solid '
       + (hatBestellung ? '#0071e3' : '#d1d1d6') + ';background:' + (hatBestellung ? '#f0f7ff' : '#f9f9f9')
@@ -2420,8 +2437,8 @@ function ladeNlProdukt() {
   const mGrid = document.getElementById('nl-manuell-grid');
   mGrid.innerHTML = '';
   relevant.forEach(f => {
-    const soll = f.soll_erst + f.soll_vor;
-    const geliefert = (f.geliefert_erst || 0) + (f.geliefert_vor || 0);
+    const soll = phaseSoll(f);
+    const geliefert = phaseGeliefert(f);
     const statusTxt = geliefert > 0
       ? ' <span style="color:#34c759;font-size:15px;font-weight:600;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> gepackt</span>'
       : ' <span style="color:#86868b;font-size:15px;font-weight:600;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg> offen</span>';
