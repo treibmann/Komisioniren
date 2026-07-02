@@ -659,13 +659,19 @@
 
   /* ── Bildschirm-Ziffernblock (fuer Tablets ohne System-Tastatur) ── */
   #num-keypad {
-    position: fixed; right: 24px; bottom: 24px; z-index: 10001;
+    position: fixed; left: 16px; bottom: 24px; z-index: 10001;
     background: #1d1d1f; border: 1px solid #3a3a3c; border-radius: 16px;
     padding: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
     display: grid; grid-template-columns: repeat(3, 78px); gap: 8px;
     user-select: none; touch-action: manipulation;
   }
   #num-keypad.hidden { display: none; }
+  #num-keypad .kp-drag {
+    grid-column: span 3; display: flex; align-items: center; justify-content: center; gap: 8px;
+    height: 34px; margin-bottom: 4px; border-radius: 10px; cursor: move;
+    color: #aeb0b5; background: #111214; font-size: 14px; font-weight: 700;
+    touch-action: none;
+  }
   #num-keypad .kp {
     font-size: 30px; font-weight: 800; height: 66px; border-radius: 12px;
     border: none; cursor: pointer; color: #f5f5f7;
@@ -1926,6 +1932,7 @@ function switchTab(tab, btn) {
   if (tab === 'nachlegen') renderNachlegen(state);
   if (tab === 'auswertung') initAuswertung();
   if (tab === 'superadmin') initSuperAdmin();
+  kbShowForTab(tab);   // Ziffernblock nur auf Zahlen-Tabs zeigen
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3026,8 +3033,12 @@ document.getElementById('filialen-vorschau').addEventListener('click', function(
 // Erscheint beim Antippen eines Mengen-Feldes (Tablet ohne System-Tastatur).
 const KB_SELECTOR = '.ist-input, #nl-menge, .nl-manuell-input';
 let kbTarget = null;
-function kbShow() { document.getElementById('num-keypad').classList.remove('hidden'); }
-function kbHide() { document.getElementById('num-keypad').classList.add('hidden'); kbTarget = null; }
+// Ziffernblock ist auf den Zahlen-Tabs (Mengenkorrektur/Nachlegen) IMMER offen.
+function kbShowForTab(tab) {
+  const kp = document.getElementById('num-keypad'); if (!kp) return;
+  if (tab === 'menge' || tab === 'nachlegen') kp.classList.remove('hidden');
+  else { kp.classList.add('hidden'); kbTarget = null; }
+}
 function kbKey(k) {
   if (!kbTarget) return;
   let v = String(kbTarget.value || '');
@@ -3039,8 +3050,8 @@ function kbKey(k) {
   kbTarget.dispatchEvent(new Event('input', { bubbles: true }));
 }
 function kbDone() {
-  if (kbTarget) kbTarget.dispatchEvent(new Event('change', { bubbles: true }));
-  kbHide();
+  if (kbTarget) { kbTarget.dispatchEvent(new Event('change', { bubbles: true })); kbTarget.blur(); }
+  kbTarget = null;   // Ziffernblock bleibt offen – einfach naechstes Feld antippen
 }
 document.addEventListener('focusin', function (e) {
   const el = e.target;
@@ -3048,12 +3059,36 @@ document.addEventListener('focusin', function (e) {
     kbTarget = el;
     el.setAttribute('inputmode', 'none');   // System-Tastatur unterdruecken
     try { el.select(); } catch (_) {}
-    kbShow();
-    // aktives Feld in den sichtbaren Bereich holen (Ziffernblock deckt unten ab)
-    setTimeout(() => { try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {} }, 60);
-  } else if (!document.getElementById('num-keypad').classList.contains('hidden')) {
-    kbHide();   // Fokus auf etwas anderes -> Ziffernblock schliessen
   }
+});
+// Ziffernblock per Ziehleiste verschiebbar (Maus + Touch). Init nach DOM-Aufbau,
+// da das Keypad-DOM erst nach diesem Script im Body steht.
+document.addEventListener('DOMContentLoaded', function () {
+  const kp = document.getElementById('num-keypad'); if (!kp) return;
+  const handle = kp.querySelector('.kp-drag'); if (!handle) return;
+  let drag = false, offX = 0, offY = 0;
+  const pt = e => (e.touches && e.touches[0]) ? e.touches[0] : e;
+  function start(e) {
+    const p = pt(e), r = kp.getBoundingClientRect();
+    offX = p.clientX - r.left; offY = p.clientY - r.top;
+    kp.style.right = 'auto'; kp.style.bottom = 'auto';
+    kp.style.left = r.left + 'px'; kp.style.top = r.top + 'px';
+    drag = true; e.preventDefault();
+  }
+  function move(e) {
+    if (!drag) return; const p = pt(e);
+    let x = p.clientX - offX, y = p.clientY - offY;
+    x = Math.max(0, Math.min(window.innerWidth  - kp.offsetWidth,  x));
+    y = Math.max(0, Math.min(window.innerHeight - kp.offsetHeight, y));
+    kp.style.left = x + 'px'; kp.style.top = y + 'px'; e.preventDefault();
+  }
+  function end() { drag = false; }
+  handle.addEventListener('mousedown', start);
+  handle.addEventListener('touchstart', start, { passive: false });
+  document.addEventListener('mousemove', move);
+  document.addEventListener('touchmove', move, { passive: false });
+  document.addEventListener('mouseup', end);
+  document.addEventListener('touchend', end);
 });
 
 // Header-Anzeige-Konfiguration beim Start laden und anwenden (gilt für alle Rollen)
@@ -3064,6 +3099,7 @@ ladeHeaderConfig();
 
 <!-- Bildschirm-Ziffernblock (erscheint beim Antippen eines Mengen-Feldes) -->
 <div id="num-keypad" class="hidden">
+  <div class="kp-drag">⠿ Ziffernblock · ziehen</div>
   <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('7')">7</button>
   <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('8')">8</button>
   <button type="button" class="kp" onmousedown="event.preventDefault()" onclick="kbKey('9')">9</button>
