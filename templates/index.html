@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pick by Raute</title>
+<script>
+  /* Auto-Skalierung fuer schmale Screens (Laptops/Tablets):
+     Zusammen mit der @media-Regel (kompakte Topbar < 1900px) passt das Layout
+     auf Laptops bei ~1300px CSS-Breite fast ohne Verkleinerung. Ist der Screen
+     schmaler als DESIGN_WIDTH, wird proportional verkleinert, damit rechts
+     nichts abgeschnitten wird. Auf breiten Screens bleibt zoom = 1. */
+  (function () {
+    var DESIGN_WIDTH = 1300;
+    function fitScale() {
+      var z = Math.min(1, window.innerWidth / DESIGN_WIDTH);
+      document.documentElement.style.zoom = z;
+    }
+    fitScale();
+    window.addEventListener('resize', fitScale);
+    window.addEventListener('orientationchange', fitScale);
+  })();
+</script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -27,6 +44,11 @@
   body.phase-erst #main { background: #1b3b6b; }  /* Dunkelblau (1. Lieferung) */
   body.phase-vor  #main { background: #7b1fa2; }  /* Lila (Vorbestellung) */
   body.phase-zwei #main { background: #4e3527; }  /* Espresso-Braun (2. Lieferung) */
+  /* Body selbst in Phasenfarbe -> kein heller Streifen unter dem Inhalt,
+     wenn die Seite auf Tablets verkleinert wird (zoom < 1) */
+  body.phase-erst { background: #1b3b6b; }
+  body.phase-vor  { background: #7b1fa2; }
+  body.phase-zwei { background: #4e3527; }
   /* Modul-Leiste in Phasenfarbe -> kein dunkler Balken, verschmilzt mit #main */
   body.phase-erst #tabbar { background: #1b3b6b; }
   body.phase-vor  #tabbar { background: #7b1fa2; }
@@ -601,6 +623,20 @@
   .pin-save-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #004499; }
   #pin-save-msg { color:#80cbc4; font-size:12px; min-height:16px; margin-top:4px; }
 
+  /* ── Kompakte Topbar fuer Laptops/Tablets (< 1900px) ──
+     Der grosse Kiosk-Monitor (>= 1900px) behaelt die grossen Original-Groessen.
+     Auf schmaleren Screens wird die Topbar schlanker, damit das Layout in die
+     Breite passt (statt stark verkleinert zu werden) und den Bildschirm ausfuellt. */
+  @media (max-width: 1899px) {
+    #topbar-logo { font-size: 32px; }
+    #topbar-logo .logo-raute { font-size: 46px; }
+    #topbar #aktiver-tag-anzeige { font-size: 22px; }
+    #topbar #aktiver-tag-anzeige .tag-quelle { font-size: 11px; }
+    #topbar #tour-anzeige { font-size: 13px; }
+    #topbar #tour-anzeige .tour-quelle { font-size: 10px; }
+    #topbar .phase-btn { min-width: 118px; font-size: 16px; padding: 12px 10px; }
+    .tab-btn { font-size: 16px; padding: 12px 12px; }
+  }
 </style>
 </head>
 <body>
