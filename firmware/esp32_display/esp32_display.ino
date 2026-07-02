@@ -1,7 +1,9 @@
 /*  Pick-by-Light Display  –  ESP32-DevKitC + Seengreat RGB Matrix Adapter (E)
  *  Panel: P5 RGB HUB75, 64x32, 1/16 Scan
- *  Zeigt die vom Server (baeckerei/display/<filiale>) gefunkte Stueckzahl gross an;
- *  "0" = Display dunkel (Posten erledigt).
+ *
+ *  POSITIONS-BASIERT: Die Displays haengen an festen Plaetzen. Die heutige Tour
+ *  ordnet den Plaetzen Filialen zu (Platz 1 = 1. Filiale der Tour, usw.).
+ *  Jeder ESP hat eine feste PLATZNUMMER und zeigt Filialname + Menge an.
  *
  *  Benoetigte Bibliotheken (Arduino IDE -> Bibliotheksverwalter):
  *    - "ESP32-HUB75-MatrixPanel-I2S-DMA"  (von mrcodetastic)
@@ -9,8 +11,8 @@
  *  Board: "ESP32 Dev Module"  (ESP32-WROOM-32U)
  *
  *  MQTT-Vertrag (siehe server.py):
- *    Topic  : baeckerei/display/<filialname klein>   z.B. baeckerei/display/penny
- *    Payload: Menge als Text ("3"); "0" = Display aus
+ *    Topic  : baeckerei/display/<platz>     z.B. baeckerei/display/1
+ *    Payload: "<Filialname>|<Menge>"  (z.B. "Penny|5");  "0" = Display aus
  */
 
 #include <WiFi.h>
@@ -18,16 +20,16 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
 // ========================================================
-// 1) EINSTELLUNGEN – PRO KISTE ANPASSEN
+// 1) EINSTELLUNGEN – PRO DISPLAY ANPASSEN
 // ========================================================
 const char* ssid         = "DEIN_BACKSTUBEN_WLAN_NAME";
 const char* password     = "DEIN_WLAN_PASSWORT";
 const char* mqtt_server  = "192.168.0.180";   // LAN-IP deines PCs/Brokers (NICHT 172.x!)
 const int   mqtt_port    = 1883;
 
-// Filialname EXAKT wie in der PDF, klein geschrieben (inkl. Umlaute/Punkte/Leerzeichen):
-//   z.B. "penny", "berga", "auma", "poelzig"/"pölzig", "neustä.", "benz 4"
-const char* filiale_name = "penny";
+// Feste PLATZNUMMER dieses Displays (1, 2, 3, ...). Wird NICHT taeglich geaendert.
+// Der Server schickt hierher, welche Filiale + Menge dieser Platz heute zeigt.
+const int   display_platz = 1;
 // ========================================================
 
 // ========================================================
@@ -73,31 +75,42 @@ const char* filiale_name = "penny";
 // ========================================================
 #define PANEL_RES_X 64
 #define PANEL_RES_Y 32
-#define PANEL_CHAIN 1     // 1 Panel pro Kiste. Zwei Panels aneinander: 2 (ergibt 128x32)
+#define PANEL_CHAIN 1     // 1 Panel pro Platz. Zwei Panels aneinander: 2 (ergibt 128x32)
 
 MatrixPanel_I2S_DMA* dma_display = nullptr;
 
 WiFiClient   espClient;
 PubSubClient client(espClient);
-String       topic_sub = "baeckerei/display/" + String(filiale_name);
+String       topic_sub = "baeckerei/display/" + String(display_platz);
 
-// ---- Zahl gross + zentriert anzeigen (bzw. dunkel bei 0) ----
-void showNumber(int n) {
+// ---- Filialname (klein, oben) + Menge (gross, gruen) anzeigen; dunkel bei 0 ----
+void showBox(const String& name, int menge) {
   if (!dma_display) return;
   dma_display->clearScreen();
-  if (n <= 0) return;                       // Posten erledigt -> Panel bleibt dunkel
+  if (menge <= 0) return;                    // Posten erledigt -> Platz bleibt dunkel
 
-  String s = String(n);
-  uint8_t size = (s.length() <= 2) ? 4 : (s.length() == 3 ? 3 : 2);
-  dma_display->setTextWrap(false);
+  // Filialname oben, klein, gelb, zentriert
+  if (name.length() > 0) {
+    dma_display->setTextWrap(false);
+    dma_display->setTextSize(1);
+    int16_t x1, y1; uint16_t w, h;
+    dma_display->getTextBounds(name, 0, 0, &x1, &y1, &w, &h);
+    int16_t nx = (PANEL_RES_X - (int)w) / 2 - x1; if (nx < 0) nx = 0;
+    dma_display->setTextColor(dma_display->color565(255, 200, 0));  // gelb
+    dma_display->setCursor(nx, 0);
+    dma_display->print(name);
+  }
+
+  // Menge gross darunter, gruen, zentriert im Bereich unterhalb des Namens
+  String s = String(menge);
+  uint8_t size = (s.length() <= 3) ? 3 : 2;
   dma_display->setTextSize(size);
-
   int16_t x1, y1; uint16_t w, h;
   dma_display->getTextBounds(s, 0, 0, &x1, &y1, &w, &h);
+  const int topArea = 10;  // Platz fuer die Namenszeile
   int16_t x = (PANEL_RES_X - (int)w) / 2 - x1;
-  int16_t y = (PANEL_RES_Y - (int)h) / 2 - y1;
-
-  dma_display->setTextColor(dma_display->color565(0, 255, 0));  // kraeftiges Gruen
+  int16_t y = topArea + ((PANEL_RES_Y - topArea) - (int)h) / 2 - y1;
+  dma_display->setTextColor(dma_display->color565(0, 255, 0));  // gruen
   dma_display->setCursor(x, y);
   dma_display->print(s);
 }
@@ -130,15 +143,22 @@ void setup_wifi() {
 void callback(char* topic, byte* payload, unsigned int length) {
   String message = "";
   for (unsigned int i = 0; i < length; i++) message += (char)payload[i];
-  int stueckzahl = message.toInt();
-  Serial.printf("Signal %s -> Menge: %d\n", filiale_name, stueckzahl);
-  showNumber(stueckzahl);
+
+  // Payload "<Name>|<Menge>"  oder  "0"
+  String name = "";
+  int    menge = 0;
+  int    sep = message.indexOf('|');
+  if (sep >= 0) { name = message.substring(0, sep); menge = message.substring(sep + 1).toInt(); }
+  else          { menge = message.toInt(); }
+
+  Serial.printf("Platz %d -> %s : %d\n", display_platz, name.c_str(), menge);
+  showBox(name, menge);
 }
 
 void reconnect() {
   while (!client.connected()) {
     Serial.print("MQTT verbinden...");
-    String clientId = "ESP32-" + String(filiale_name);
+    String clientId = "ESP32-Platz" + String(display_platz);
     if (client.connect(clientId.c_str())) {
       Serial.println("ok");
       client.subscribe(topic_sub.c_str());

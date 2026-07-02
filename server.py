@@ -255,14 +255,27 @@ PDF_PATH = os.getenv("PDF_PATH", "/pdf/Drucke_Artikel-Versandliste.pdf")
 
 
 def mqtt_send(filiale: str, menge: int) -> None:
-    """Sendet einen Wert an ein Display via MQTT."""
+    """Sendet an das Display am PLATZ der Filiale (positions-basiert).
+
+    Die Displays haengen an festen Plaetzen; die heutige Tour ordnet ihnen
+    Filialen zu. Platznummer = Position der Filiale in der heutigen (vollen)
+    Tour-Reihenfolge, 1-basiert.
+    Topic:   baeckerei/display/<platz>        (z.B. baeckerei/display/1)
+    Payload: "<Filialname>|<Menge>"  bzw. "0" wenn aus.
+    """
     if not MQTT_AVAILABLE:
         return
     try:
+        state = get_state()
+        tour = state.get_filialen_geordnet(get_heute_tag(), True)  # volle Tour = Platzreihenfolge
+        if filiale not in tour:
+            return  # kein fester Platz (z.B. Fremdkunde/Verkaufsauto) -> kein Display
+        platz = tour.index(filiale) + 1
         client = mqtt_lib.Client(mqtt_lib.CallbackAPIVersion.VERSION2)
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
-        topic = f"baeckerei/display/{filiale.lower()}"
-        client.publish(topic, str(menge))
+        topic = f"baeckerei/display/{platz}"
+        payload = f"{filiale}|{menge}" if menge > 0 else "0"
+        client.publish(topic, payload)
         client.disconnect()
     except Exception as exc:
         print(f"[MQTT] Fehler: {exc}")
