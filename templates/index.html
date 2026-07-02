@@ -1932,7 +1932,7 @@ function switchTab(tab, btn) {
   if (tab === 'nachlegen') renderNachlegen(state);
   if (tab === 'auswertung') initAuswertung();
   if (tab === 'superadmin') initSuperAdmin();
-  kbShowForTab(tab);   // Ziffernblock nur auf Zahlen-Tabs zeigen
+  kbOnTabChange();   // Ziffernblock beim Tabwechsel schliessen (erscheint nur bei Feld-Fokus)
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3031,13 +3031,13 @@ document.getElementById('filialen-vorschau').addEventListener('click', function(
 
 // ── Bildschirm-Ziffernblock ──────────────────────────────────────────
 // Erscheint beim Antippen eines Mengen-Feldes (Tablet ohne System-Tastatur).
-const KB_SELECTOR = '.ist-input, #nl-menge, .nl-manuell-input';
+const KB_SELECTOR = 'input[inputmode="decimal"], .ist-input, #nl-menge, .nl-manuell-input';
 let kbTarget = null;
-// Ziffernblock ist auf den Zahlen-Tabs (Mengenkorrektur/Nachlegen) IMMER offen.
-function kbShowForTab(tab) {
+// Ziffernblock erscheint NUR beim Antippen eines Zahlenfeldes (in jedem Modul).
+// Beim Tabwechsel schliessen (kein Feld mehr im Fokus).
+function kbOnTabChange() {
   const kp = document.getElementById('num-keypad'); if (!kp) return;
-  if (tab === 'menge' || tab === 'nachlegen') kp.classList.remove('hidden');
-  else { kp.classList.add('hidden'); kbTarget = null; }
+  kp.classList.add('hidden'); kbTarget = null;
 }
 function kbKey(k) {
   if (!kbTarget) return;
@@ -3051,7 +3051,8 @@ function kbKey(k) {
 }
 function kbDone() {
   if (kbTarget) { kbTarget.dispatchEvent(new Event('change', { bubbles: true })); kbTarget.blur(); }
-  kbTarget = null;   // Ziffernblock bleibt offen – einfach naechstes Feld antippen
+  kbTarget = null;
+  document.getElementById('num-keypad').classList.add('hidden');   // nach "Fertig" ausblenden
 }
 document.addEventListener('focusin', function (e) {
   const el = e.target;
@@ -3059,6 +3060,7 @@ document.addEventListener('focusin', function (e) {
     kbTarget = el;
     el.setAttribute('inputmode', 'none');   // System-Tastatur unterdruecken
     try { el.select(); } catch (_) {}
+    document.getElementById('num-keypad').classList.remove('hidden');   // Feld angetippt -> wieder zeigen
   }
 });
 // Ziffernblock per Ziehleiste verschiebbar (Maus + Touch). Init nach DOM-Aufbau,
