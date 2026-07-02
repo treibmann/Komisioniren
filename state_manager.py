@@ -624,8 +624,9 @@ class AppState:
                     status = "pending"
                 filialen_status.append({
                     "name": f,
-                    "menge": menge,           # Soll-Menge
+                    "menge": menge,           # Soll-Menge (gesamt, inkl. Nachlege)
                     "geliefert": int(geliefert) if geliefert > 0 else 0,  # tatsächlich geliefert
+                    "nachlege": int(nachlege) if nachlege > 0 else 0,     # noch nachzulegen (+X)
                     "status": status,
                 })
 

@@ -265,8 +265,9 @@ def mqtt_broadcast_displays(snapshot: dict) -> None:
       p = offen  (rot),  a = aktiv (orange),  d = erledigt (gruen, durchgestrichen).
     Platznummer = Position der Filiale in der vollen Tour, 1-basiert.
     Topic:   baeckerei/display/<platz>
-    Payload: "<Name>|<Menge>|<p|a|d>"  bzw. "0" wenn diese Filiale fuer das
-             aktuelle Produkt nichts zu packen hat (Kiste aus).
+    Payload: "<Name>|<Menge>|<p|a|d>|<Nachlege>"  bzw. "0" wenn diese Filiale
+             fuer das aktuelle Produkt nichts zu packen hat (Kiste aus).
+             Nachlege > 0  -> Kiste zeigt (Menge-Nachlege) gruen + "+Nachlege" rot.
     """
     state = get_state()
     if not MQTT_AVAILABLE or state.hardware_mode != "MQTT":
@@ -283,7 +284,8 @@ def mqtt_broadcast_displays(snapshot: dict) -> None:
         for i, filiale in enumerate(tour):
             st = status_map.get(filiale)
             if st and st.get("menge", 0) > 0:
-                payload = f"{filiale}|{st['menge']}|{_STATUS_CODE.get(st.get('status'), 'p')}"
+                payload = (f"{filiale}|{st['menge']}|{_STATUS_CODE.get(st.get('status'), 'p')}"
+                           f"|{st.get('nachlege', 0)}")
             else:
                 payload = "0"        # keine Bestellung fuer dieses Produkt -> Kiste aus
             last_info = client.publish(f"baeckerei/display/{i + 1}", payload, qos=1, retain=True)
