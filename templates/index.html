@@ -2378,14 +2378,17 @@ function ladeNlProdukt() {
   document.getElementById('nl-menge').value = '';
   document.getElementById('nl-produkt-detail').style.display = 'block';
 
-  // Nur Filialen aus dem heutigen Tourplan die dieses Produkt bestellt haben.
-  // WICHTIG: volle Tour (tour_filialen), NICHT der aktive Block (filialen_heute) –
-  // sonst zeigt Nachlegen bei aktiven Bloecken nur die 4 Block-Filialen.
+  // ALLE Filialen aus dem heutigen Tourplan anzeigen – auch die, die dieses
+  // Produkt nicht bestellt haben (Soll 0), damit man per Hand ueberall nachlegen
+  // kann. Bestellmengen kommen vom Backend (nur Soll>0 enthalten), fehlende
+  // werden mit 0 aufgefuellt.
+  // WICHTIG: volle Tour (tour_filialen), NICHT der aktive Block (filialen_heute).
   const tour = (state.tour_filialen && state.tour_filialen.length)
     ? state.tour_filialen : (state.filialen_heute || []);
-  const relevant = (artikel.filialen || []).filter(f =>
-    tour.includes(f.name) && (f.soll_erst + f.soll_vor) > 0
-  );
+  const nlByName = {};
+  (artikel.filialen || []).forEach(f => { nlByName[f.name] = f; });
+  const relevant = tour.map(name => nlByName[name] ||
+    { name: name, soll_erst: 0, soll_vor: 0, geliefert_erst: 0, geliefert_vor: 0 });
 
   // Auto-Modus: Checkboxen (via createElement um Quote-Probleme zu vermeiden)
   const grid = document.getElementById('nl-filialen-grid');
@@ -2393,10 +2396,13 @@ function ladeNlProdukt() {
   relevant.forEach(f => {
     const soll = f.soll_erst + f.soll_vor;
     const geliefert = (f.geliefert_erst || 0) + (f.geliefert_vor || 0);
+    const hatBestellung = (f.soll_erst + f.soll_vor) > 0;
     const lbl = document.createElement('label');
-    lbl.style.cssText = 'display:flex;align-items:center;gap:14px;padding:20px 24px;border-radius:16px;border:3px solid #0071e3;background:#f0f7ff;cursor:pointer;width:300px;box-sizing:border-box;transition:border-color .15s;';
+    lbl.style.cssText = 'display:flex;align-items:center;gap:14px;padding:20px 24px;border-radius:16px;border:3px solid '
+      + (hatBestellung ? '#0071e3' : '#d1d1d6') + ';background:' + (hatBestellung ? '#f0f7ff' : '#f9f9f9')
+      + ';cursor:pointer;width:300px;box-sizing:border-box;transition:border-color .15s;';
     const cb = document.createElement('input');
-    cb.type = 'checkbox'; cb.value = f.name; cb.checked = true;
+    cb.type = 'checkbox'; cb.value = f.name; cb.checked = hatBestellung;
     cb.style.cssText = 'width:28px;height:28px;cursor:pointer;flex-shrink:0;';
     cb.onchange = function() {
       lbl.style.borderColor = this.checked ? '#0071e3' : '#d1d1d6';
