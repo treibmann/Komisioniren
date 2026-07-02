@@ -634,8 +634,15 @@
     #topbar #aktiver-tag-anzeige .tag-quelle { font-size: 11px; }
     #topbar #tour-anzeige { font-size: 13px; }
     #topbar #tour-anzeige .tour-quelle { font-size: 10px; }
-    #topbar .phase-btn { min-width: 118px; font-size: 16px; padding: 12px 10px; }
-    .tab-btn { font-size: 16px; padding: 12px 12px; }
+    #topbar .phase-btn { min-width: 118px; font-size: 16px; padding: 10px 10px; }
+    .tab-btn { font-size: 15px; padding: 9px 12px; }
+    /* Kompakt: ungenutzte Flaeche + Raender minimieren */
+    #role-frame { border-width: 8px; }              /* schmaler Rand zum Bildschirmrand */
+    #topbar { height: 62px; min-height: 62px; padding: 0 14px; }  /* Header niedriger */
+    #header-menu { top: 58px; right: 14px; }         /* Dropdown an niedrigen Header angepasst */
+    #tabbar { padding: 6px 14px; }                   /* Modus-Leiste dicht an Header + Inhalt */
+    .tabs { gap: 5px; }
+    #main { padding: 10px 14px; }                    /* wenig Abstand zum Rand */
   }
 </style>
 </head>
