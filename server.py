@@ -254,47 +254,45 @@ MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 PDF_PATH = os.getenv("PDF_PATH", "/pdf/Drucke_Artikel-Versandliste.pdf")
 
 
-# Merkt sich den zuletzt beleuchteten Platz, damit beim Stationswechsel
-# genau EIN Display leuchtet (Pick-by-Light): der alte Platz wird auf "0" gesetzt.
-_last_display_platz: int | None = None
+# Status-Code fuer die physischen Displays: p=offen(rot), a=aktiv(orange), d=erledigt(gruen)
+_STATUS_CODE = {"pending": "p", "active": "a", "done": "d"}
 
 
-def mqtt_send(filiale: str, menge: int) -> None:
-    """Sendet an das Display am PLATZ der Filiale (positions-basiert).
+def mqtt_broadcast_displays(snapshot: dict) -> None:
+    """Sendet an ALLE Plaetze der heutigen Tour ihren Zustand (Menge + Status).
 
-    Die Displays haengen an festen Plaetzen; die heutige Tour ordnet ihnen
-    Filialen zu. Platznummer = Position der Filiale in der heutigen (vollen)
-    Tour-Reihenfolge, 1-basiert.
-    Topic:   baeckerei/display/<platz>        (z.B. baeckerei/display/1)
-    Payload: "<Filialname>|<Menge>"  bzw. "0" wenn aus.
-
-    Beim Wechsel auf einen anderen Platz wird der zuvor aktive Platz
-    ausgeschaltet, damit immer nur ein Display leuchtet.
+    Anzeige-Modell: jede Kiste zeigt dauerhaft ihre Zahl, farbcodiert:
+      p = offen  (rot),  a = aktiv (orange),  d = erledigt (gruen, durchgestrichen).
+    Platznummer = Position der Filiale in der vollen Tour, 1-basiert.
+    Topic:   baeckerei/display/<platz>
+    Payload: "<Name>|<Menge>|<p|a|d>"  bzw. "0" wenn diese Filiale fuer das
+             aktuelle Produkt nichts zu packen hat (Kiste aus).
     """
-    global _last_display_platz
-    if not MQTT_AVAILABLE:
+    state = get_state()
+    if not MQTT_AVAILABLE or state.hardware_mode != "MQTT":
         return
+    tour = snapshot.get("tour_filialen", [])
+    if not tour:
+        return
+    status_map = {f["name"]: f for f in snapshot.get("filialen_status", [])}
     try:
-        state = get_state()
-        tour = state.get_filialen_geordnet(get_heute_tag(), True)  # volle Tour = Platzreihenfolge
-        if filiale not in tour:
-            return  # kein fester Platz (z.B. Fremdkunde/Verkaufsauto) -> kein Display
-        platz = tour.index(filiale) + 1
         client = mqtt_lib.Client(mqtt_lib.CallbackAPIVersion.VERSION2)
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
-        client.loop_start()          # Netzwerk-Loop: ohne ihn geht die Nachricht vor dem disconnect verloren
-        # Vorherigen Platz ausschalten, falls die aktive Station gewechselt hat
-        if _last_display_platz is not None and _last_display_platz != platz:
-            client.publish(f"baeckerei/display/{_last_display_platz}", "0", qos=1, retain=True)
-        topic = f"baeckerei/display/{platz}"
-        payload = f"{filiale}|{menge}" if menge > 0 else "0"
-        info = client.publish(topic, payload, qos=1, retain=True)  # retain: ESP zeigt nach Reconnect den aktuellen Stand
-        info.wait_for_publish(timeout=2.0)   # sicherstellen, dass sie wirklich raus ist
+        client.loop_start()          # Netzwerk-Loop: ohne ihn gehen die Nachrichten vor dem disconnect verloren
+        last_info = None
+        for i, filiale in enumerate(tour):
+            st = status_map.get(filiale)
+            if st and st.get("menge", 0) > 0:
+                payload = f"{filiale}|{st['menge']}|{_STATUS_CODE.get(st.get('status'), 'p')}"
+            else:
+                payload = "0"        # keine Bestellung fuer dieses Produkt -> Kiste aus
+            last_info = client.publish(f"baeckerei/display/{i + 1}", payload, qos=1, retain=True)
+        if last_info is not None:
+            last_info.wait_for_publish(timeout=2.0)   # sicherstellen, dass wirklich alles raus ist
         client.loop_stop()
         client.disconnect()
-        _last_display_platz = platz if menge > 0 else None
     except Exception as exc:
-        print(f"[MQTT] Fehler: {exc}")
+        print(f"[MQTT] Broadcast-Fehler: {exc}")
 
 
 # ---------------------------------------------------------------------------
@@ -371,11 +369,14 @@ def get_block_meta() -> dict:
 
 
 def send_display(filiale: str, menge: int) -> None:
-    """Sendet an virtuelles Display oder echtes MQTT je nach Modus."""
+    """Aktualisiert das virtuelle Display (Sidebar-Monitor).
+
+    Das Senden an die physischen MQTT-Displays passiert zentral in
+    push_state() via mqtt_broadcast_displays() – dort werden ALLE Plaetze
+    mit Menge + Status versorgt (farbcodiert), nicht nur der aktive.
+    """
     state = get_state()
     state.virtual_displays[filiale] = menge
-    if state.hardware_mode == "MQTT":
-        mqtt_send(filiale, menge)
 
 
 def save_runtime_state() -> None:
@@ -398,6 +399,7 @@ async def push_state() -> None:
     snapshot["aktiver_tag"] = get_heute_tag()
     snapshot.update(get_block_meta())
     await manager.broadcast(snapshot)
+    mqtt_broadcast_displays(snapshot)   # physische Kisten: alle Plaetze farbcodiert versorgen
     save_runtime_state()
 
 
