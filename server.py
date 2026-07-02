@@ -273,9 +273,12 @@ def mqtt_send(filiale: str, menge: int) -> None:
         platz = tour.index(filiale) + 1
         client = mqtt_lib.Client(mqtt_lib.CallbackAPIVersion.VERSION2)
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
+        client.loop_start()          # Netzwerk-Loop: ohne ihn geht die Nachricht vor dem disconnect verloren
         topic = f"baeckerei/display/{platz}"
         payload = f"{filiale}|{menge}" if menge > 0 else "0"
-        client.publish(topic, payload)
+        info = client.publish(topic, payload, qos=1, retain=True)  # retain: ESP zeigt nach Reconnect den aktuellen Stand
+        info.wait_for_publish(timeout=2.0)   # sicherstellen, dass sie wirklich raus ist
+        client.loop_stop()
         client.disconnect()
     except Exception as exc:
         print(f"[MQTT] Fehler: {exc}")
