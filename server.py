@@ -298,9 +298,10 @@ def mqtt_broadcast_displays(snapshot: dict) -> None:
       p = offen  (rot),  a = aktiv (orange),  d = erledigt (gruen, durchgestrichen).
     Platznummer = Position der Filiale in der vollen Tour, 1-basiert.
     Topic:   baeckerei/display/<platz>
-    Payload: "<Name>|<Menge>|<p|a|d>|<Nachlege>|<Typ>"  bzw. "0" wenn diese Filiale
-             fuer das aktuelle Produkt nichts zu packen hat (Kiste aus).
-             Nachlege > 0  -> Kiste zeigt (Menge-Nachlege) gruen + "+Nachlege" rot.
+    Payload: "<Name>|<Menge>|<p|a|d>|<Nachlege>|<Typ>".
+             Menge 0 (keine Bestellung fuer dieses Produkt) -> Kiste zeigt Name + gruenes "-".
+             Nachlege > 0  -> Kiste zeigt (Menge-Nachlege) gruen + "+Nachlege" (Statusfarbe;
+             bei done beide gruen+durchgestrichen).
              Typ (Namensfarbe): 1=Erstlieferung(blau), V=Vorbestellung(lila), 2=2.Lieferung(braun).
     """
     state = get_state()
@@ -319,14 +320,13 @@ def mqtt_broadcast_displays(snapshot: dict) -> None:
             platz = i + 1
             st = status_map.get(filiale)
             if st and st.get("menge", 0) > 0:
-                status = st.get("status")
-                # Fertige Station: kein Nachlege-Split mehr -> volle Zahl durchgestrichen.
-                # (_Nachlege bleibt im State als Historie erhalten, ist hier aber irrelevant.)
-                nachlege = 0 if status == "done" else st.get("nachlege", 0)
-                payload = (f"{filiale}|{st['menge']}|{_STATUS_CODE.get(status, 'p')}"
-                           f"|{nachlege}|{typ_code}")
+                # Nachlege bleibt auch bei "done" erhalten -> Firmware zeigt dann
+                # beide Zahlen gruen + durchgestrichen (statt Summe).
+                payload = (f"{filiale}|{st['menge']}|{_STATUS_CODE.get(st.get('status'), 'p')}"
+                           f"|{st.get('nachlege', 0)}|{typ_code}")
             else:
-                payload = "0"        # keine Bestellung fuer dieses Produkt -> Kiste aus
+                # keine Bestellung fuer dieses Produkt -> Name + gruenes "-" (Menge 0)
+                payload = f"{filiale}|0|d|0|{typ_code}"
             if _last_payloads.get(platz) != payload:      # nur bei Aenderung senden
                 client.publish(f"baeckerei/display/{platz}", payload, qos=1, retain=True)
                 _last_payloads[platz] = payload
