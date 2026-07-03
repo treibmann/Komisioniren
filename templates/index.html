@@ -3038,8 +3038,9 @@ document.getElementById('filialen-vorschau').addEventListener('click', function(
 
 // ── Bildschirm-Ziffernblock ──────────────────────────────────────────
 // Erscheint beim Antippen eines Mengen-Feldes (Tablet ohne System-Tastatur).
-const KB_SELECTOR = 'input[inputmode="decimal"], .ist-input, #nl-menge, .nl-manuell-input';
+const KB_SELECTOR = 'input[inputmode="decimal"], .ist-input, #nl-menge, .nl-manuell-input, #mp-input';
 let kbTarget = null;
+let kbReplaceNext = false;   // erste Ziffer nach Fokus ersetzt den Vorgabewert (statt anzuhaengen)
 // Ziffernblock erscheint NUR beim Antippen eines Zahlenfeldes (in jedem Modul).
 // Beim Tabwechsel schliessen (kein Feld mehr im Fokus).
 function kbOnTabChange() {
@@ -3049,6 +3050,9 @@ function kbOnTabChange() {
 function kbKey(k) {
   if (!kbTarget) return;
   let v = String(kbTarget.value || '');
+  // Erste Eingabe nach dem Antippen ueberschreibt den vorbefuellten Wert (z.B. Soll-Menge)
+  if (kbReplaceNext && k !== 'back') { v = ''; }
+  kbReplaceNext = false;
   if (k === 'back')       v = v.slice(0, -1);
   else if (k === 'clear') v = '';
   else if (k === '.')     { if (!v.includes('.')) v = (v === '' ? '0' : v) + '.'; }
@@ -3065,6 +3069,7 @@ document.addEventListener('focusin', function (e) {
   const el = e.target;
   if (el && el.matches && el.matches(KB_SELECTOR)) {
     kbTarget = el;
+    kbReplaceNext = true;   // naechste Ziffer ersetzt den vorbefuellten Wert
     el.setAttribute('inputmode', 'none');   // System-Tastatur unterdruecken
     try { el.select(); } catch (_) {}
     document.getElementById('num-keypad').classList.remove('hidden');   // Feld angetippt -> wieder zeigen

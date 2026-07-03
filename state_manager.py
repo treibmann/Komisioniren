@@ -654,13 +654,20 @@ class AppState:
                     row = df_gef.iloc[self.selected_posten_idx]
                     gesamt = int(row.get(aktive_filiale, 0))
                     nl_col = f"{aktive_filiale}_Nachlege"
-                    if nl_col in self.df.columns:
-                        nl_val = int(float(self.df.at[row.name, nl_col] or 0))
-                        if nl_val > 0:
-                            ziel_menge_nachlege = nl_val
-                            ziel_menge = gesamt - nl_val   # ursprüngliche Menge
-                        else:
-                            ziel_menge = gesamt
+                    nl_val = int(float(self.df.at[row.name, nl_col] or 0)) \
+                             if nl_col in self.df.columns else 0
+                    gc = f"{aktive_filiale}_Geliefert"
+                    gel = float(self.df.at[row.name, gc] or 0) if gc in self.df.columns else 0.0
+                    if gel != gel:  # NaN
+                        gel = 0.0
+                    if nl_val > 0:
+                        # Nachlegen: schon vorhanden (gruen) + nachzulegen (rot)
+                        ziel_menge_nachlege = nl_val
+                        ziel_menge = gesamt - nl_val
+                    elif 0 < gel < gesamt:
+                        # Teilmenge: schon gepackt (gruen) + Rest (rot)
+                        ziel_menge = int(gel)
+                        ziel_menge_nachlege = gesamt - int(gel)
                     else:
                         ziel_menge = gesamt
 
