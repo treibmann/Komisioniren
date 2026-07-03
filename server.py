@@ -257,9 +257,42 @@ PDF_PATH = os.getenv("PDF_PATH", "/pdf/Drucke_Artikel-Versandliste.pdf")
 # Status-Code fuer die physischen Displays: p=offen(rot), a=aktiv(orange), d=erledigt(gruen)
 _STATUS_CODE = {"pending": "p", "active": "a", "done": "d"}
 
+# DAUERHAFTE MQTT-Verbindung fuer die Display-Broadcasts.
+# Frueher wurde pro Klick eine neue TCP-Verbindung geoeffnet + 2s auf Bestaetigung
+# gewartet -> spuerbare Verzoegerung der ganzen UI. Jetzt: einmal verbinden, im
+# Hintergrund-Thread laufen lassen (auto-reconnect), pro Aktion nur GEAENDERTE
+# Plaetze publishen.
+_mqtt_client = None
+_last_payloads: dict[int, str] = {}
+
+
+def _on_mqtt_connect(client, userdata, flags, reason_code, properties=None):
+    # Nach (Re)connect alle Plaetze neu senden (z.B. falls Broker neu gestartet
+    # wurde und die retained Werte verloren gingen).
+    _last_payloads.clear()
+
+
+def _get_mqtt_client():
+    """Liefert den dauerhaften MQTT-Client (verbindet beim ersten Aufruf)."""
+    global _mqtt_client
+    if not MQTT_AVAILABLE:
+        return None
+    if _mqtt_client is None:
+        c = mqtt_lib.Client(mqtt_lib.CallbackAPIVersion.VERSION2)
+        c.on_connect = _on_mqtt_connect
+        c.reconnect_delay_set(min_delay=1, max_delay=15)
+        try:
+            c.connect_async(MQTT_BROKER, MQTT_PORT, 60)
+            c.loop_start()   # Hintergrund-Thread: Verbindung/Reconnect/Senden
+            _mqtt_client = c
+        except Exception as exc:
+            print(f"[MQTT] Connect-Fehler: {exc}")
+            return None
+    return _mqtt_client
+
 
 def mqtt_broadcast_displays(snapshot: dict) -> None:
-    """Sendet an ALLE Plaetze der heutigen Tour ihren Zustand (Menge + Status).
+    """Sendet den Zustand pro Platz (Menge + Status) an geaenderte Displays.
 
     Anzeige-Modell: jede Kiste zeigt dauerhaft ihre Zahl, farbcodiert:
       p = offen  (rot),  a = aktiv (orange),  d = erledigt (gruen, durchgestrichen).
@@ -276,25 +309,23 @@ def mqtt_broadcast_displays(snapshot: dict) -> None:
     tour = snapshot.get("tour_filialen", [])
     if not tour:
         return
+    client = _get_mqtt_client()
+    if client is None:
+        return
     status_map = {f["name"]: f for f in snapshot.get("filialen_status", [])}
     typ_code = {"1.": "1", "V": "V", "2.": "2"}.get(snapshot.get("lieferung_phase", "1."), "1")
     try:
-        client = mqtt_lib.Client(mqtt_lib.CallbackAPIVersion.VERSION2)
-        client.connect(MQTT_BROKER, MQTT_PORT, 60)
-        client.loop_start()          # Netzwerk-Loop: ohne ihn gehen die Nachrichten vor dem disconnect verloren
-        last_info = None
         for i, filiale in enumerate(tour):
+            platz = i + 1
             st = status_map.get(filiale)
             if st and st.get("menge", 0) > 0:
                 payload = (f"{filiale}|{st['menge']}|{_STATUS_CODE.get(st.get('status'), 'p')}"
                            f"|{st.get('nachlege', 0)}|{typ_code}")
             else:
                 payload = "0"        # keine Bestellung fuer dieses Produkt -> Kiste aus
-            last_info = client.publish(f"baeckerei/display/{i + 1}", payload, qos=1, retain=True)
-        if last_info is not None:
-            last_info.wait_for_publish(timeout=2.0)   # sicherstellen, dass wirklich alles raus ist
-        client.loop_stop()
-        client.disconnect()
+            if _last_payloads.get(platz) != payload:      # nur bei Aenderung senden
+                client.publish(f"baeckerei/display/{platz}", payload, qos=1, retain=True)
+                _last_payloads[platz] = payload
     except Exception as exc:
         print(f"[MQTT] Broadcast-Fehler: {exc}")
 
