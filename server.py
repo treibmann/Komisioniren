@@ -319,8 +319,12 @@ def mqtt_broadcast_displays(snapshot: dict) -> None:
             platz = i + 1
             st = status_map.get(filiale)
             if st and st.get("menge", 0) > 0:
-                payload = (f"{filiale}|{st['menge']}|{_STATUS_CODE.get(st.get('status'), 'p')}"
-                           f"|{st.get('nachlege', 0)}|{typ_code}")
+                status = st.get("status")
+                # Fertige Station: kein Nachlege-Split mehr -> volle Zahl durchgestrichen.
+                # (_Nachlege bleibt im State als Historie erhalten, ist hier aber irrelevant.)
+                nachlege = 0 if status == "done" else st.get("nachlege", 0)
+                payload = (f"{filiale}|{st['menge']}|{_STATUS_CODE.get(status, 'p')}"
+                           f"|{nachlege}|{typ_code}")
             else:
                 payload = "0"        # keine Bestellung fuer dieses Produkt -> Kiste aus
             if _last_payloads.get(platz) != payload:      # nur bei Aenderung senden
