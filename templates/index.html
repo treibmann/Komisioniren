@@ -1802,8 +1802,12 @@ function renderState(s) {
         <span style="float:right;opacity:.7"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg></span><b>${f.name}</b><br>${mengeZeile}
       </div>`;
     } else {
-      return `<div class="filiale-chip ${cls}" data-action="bestaetigen" data-name="${f.name}" data-menge="${f.menge}" style="cursor:pointer;">
-        <span style="float:right;opacity:.6"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><b>${f.name}</b><br>${f.menge} Stk
+      const teil = (f.geliefert > 0 && f.geliefert < f.menge);
+      const mengeZeile = teil
+        ? `<b>${f.geliefert}</b>/${f.menge} Stk · <span style="color:#c0392b">Rest ${f.menge - f.geliefert}</span>`
+        : `${f.menge} Stk`;
+      return `<div class="filiale-chip ${cls}" data-action="bestaetigen" data-name="${f.name}" data-menge="${f.menge}" data-geliefert="${f.geliefert || 0}" style="cursor:pointer;">
+        <span style="float:right;opacity:.6"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><b>${f.name}</b><br>${mengeZeile}
       </div>`;
     }
   }).join('');
@@ -1832,11 +1836,13 @@ function setTagOverride(tag) {
 let _mpFiliale = null;
 let _mpSoll    = 0;
 
-function manuellBestaetigen(filialeName, sollMenge) {
+function manuellBestaetigen(filialeName, sollMenge, bereits) {
   _mpFiliale = filialeName;
   _mpSoll    = sollMenge;
   document.getElementById('mp-titel').textContent = filialeName;
-  document.getElementById('mp-sub').textContent   = `Soll: ${sollMenge} Stück`;
+  document.getElementById('mp-sub').textContent   = (bereits > 0)
+    ? `Soll: ${sollMenge} Stück · bereits gepackt: ${bereits}`
+    : `Soll: ${sollMenge} Stück`;
   const inp = document.getElementById('mp-input');
   inp.value = sollMenge;
   inp.removeAttribute('max');   // keine Browser-Validation-Einschränkung
@@ -3025,7 +3031,8 @@ document.getElementById('filialen-vorschau').addEventListener('click', function(
   const chip = e.target.closest('[data-action]'); if (!chip) return;
   const action = chip.dataset.action, name = chip.dataset.name;
   const menge = parseFloat(chip.dataset.menge || '0');
-  if (action === 'bestaetigen') manuellBestaetigen(name, menge);
+  const geliefert = parseFloat(chip.dataset.geliefert || '0');
+  if (action === 'bestaetigen') manuellBestaetigen(name, menge, geliefert);
   if (action === 'rueckgaengig') rueckgaengigFiliale(name);
 });
 

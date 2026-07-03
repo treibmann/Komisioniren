@@ -320,10 +320,10 @@ def mqtt_broadcast_displays(snapshot: dict) -> None:
             platz = i + 1
             st = status_map.get(filiale)
             if st and st.get("menge", 0) > 0:
-                # Nachlege bleibt auch bei "done" erhalten -> Firmware zeigt dann
-                # beide Zahlen gruen + durchgestrichen (statt Summe).
+                # 4. Feld = "rest" (noch zu packen): Nachlege ODER Teilmengen-Differenz.
+                # Firmware zeigt (Menge-rest) gruen durchgestrichen + "+rest" in Statusfarbe.
                 payload = (f"{filiale}|{st['menge']}|{_STATUS_CODE.get(st.get('status'), 'p')}"
-                           f"|{st.get('nachlege', 0)}|{typ_code}")
+                           f"|{st.get('rest', 0)}|{typ_code}")
             else:
                 # keine Bestellung fuer dieses Produkt -> Name + gruenes "-" (Menge 0)
                 payload = f"{filiale}|0|d|0|{typ_code}"

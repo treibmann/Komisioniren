@@ -182,11 +182,12 @@ class AppState:
         if not rel:
             return False
         for f in rel:
+            soll = float(row.get(f, 0) or 0)
             gc = f"{f}_Geliefert"
             gel = float(self.df.at[idx, gc]) if gc in self.df.columns else 0.0
             if gel != gel:  # NaN
                 gel = 0.0
-            if gel <= 0:
+            if gel < soll:   # nur voll gepackt zaehlt als fertig (Teilmengen bleiben offen)
                 return False
         return True
 
@@ -202,13 +203,14 @@ class AppState:
         any_done = False
         all_done = True
         for f in rel:
+            soll = float(row.get(f, 0) or 0)
             gc = f"{f}_Geliefert"
             gel = float(self.df.at[idx, gc]) if gc in self.df.columns else 0.0
             if gel != gel:  # NaN
                 gel = 0.0
             if gel > 0:
                 any_done = True
-            else:
+            if gel < soll:   # noch nicht voll -> Produkt nicht komplett
                 all_done = False
         return any_done and not all_done
 
@@ -371,8 +373,8 @@ class AppState:
         geliefert_col = f"{filiale_name}_Geliefert"
         already = float(self.df.at[actual_idx, geliefert_col] or 0) \
                   if geliefert_col in self.df.columns else 0.0
-        if already > 0:
-            return {"event": "no_op"}
+        if already >= float(soll_menge):
+            return {"event": "no_op"}   # schon voll gepackt
 
         tatsaechlich = float(geliefert_menge) if geliefert_menge is not None else float(soll_menge)
 
@@ -438,11 +440,12 @@ class AppState:
         """Gibt Indizes aller noch nicht bestätigten Filialen zurück."""
         result = []
         for i, f in enumerate(active_filialen):
+            soll = float(self.df.at[actual_idx, f] or 0)
             gc = f"{f}_Geliefert"
             geliefert = float(self.df.at[actual_idx, gc] or 0) if gc in self.df.columns else 0.0
             nl = f"{f}_Nachlege"
             nachlege = float(self.df.at[actual_idx, nl] or 0) if nl in self.df.columns else 0.0
-            if geliefert == 0 or nachlege > 0:
+            if geliefert < soll or nachlege > 0:   # nicht voll gepackt (Teilmenge) oder Nachlege offen
                 result.append(i)
         return result
 
@@ -516,12 +519,13 @@ class AppState:
                 continue
             geliefert_col = f"{f}_Geliefert"
             nachlege_col  = f"{f}_Nachlege"
+            soll = float(row.get(f, 0) or 0)
             geliefert = float(self.df.at[row.name, geliefert_col] or 0) \
                         if geliefert_col in self.df.columns else 0.0
             nachlege  = float(self.df.at[row.name, nachlege_col]  or 0) \
                         if nachlege_col  in self.df.columns else 0.0
-            if geliefert > 0 and nachlege == 0:
-                continue   # schon fertig, kein Nachlegen → überspringen
+            if geliefert >= soll and nachlege == 0:
+                continue   # voll gepackt, kein Nachlegen → überspringen
             result.append(f)
         return result
 
@@ -614,19 +618,29 @@ class AppState:
                 nachlege_raw = self.df.at[row.name, nachlege_col] \
                                if nachlege_col in self.df.columns else 0.0
                 nachlege  = float(nachlege_raw) if nachlege_raw == nachlege_raw else 0.0
-                if geliefert > 0 and nachlege == 0:
+                # Fertig = voll gepackt (Teilmengen bleiben offen).
+                voll = (menge > 0 and geliefert >= menge)
+                if voll:
                     status = "done"
-                elif self.produkt_fertig_sperre or i < self.current_filiale_idx:
-                    status = "done"
-                elif i == self.current_filiale_idx:
+                elif i == self.current_filiale_idx and not self.produkt_fertig_sperre:
                     status = "active"
                 else:
                     status = "pending"
+                # Rest = noch zu packen: Nachlege-Auftrag oder Teilmengen-Differenz.
+                if voll:
+                    rest = 0
+                elif nachlege > 0:
+                    rest = int(nachlege)
+                elif 0 < geliefert < menge:
+                    rest = menge - int(geliefert)
+                else:
+                    rest = 0
                 filialen_status.append({
                     "name": f,
                     "menge": menge,           # Soll-Menge (gesamt, inkl. Nachlege)
                     "geliefert": int(geliefert) if geliefert > 0 else 0,  # tatsächlich geliefert
                     "nachlege": int(nachlege) if nachlege > 0 else 0,     # noch nachzulegen (+X)
+                    "rest": rest,             # noch zu packen (Nachlege ODER Teilmengen-Rest)
                     "status": status,
                 })
 
