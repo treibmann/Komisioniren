@@ -469,6 +469,19 @@ async def lifespan(app: FastAPI):
             print(f"[PDF] Kein PDF unter {PDF_PATH} – manuell laden.")
     except Exception as exc:
         print("[Startup] PDF/State-Wiederherstellung fehlgeschlagen:", exc)
+    # Nach (Re)start die physischen Kisten einmal versorgen, falls MQTT aktiv ->
+    # Displays kommen ohne Nutzeraktion korrekt hoch (auch nach Reboot/Broker-Neustart).
+    try:
+        state = get_state()
+        if state.df is not None and state.hardware_mode == "MQTT":
+            filialen = get_filialen_heute()
+            snap = state.to_ui_snapshot(filialen)
+            snap["aktiver_tag"] = get_heute_tag()
+            snap.update(get_block_meta())
+            mqtt_broadcast_displays(snap)
+            print("[MQTT] Displays initial versorgt.")
+    except Exception as exc:
+        print("[Startup] Display-Init fehlgeschlagen:", exc)
     yield
     save_runtime_state()
     print("[Server] Shutdown.")
@@ -756,6 +769,8 @@ async def websocket_endpoint(ws: WebSocket):
                 elif cmd == "set_hardware_mode":
                     mode = msg.get("mode", "VIRTUAL")
                     state.hardware_mode = mode
+                    if mode == "MQTT":
+                        _last_payloads.clear()   # beim Aktivieren alle Kisten neu versorgen
                     db_module.log_aktion("hardware_mode", {"mode": mode})
                     result = {"event": "state_update"}
 
