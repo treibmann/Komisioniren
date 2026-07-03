@@ -1332,36 +1332,25 @@
   <div style="background:#fff;border-radius:14px;padding:28px 32px;min-width:300px;max-width:380px;
               box-shadow:0 8px 32px rgba(0,0,0,.4);text-align:center;">
     <div id="mp-titel" style="font-size:18px;font-weight:700;margin-bottom:6px;color:#222;"></div>
-    <div id="mp-sub" style="font-size:13px;color:#666;margin-bottom:20px;"></div>
-    <!-- Auswahl: Voll gepackt ODER Teilmenge -->
-    <div id="mp-choice" style="display:flex;flex-direction:column;gap:12px;">
-      <button id="mp-voll-btn" onclick="mpVoll()"
-        style="padding:16px;font-size:18px;border:none;border-radius:10px;
-               background:#2e7d32;color:#fff;cursor:pointer;font-weight:700;">✓ Voll gepackt</button>
-      <button onclick="mpTeilStart()"
-        style="padding:16px;font-size:18px;border:2px solid #d32f2f;border-radius:10px;
-               background:#fff;color:#d32f2f;cursor:pointer;font-weight:700;">Teilmenge …</button>
+    <div id="mp-sub" style="font-size:13px;color:#666;margin-bottom:16px;"></div>
+    <!-- 1) Menge eingeben -->
+    <input id="mp-input" type="number" min="0" step="0.5"
+           style="width:100%;font-size:36px;font-weight:700;text-align:center;
+                  border:2px solid #1976d2;border-radius:10px;padding:10px;
+                  outline:none;box-sizing:border-box;"
+           onkeydown="if(event.key==='Escape')mpAbbrechen();">
+    <!-- 2) Was mit der Menge? -->
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+      <button onclick="mpBestellmenge()"
+        style="padding:15px;font-size:17px;border:none;border-radius:10px;
+               background:#1976d2;color:#fff;cursor:pointer;font-weight:700;">Bestellmenge ändern</button>
+      <button onclick="mpBestaetigen()"
+        style="padding:15px;font-size:17px;border:2px solid #d32f2f;border-radius:10px;
+               background:#fff;color:#d32f2f;cursor:pointer;font-weight:700;">Teilmenge kommissioniert</button>
+      <button onclick="mpAbbrechen()"
+        style="padding:10px;font-size:14px;border:2px solid #ccc;border-radius:8px;
+               background:#f5f5f5;cursor:pointer;font-weight:600;">Abbrechen</button>
     </div>
-    <!-- Teilmengen-Eingabe (erscheint nach 'Teilmenge') -->
-    <div id="mp-teil" style="display:none;">
-      <input id="mp-input" type="number" min="0" step="0.5"
-             style="width:100%;font-size:36px;font-weight:700;text-align:center;
-                    border:2px solid #d32f2f;border-radius:10px;padding:10px;
-                    outline:none;box-sizing:border-box;"
-             onkeydown="if(event.key==='Enter')mpBestaetigen();if(event.key==='Escape')mpAbbrechen();">
-      <div style="font-size:12px;color:#888;margin-top:6px;">gepackte Menge – weniger als Soll = Rest bleibt offen</div>
-      <div style="display:flex;gap:10px;margin-top:14px;">
-        <button onclick="mpTeilZurueck()"
-          style="flex:1;padding:12px;font-size:15px;border:2px solid #ccc;border-radius:8px;
-                 background:#f5f5f5;cursor:pointer;font-weight:600;">Zurück</button>
-        <button onclick="mpBestaetigen()"
-          style="flex:2;padding:12px;font-size:15px;border:none;border-radius:8px;
-                 background:#d32f2f;color:#fff;cursor:pointer;font-weight:700;">Teilmenge bestätigen</button>
-      </div>
-    </div>
-    <button onclick="mpAbbrechen()"
-      style="width:100%;margin-top:16px;padding:10px;font-size:14px;border:2px solid #ccc;border-radius:8px;
-             background:#f5f5f5;cursor:pointer;font-weight:600;">Abbrechen</button>
   </div>
 </div>
 
@@ -1859,55 +1848,42 @@ function manuellBestaetigen(filialeName, sollMenge, bereits) {
   document.getElementById('mp-sub').textContent   = (bereits > 0)
     ? `Soll: ${sollMenge} Stück · bereits gepackt: ${bereits}`
     : `Soll: ${sollMenge} Stück`;
-  document.getElementById('mp-voll-btn').textContent = `✓ Voll gepackt (${sollMenge})`;
-  // Immer mit der Auswahl starten (Voll / Teilmenge)
-  document.getElementById('mp-choice').style.display = 'flex';
-  document.getElementById('mp-teil').style.display   = 'none';
   const inp = document.getElementById('mp-input');
   inp.value = sollMenge;
   inp.removeAttribute('max');   // keine Browser-Validation-Einschränkung
-  inp.style.borderColor = '#d32f2f';
+  inp.style.borderColor = '#1976d2';
   document.getElementById('menge-popup').style.display = 'flex';
+  setTimeout(() => { inp.focus(); inp.select(); }, 80);
 }
 
-// "Voll gepackt": Soll-Menge sofort bestaetigen
-function mpVoll() {
-  const f = _mpFiliale;
-  document.getElementById('menge-popup').style.display = 'none';
-  _mpFiliale = null;
-  sendCmd('bestaetige_filiale', { filiale: f, geliefert_menge: _mpSoll });
-  zeigToast(ICO.check + `${f}: ${_mpSoll} Stk (voll)`);
-}
-
-// "Teilmenge …": Zahlenfeld einblenden
-function mpTeilStart() {
-  document.getElementById('mp-choice').style.display = 'none';
-  document.getElementById('mp-teil').style.display   = 'block';
-  const inp = document.getElementById('mp-input');
-  inp.value = _mpSoll;
-  setTimeout(() => { inp.focus(); inp.select(); }, 60);
-}
-
-// zurueck zur Auswahl
-function mpTeilZurueck() {
-  document.getElementById('mp-teil').style.display   = 'none';
-  document.getElementById('mp-choice').style.display = 'flex';
-}
-
-function mpBestaetigen() {
+// liest + validiert die eingegebene Menge (oder null)
+function _mpMenge() {
   const inp = document.getElementById('mp-input');
   const raw = inp.value.trim().replace(',', '.');
   const menge = parseFloat(raw);
   if (raw === '' || isNaN(menge) || menge < 0) {
-    inp.style.borderColor = '#d32f2f';
-    inp.focus();
-    return;
+    inp.style.borderColor = '#d32f2f'; inp.focus();
+    return null;
   }
+  return menge;
+}
+
+// "Bestellmenge ändern": Soll auf eingegebene Menge korrigieren + als fertig markieren
+function mpBestellmenge() {
+  const menge = _mpMenge(); if (menge === null) return;
   document.getElementById('menge-popup').style.display = 'none';
-  const f = _mpFiliale;
-  _mpFiliale = null;
+  const f = _mpFiliale; _mpFiliale = null;
+  sendCmd('set_bestellmenge', { filiale: f, menge: menge });
+  zeigToast(ICO.check + `${f}: Bestellmenge → ${menge} Stk`);
+}
+
+// "Teilmenge kommissioniert": eingegebene Menge packen, Rest bleibt offen
+function mpBestaetigen() {
+  const menge = _mpMenge(); if (menge === null) return;
+  document.getElementById('menge-popup').style.display = 'none';
+  const f = _mpFiliale; _mpFiliale = null;
   sendCmd('bestaetige_filiale', { filiale: f, geliefert_menge: menge });
-  zeigToast(ICO.check + `${f}: ${menge} Stk eingepackt`);
+  zeigToast(ICO.check + `${f}: ${menge} Stk gepackt`);
 }
 
 function mpAbbrechen() {

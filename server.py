@@ -666,6 +666,40 @@ async def websocket_endpoint(ws: WebSocket):
                     if target and not state.produkt_fertig_sperre:
                         send_display(target[0], target[1])
 
+                elif cmd == "set_bestellmenge":
+                    filiale = msg.get("filiale", "")
+                    neue_menge = msg.get("menge", None)
+                    result = state.korrigiere_menge(filiale, filialen, neue_menge)
+                    if result.get("event") in ("filiale_erledigt", "produkt_fertig"):
+                        jetzt = dt.datetime.now()
+                        db_module.upsert_kommission(
+                            datum         = jetzt.strftime("%Y-%m-%d"),
+                            produkt_nr    = result["produkt_nr"],
+                            produkt_name  = result["produkt_name"],
+                            filiale       = result["filiale"],
+                            typ           = result["typ"],
+                            soll          = result["soll"],
+                            geliefert     = result["geliefert"],
+                            nachlege      = result["nachlege"],
+                            bestaetigt_um = jetzt.strftime("%H:%M:%S"),
+                        )
+                        db_module.log_aktion("bestellmenge_korrigiert", {
+                            "filiale": filiale, "neue_menge": result["soll"], "event": result["event"],
+                        })
+                        save_history_entry({
+                            "timestamp":     jetzt.strftime("%d.%m.%Y %H:%M"),
+                            "typ":           "korrektur",
+                            "produkt_nr":    result["produkt_nr"],
+                            "produkt_name":  result["produkt_name"],
+                            "filiale":       filiale,
+                            "soll":          result["soll"],
+                            "geliefert":     result["geliefert"],
+                            "differenz":     0,
+                        })
+                    target = state.get_current_display_target(filialen)
+                    if target and not state.produkt_fertig_sperre:
+                        send_display(target[0], target[1])
+
                 elif cmd == "rueckgaengig_filiale":
                     filiale = msg.get("filiale", "")
                     result = state.rueckgaengig_filiale(filiale, filialen)

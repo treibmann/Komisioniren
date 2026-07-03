@@ -408,6 +408,53 @@ class AppState:
             self.current_filiale_idx = unconfirmed[0]
             return {"event": "filiale_erledigt", **db_info}
 
+    def korrigiere_menge(self, filiale_name: str, filialen_heute: list[str],
+                         neue_menge: float) -> dict:
+        """Korrigiert die BESTELLMENGE (Soll) einer Filiale und markiert sie als
+        fertig (voll gepackt mit der neuen Menge). Fuer 'PDF war falsch'."""
+        df_gef = self.get_df_gefiltert()
+        if df_gef.empty:
+            return {"event": "no_op"}
+        row = df_gef.iloc[self.selected_posten_idx]
+        actual_idx = row.name
+        try:
+            neue = float(neue_menge)
+        except (TypeError, ValueError):
+            return {"event": "no_op"}
+        if neue < 0:
+            return {"event": "no_op"}
+
+        # Soll korrigieren + als fertig markieren (geliefert = neue Menge), Nachlege loeschen
+        self.df.at[actual_idx, filiale_name] = neue
+        gc = f"{filiale_name}_Geliefert"
+        if gc in self.df.columns:
+            self.df.at[actual_idx, gc] = neue
+        nc = f"{filiale_name}_Nachlege"
+        if nc in self.df.columns:
+            self.df.at[actual_idx, nc] = 0.0
+        self._set_display(filiale_name, 0)
+
+        db_info = {
+            "produkt_nr":   str(row["Nr"]),
+            "produkt_name": str(row["Name"]),
+            "filiale":      filiale_name,
+            "typ":          str(row["Typ"]),
+            "soll":         neue,
+            "geliefert":    neue,
+            "nachlege":     0.0,
+        }
+
+        # aktive Filialen anhand der (evtl. geaenderten) Soll-Mengen neu bestimmen
+        active_filialen = [f for f in filialen_heute if float(self.df.at[actual_idx, f] or 0) > 0]
+        unconfirmed = self._get_unconfirmed_indices(actual_idx, active_filialen)
+        if not unconfirmed:
+            self.produkt_fertig_sperre = True
+            self.current_filiale_idx = len(active_filialen)
+            return {"event": "produkt_fertig", "name": row["Name"], **db_info}
+        else:
+            self.current_filiale_idx = unconfirmed[0]
+            return {"event": "filiale_erledigt", **db_info}
+
     def rueckgaengig_filiale(self, filiale_name: str, filialen_heute: list[str]) -> dict:
         """Macht die Bestätigung einer Filiale rückgängig."""
         df_gef = self.get_df_gefiltert()
