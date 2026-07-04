@@ -296,7 +296,11 @@ def mqtt_broadcast_displays(snapshot: dict) -> None:
 
     Anzeige-Modell: jede Kiste zeigt dauerhaft ihre Zahl, farbcodiert:
       p = offen  (rot),  a = aktiv (orange),  d = erledigt (gruen, durchgestrichen).
-    Platznummer = Position der Filiale in der vollen Tour, 1-basiert.
+    Platznummer:
+      - OHNE Blöcke: Position der Filiale in der vollen Tour, 1-basiert.
+      - MIT Blöcken (block_aktiv): Position IM aktiven Block -> die Kisten folgen
+        dem Block (Platz 1 = 1. Filiale des aktuellen Blocks). Ueberzaehlige
+        Plaetze (kleinerer letzter Block) werden ausgeschaltet ("0").
     Topic:   baeckerei/display/<platz>
     Payload: "<Name>|<Menge>|<p|a|d>|<Nachlege>|<Typ>".
              Menge 0 (keine Bestellung fuer dieses Produkt) -> Kiste zeigt Name + gruenes "-".
@@ -307,8 +311,14 @@ def mqtt_broadcast_displays(snapshot: dict) -> None:
     state = get_state()
     if not MQTT_AVAILABLE or state.hardware_mode != "MQTT":
         return
-    tour = snapshot.get("tour_filialen", [])
-    if not tour:
+    # Quelle der Platz-Zuordnung: aktiver Block (Kisten folgen dem Block) oder volle Tour.
+    if snapshot.get("block_aktiv"):
+        quelle = snapshot.get("block_filialen", [])
+        n_plaetze = max(int(snapshot.get("block_size", 0) or 0), len(quelle))
+    else:
+        quelle = snapshot.get("tour_filialen", [])
+        n_plaetze = len(quelle)
+    if n_plaetze <= 0:
         return
     client = _get_mqtt_client()
     if client is None:
@@ -316,17 +326,20 @@ def mqtt_broadcast_displays(snapshot: dict) -> None:
     status_map = {f["name"]: f for f in snapshot.get("filialen_status", [])}
     typ_code = {"1.": "1", "V": "V", "2.": "2"}.get(snapshot.get("lieferung_phase", "1."), "1")
     try:
-        for i, filiale in enumerate(tour):
+        for i in range(n_plaetze):
             platz = i + 1
-            st = status_map.get(filiale)
-            if st and st.get("menge", 0) > 0:
-                # 4. Feld = "rest" (noch zu packen): Nachlege ODER Teilmengen-Differenz.
-                # Firmware zeigt (Menge-rest) gruen durchgestrichen + "+rest" in Statusfarbe.
-                payload = (f"{filiale}|{st['menge']}|{_STATUS_CODE.get(st.get('status'), 'p')}"
-                           f"|{st.get('rest', 0)}|{typ_code}")
+            filiale = quelle[i] if i < len(quelle) else None
+            if filiale is None:
+                payload = "0"        # ueberzaehlige Kiste (kleinerer letzter Block) -> aus
             else:
-                # keine Bestellung fuer dieses Produkt -> Name + gruenes "-" (Menge 0)
-                payload = f"{filiale}|0|d|0|{typ_code}"
+                st = status_map.get(filiale)
+                if st and st.get("menge", 0) > 0:
+                    # 4. Feld = "rest" (noch zu packen): Nachlege ODER Teilmengen-Differenz.
+                    payload = (f"{filiale}|{st['menge']}|{_STATUS_CODE.get(st.get('status'), 'p')}"
+                               f"|{st.get('rest', 0)}|{typ_code}")
+                else:
+                    # keine Bestellung fuer dieses Produkt -> Name + gruenes "-"
+                    payload = f"{filiale}|0|d|0|{typ_code}"
             if _last_payloads.get(platz) != payload:      # nur bei Aenderung senden
                 client.publish(f"baeckerei/display/{platz}", payload, qos=1, retain=True)
                 _last_payloads[platz] = payload
@@ -399,6 +412,7 @@ def get_block_meta() -> dict:
         "block_aktiv": block_size > 0 and len(bloecke) > 1,
         "block_anzahl": len(bloecke),
         "block_idx": idx,
+        "block_size": block_size,
         "block_filialen": bloecke[idx] if bloecke else [],
         "block_bereich": state.kat_filter,
         # Volle Tour-Reihenfolge (NICHT block-beschraenkt) – u.a. fuer Nachlegen,
