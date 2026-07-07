@@ -496,75 +496,38 @@
   .wert-minus { color: #d32f2f; }
   .wert-gleich { color: #555; }
 
-  /* ── ESP32 Display Simulator ── */
-  #displays-grid {
-    display: flex; flex-wrap: wrap; gap: 14px; padding: 4px;
+  /* ── Kisten-Simulator: 1:1 wie die echten LED-Panels (64x32) ── */
+  #displays-grid { display: flex; flex-wrap: wrap; gap: 16px; padding: 4px; }
+  .kiste { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .kiste-platz { font-size: 11px; font-weight: 700; color: #90a4ae; letter-spacing: .5px; }
+  /* LED-Panel im Seitenverhaeltnis 64:32 (=2:1), Punktraster = einzelne LEDs */
+  .led-panel {
+    position: relative; width: 160px; height: 80px;
+    background: #050505;
+    background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.4px);
+    background-size: 5px 5px;
+    border-radius: 5px; border: 1px solid #1e1e1e;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: 'Courier New', monospace; overflow: hidden; user-select: none;
+    box-shadow: inset 0 0 12px rgba(0,0,0,.8);
   }
-  .kiste {
-    background: #1a1a1a; border-radius: 10px; padding: 12px 10px 10px;
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    width: 130px; border: 2px solid #333; transition: border-color .2s, box-shadow .2s;
-    position: relative;
+  .led-panel.off { opacity: .45; }
+  /* orange Randbalken links+rechts = aktiv (wird gerade kommissioniert) */
+  .led-panel.aktiv::before, .led-panel.aktiv::after {
+    content: ''; position: absolute; top: 0; bottom: 0; width: 5px;
+    background: #ffa500; box-shadow: 0 0 8px #ff8c00;
   }
-  /* aktiv = leuchtet gerade (orange) */
-  .kiste.active {
-    border-color: #ff8c00;
-    box-shadow: 0 0 18px rgba(255,140,0,.55), 0 0 6px rgba(255,140,0,.3);
+  .led-panel.aktiv::before { left: 0; }
+  .led-panel.aktiv::after  { right: 0; }
+  .lp-name {
+    font-size: 13px; font-weight: 700; line-height: 1; margin-bottom: 4px;
+    text-transform: uppercase; letter-spacing: .5px; text-shadow: 0 0 6px currentColor;
   }
-  /* pending = muss noch gepackt werden → rot */
-  .kiste.pending { border-color: #c0392b; background: #1f0d0d; }
-  /* done = erledigt → grün */
-  .kiste.done    { border-color: #1a7f37; background: #0d1f0d; }
-  /* none = keine Menge */
-  .kiste.none    { border-color: #333; background: #1a1a1a; opacity: .6; }
-
-  .kiste-name {
-    font-size: 11px; font-weight: 700; color: #aaa; text-align: center;
-    text-transform: uppercase; letter-spacing: .5px; line-height: 1.2;
-    min-height: 26px; display: flex; align-items: center; justify-content: center;
-  }
-  .kiste.active  .kiste-name { color: #ffcc80; }
-  .kiste.pending .kiste-name { color: #ef9a9a; }
-  .kiste.done    .kiste-name { color: #81c784; }
-  .kiste.none    .kiste-name { color: #555; }
-
-  /* 7-Segment-Style Display */
-  .led-display {
-    background: #0d0d0d; border: 1px solid #222; border-radius: 6px;
-    width: 108px; height: 56px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Courier New', monospace; font-size: 36px; font-weight: 900;
-    letter-spacing: -1px;
-    color: #1a0f00;
-    text-shadow: none;
-    transition: color .15s, text-shadow .15s;
-    user-select: none;
-  }
-  .kiste.active  .led-display {
-    color: #ffa500;
-    text-shadow: 0 0 8px #ffa500, 0 0 20px #ff6600, 0 0 2px #fff;
-  }
-  .kiste.pending .led-display {
-    color: #e74c3c;
-    text-shadow: 0 0 6px rgba(231,76,60,.5);
-  }
-  .kiste.done .led-display {
-    color: #27ae60;
-    text-decoration: line-through;
-    text-shadow: 0 0 4px rgba(39,174,96,.3);
-  }
-  .kiste.none .led-display {
-    color: #6a1010; font-size: 32px;
-    text-shadow: none;
-  }
-  .kiste-status {
-    font-size: 10px; font-weight: 600; color: #444; text-align: center;
-    min-height: 14px;
-  }
-  .kiste.active  .kiste-status { color: #ff8c00; }
-  .kiste.pending .kiste-status { color: #e74c3c; }
-  .kiste.done    .kiste-status { color: #27ae60; }
-  .kiste.none    .kiste-status { color: #444; }
+  .lp-zahl { font-size: 34px; font-weight: 900; line-height: 1; letter-spacing: -1px;
+             text-shadow: 0 0 8px currentColor; }
+  .lp-split { display: flex; align-items: baseline; gap: 5px; }
+  .lp-split .rest { font-size: 26px; }
+  .led-panel .strike { text-decoration: line-through; }
   #display-info-bar {
     background: #263238; color: #eceff1; border-radius: 10px;
     padding: 12px 18px; margin-bottom: 16px; font-size: 13px;
@@ -577,10 +540,13 @@
   }
   .legend-item { display: flex; align-items: center; gap: 6px; }
   .legend-dot { width: 14px; height: 14px; border-radius: 3px; border: 2px solid; }
-  .legend-dot.active  { border-color: #ff8c00; background: #1a0a00; }
-  .legend-dot.pending { border-color: #c0392b; background: #1f0d0d; }
-  .legend-dot.done    { border-color: #1a7f37; background: #0d1f0d; }
-  .legend-dot.none    { border-color: #333; background: #1a1a1a; }
+  .legend-dot.active  { background: #ffa500; border-color: #ffa500; }
+  .legend-dot.pending { background: #ff5252; border-color: #ff5252; }
+  .legend-dot.done    { background: #33d17a; border-color: #33d17a; }
+  .legend-dot.none    { background: #050505; border-color: #333; }
+  .legend-dot.typ1    { background: #1e90ff; border-color: #1e90ff; }
+  .legend-dot.typv    { background: #c85aff; border-color: #c85aff; }
+  .legend-dot.typ2    { background: #c8811e; border-color: #c8811e; }
 
   /* ── PIN Overlay ── */
   #pin-overlay { position:fixed; inset:0; background:rgba(15,20,30,.92);
@@ -1077,10 +1043,15 @@
       </div>
 
       <div class="display-legend" id="display-legend">
-        <div class="legend-item"><div class="legend-dot active"></div> Aktiv – wird gerade gepackt</div>
-        <div class="legend-item"><div class="legend-dot pending"></div> Ausstehend – muss noch gepackt werden</div>
-        <div class="legend-item"><div class="legend-dot done"></div> Erledigt – abgehakt</div>
-        <div class="legend-item"><div class="legend-dot none"></div> Keine Menge für dieses Produkt</div>
+        <div class="legend-item"><div class="legend-dot active"></div> Aktiv – wird gerade gepackt (Randbalken)</div>
+        <div class="legend-item"><div class="legend-dot pending"></div> Offen – muss noch gepackt werden</div>
+        <div class="legend-item"><div class="legend-dot done"></div> Erledigt – durchgestrichen</div>
+        <div class="legend-item"><div class="legend-dot none"></div> Keine Bestellung – grünes „−"</div>
+        <div class="legend-item" style="flex-basis:100%;height:0;"></div>
+        <div class="legend-item" style="color:#90a4ae;">Name-Farbe = Lieferung:</div>
+        <div class="legend-item"><div class="legend-dot typ1"></div> 1. Lieferung</div>
+        <div class="legend-item"><div class="legend-dot typv"></div> Vorbestellung</div>
+        <div class="legend-item"><div class="legend-dot typ2"></div> 2. Lieferung</div>
       </div>
 
       <div id="displays-grid"></div>
@@ -2140,31 +2111,46 @@ function saveTourenConfig() {
 // ═══════════════════════════════════════════════════════════
 // Displays-Tab
 // ═══════════════════════════════════════════════════════════
+// Virtuelle Kisten = 1:1 wie die echten LED-Panels. Quelle: s.displays (Platz-Zustaende,
+// dieselbe Berechnung wie fuers MQTT). Regeln/Farben spiegeln die Firmware showBox().
 function renderDisplays(s) {
   const container = document.getElementById('displays-grid');
   if (!container) return;
-  const filialen = s.filialen_heute || [];
-  if (filialen.length === 0) {
-    container.innerHTML = '<p style="color:#546e7a;font-size:13px;">Keine Filialen für heute konfiguriert.</p>';
+  const displays = s.displays || [];
+  if (displays.length === 0) {
+    container.innerHTML = '<p style="color:#546e7a;font-size:13px;">Keine Displays / Filialen für heute.</p>';
     return;
   }
-  const filStatus = {};
-  (s.filialen_status || []).forEach(f => { filStatus[f.name] = f; });
-  container.innerHTML = filialen.map(f => {
-    const fs = filStatus[f];
-    let cls, menge, statusText;
-    if (fs) {
-      if (fs.status === 'active')    { cls = 'active';  menge = fs.menge;              statusText = 'AKTIV'; }
-      else if (fs.status === 'done') { cls = 'done';    menge = fs.geliefert||fs.menge; statusText = 'FERTIG'; }
-      else                           { cls = 'pending'; menge = fs.menge;              statusText = 'OFFEN'; }
-    } else {
-      cls = 'none'; menge = '–'; statusText = '';
+  const TYP   = { '1': '#1e90ff', 'V': '#c85aff', '2': '#c8811e' };            // blau / lila / braun
+  const STAT  = { active: '#ffa500', pending: '#ff5252', done: '#33d17a' };    // orange / rot / gruen
+  const GRUEN = '#33d17a';
+  container.innerHTML = displays.map(d => {
+    const platz = '<div class="kiste-platz">Platz ' + d.platz + '</div>';
+    if (d.kind === 'off') {
+      return '<div class="kiste">' + platz + '<div class="led-panel off"></div></div>';
     }
-    return '<div class="kiste ' + cls + '">' +
-      '<div class="kiste-name">' + f + '</div>' +
-      '<div class="led-display">' + menge + '</div>' +
-      '<div class="kiste-status">' + statusText + '</div>' +
-    '</div>';
+    const nameCol = TYP[d.typ] || '#ffd54f';
+    const name = '<div class="lp-name" style="color:' + nameCol + '">' + d.name + '</div>';
+    let inner = '', aktiv = '';
+    if (d.kind === 'dash') {
+      inner = '<div class="lp-zahl" style="color:' + GRUEN + '">–</div>';   // keine Bestellung
+    } else {
+      if (d.status === 'active') aktiv = ' aktiv';
+      const statCol = STAT[d.status] || '#ff5252';
+      if (d.rest > 0) {                                   // Split: gepackt (gruen, durchgestr.) + Rest
+        const done = Math.max(0, d.menge - d.rest);
+        const restCol    = d.status === 'done' ? GRUEN : statCol;
+        const restStrike = d.status === 'done' ? ' strike' : '';
+        inner = '<div class="lp-zahl lp-split">' +
+                  '<span class="strike" style="color:' + GRUEN + '">' + done + '</span>' +
+                  '<span class="rest' + restStrike + '" style="color:' + restCol + '">+' + d.rest + '</span>' +
+                '</div>';
+      } else {                                            // eine Zahl in Statusfarbe
+        const strike = d.status === 'done' ? ' strike' : '';
+        inner = '<div class="lp-zahl' + strike + '" style="color:' + statCol + '">' + d.menge + '</div>';
+      }
+    }
+    return '<div class="kiste">' + platz + '<div class="led-panel' + aktiv + '">' + name + inner + '</div></div>';
   }).join('');
 }
 

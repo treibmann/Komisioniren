@@ -291,56 +291,69 @@ def _get_mqtt_client():
     return _mqtt_client
 
 
-def mqtt_broadcast_displays(snapshot: dict) -> None:
-    """Sendet den Zustand pro Platz (Menge + Status) an geaenderte Displays.
+def compute_display_states(snapshot: dict) -> list[dict]:
+    """Berechnet den Zustand JE PLATZ (1-basiert) – die EINE Quelle fuer echte
+    (MQTT) UND virtuelle Displays, damit beide identisch aussehen/regeln.
 
-    Anzeige-Modell: jede Kiste zeigt dauerhaft ihre Zahl, farbcodiert:
-      p = offen  (rot),  a = aktiv (orange),  d = erledigt (gruen, durchgestrichen).
-    Platznummer:
-      - OHNE Blöcke: Position der Filiale in der vollen Tour, 1-basiert.
-      - MIT Blöcken (block_aktiv): Position IM aktiven Block -> die Kisten folgen
-        dem Block (Platz 1 = 1. Filiale des aktuellen Blocks). Ueberzaehlige
-        Plaetze (kleinerer letzter Block) werden ausgeschaltet ("0").
-    Topic:   baeckerei/display/<platz>
-    Payload: "<Name>|<Menge>|<p|a|d>|<Nachlege>|<Typ>".
-             Menge 0 (keine Bestellung fuer dieses Produkt) -> Kiste zeigt Name + gruenes "-".
-             Nachlege > 0  -> Kiste zeigt (Menge-Nachlege) gruen + "+Nachlege" (Statusfarbe;
-             bei done beide gruen+durchgestrichen).
-             Typ (Namensfarbe): 1=Erstlieferung(blau), V=Vorbestellung(lila), 2=2.Lieferung(braun).
+    Platz = Position im aktiven Block (block_aktiv) bzw. in der vollen Tour.
+    Ueberzaehlige Plaetze (kleinerer letzter Block) -> kind 'off'.
+    kind: 'number' (name+menge+status+rest+typ) | 'dash' (keine Bestellung ->
+          Name + gruenes "-") | 'off' (dunkel).
+    typ (Namensfarbe): 1=Erstlieferung(blau) / V=Vorbestellung(lila) / 2=2.Lieferung(braun).
+    status: pending(rot) / active(orange) / done(gruen, durchgestrichen).
+    rest>0 -> Split (menge-rest gruen durchgestrichen + "+rest" in Statusfarbe).
     """
-    state = get_state()
-    if not MQTT_AVAILABLE or state.hardware_mode != "MQTT":
-        return
-    # Quelle der Platz-Zuordnung: aktiver Block (Kisten folgen dem Block) oder volle Tour.
     if snapshot.get("block_aktiv"):
         quelle = snapshot.get("block_filialen", [])
         n_plaetze = max(int(snapshot.get("block_size", 0) or 0), len(quelle))
     else:
         quelle = snapshot.get("tour_filialen", [])
         n_plaetze = len(quelle)
-    if n_plaetze <= 0:
+    status_map = {f["name"]: f for f in snapshot.get("filialen_status", [])}
+    typ_code = {"1.": "1", "V": "V", "2.": "2"}.get(snapshot.get("lieferung_phase", "1."), "1")
+    out: list[dict] = []
+    for i in range(n_plaetze):
+        platz = i + 1
+        filiale = quelle[i] if i < len(quelle) else None
+        if filiale is None:
+            out.append({"platz": platz, "kind": "off"})
+            continue
+        st = status_map.get(filiale)
+        if st and st.get("menge", 0) > 0:
+            out.append({"platz": platz, "kind": "number", "name": filiale,
+                        "menge": st["menge"], "status": st.get("status", "pending"),
+                        "rest": st.get("rest", 0), "typ": typ_code})
+        else:
+            out.append({"platz": platz, "kind": "dash", "name": filiale, "typ": typ_code})
+    return out
+
+
+def _display_payload(e: dict) -> str:
+    """MQTT-Payload-String fuer einen Platz-Zustand (Format siehe Firmware showBox)."""
+    if e.get("kind") == "off":
+        return "0"
+    if e.get("kind") == "dash":
+        return f"{e['name']}|0|d|0|{e['typ']}"
+    return f"{e['name']}|{e['menge']}|{_STATUS_CODE.get(e['status'], 'p')}|{e['rest']}|{e['typ']}"
+
+
+def mqtt_broadcast_displays(snapshot: dict) -> None:
+    """Sendet den Zustand je Platz an die ECHTEN (MQTT) Displays; nur Aenderungen.
+    Platz-/Anzeige-Logik: compute_display_states(); Payload: _display_payload()."""
+    state = get_state()
+    if not MQTT_AVAILABLE or state.hardware_mode != "MQTT":
+        return
+    zustaende = snapshot.get("displays") or compute_display_states(snapshot)
+    if not zustaende:
         return
     client = _get_mqtt_client()
     if client is None:
         return
-    status_map = {f["name"]: f for f in snapshot.get("filialen_status", [])}
-    typ_code = {"1.": "1", "V": "V", "2.": "2"}.get(snapshot.get("lieferung_phase", "1."), "1")
     try:
-        for i in range(n_plaetze):
-            platz = i + 1
-            filiale = quelle[i] if i < len(quelle) else None
-            if filiale is None:
-                payload = "0"        # ueberzaehlige Kiste (kleinerer letzter Block) -> aus
-            else:
-                st = status_map.get(filiale)
-                if st and st.get("menge", 0) > 0:
-                    # 4. Feld = "rest" (noch zu packen): Nachlege ODER Teilmengen-Differenz.
-                    payload = (f"{filiale}|{st['menge']}|{_STATUS_CODE.get(st.get('status'), 'p')}"
-                               f"|{st.get('rest', 0)}|{typ_code}")
-                else:
-                    # keine Bestellung fuer dieses Produkt -> Name + gruenes "-"
-                    payload = f"{filiale}|0|d|0|{typ_code}"
-            if _last_payloads.get(platz) != payload:      # nur bei Aenderung senden
+        for e in zustaende:
+            platz = e["platz"]
+            payload = _display_payload(e)
+            if _last_payloads.get(platz) != payload:
                 client.publish(f"baeckerei/display/{platz}", payload, qos=1, retain=True)
                 _last_payloads[platz] = payload
     except Exception as exc:
@@ -451,6 +464,7 @@ async def push_state() -> None:
     snapshot = state.to_ui_snapshot(filialen)
     snapshot["aktiver_tag"] = get_heute_tag()
     snapshot.update(get_block_meta())
+    snapshot["displays"] = compute_display_states(snapshot)   # Platz-Zustaende (echt + virtuell)
     await manager.broadcast(snapshot)
     mqtt_broadcast_displays(snapshot)   # physische Kisten: alle Plaetze farbcodiert versorgen
     save_runtime_state()
@@ -596,6 +610,7 @@ async def websocket_endpoint(ws: WebSocket):
     init_snap = state.to_ui_snapshot(filialen)
     init_snap["aktiver_tag"] = get_heute_tag()
     init_snap.update(get_block_meta())
+    init_snap["displays"] = compute_display_states(init_snap)
     await ws.send_text(json.dumps(init_snap, ensure_ascii=False))
 
     try:
