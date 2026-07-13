@@ -845,6 +845,20 @@ async def websocket_endpoint(ws: WebSocket):
                     db_module.log_aktion("hardware_mode", {"mode": mode})
                     result = {"event": "state_update"}
 
+                elif cmd == "ota_update":
+                    # OTA an ALLE ESPs: Nachricht "URL|Version" auf baeckerei/ota (retained,
+                    # damit auch offline-ESPs beim naechsten Start updaten). ESP prueft Version.
+                    url = str(msg.get("url", "")).strip()
+                    version = str(msg.get("version", "")).strip()
+                    if url and version:
+                        c = _get_mqtt_client()
+                        if c is not None:
+                            c.publish("baeckerei/ota", f"{url}|{version}", qos=1, retain=True)
+                        db_module.log_aktion("ota_update", {"url": url, "version": version})
+                        result = {"event": "ota_gesendet", "version": version}
+                    else:
+                        result = {"event": "ota_fehler"}
+
                 elif cmd == "reset":
                     state.reset_morning(filialen)
                     db_module.log_aktion("reset_morgen", {})

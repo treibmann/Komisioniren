@@ -1061,6 +1061,28 @@
 
       <div id="displays-grid"></div>
 
+      <!-- OTA: Firmware-Update an alle Kisten (nur Admin) -->
+      <div class="admin-only" id="ota-box" style="margin-top:20px;padding:14px 16px;background:#f5f7fa;
+           border:1px solid #d7dee6;border-radius:10px;max-width:640px;">
+        <div style="font-weight:700;color:#333;margin-bottom:8px;">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M20 21H4"/></svg>
+          Firmware-Update an alle Kisten (OTA)
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <input id="ota-url" type="text" placeholder="https://…/firmware/vN.bin"
+                 style="flex:1;min-width:260px;padding:9px 10px;border:1px solid #ccc;border-radius:8px;font-size:14px;">
+          <input id="ota-version" type="number" min="1" placeholder="Version (z. B. 7)"
+                 style="width:150px;padding:9px 10px;border:1px solid #ccc;border-radius:8px;font-size:14px;">
+          <button onclick="sendOtaUpdate()"
+                  style="padding:10px 16px;border:none;border-radius:8px;background:#1976d2;color:#fff;
+                         font-weight:700;cursor:pointer;">An alle senden</button>
+        </div>
+        <div id="ota-msg" style="font-size:13px;margin-top:8px;min-height:18px;color:#666;"></div>
+        <div style="font-size:12px;color:#8a949e;margin-top:4px;">
+          Alle ESPs mit niedrigerer Version laden die .bin vom Server und flashen sich selbst.
+        </div>
+      </div>
+
       <div id="disp-no-pdf" style="color:#999;text-align:center;padding:40px;">
         Bitte zuerst eine Versandliste einlesen.
       </div>
@@ -1807,6 +1829,19 @@ function renderState(s) {
 // ═══════════════════════════════════════════════════════════
 function setMode(mode) {
   sendCmd('set_hardware_mode', { mode });
+}
+
+// OTA: Firmware-Update an alle Kisten senden (Admin)
+function sendOtaUpdate() {
+  const url = (document.getElementById('ota-url').value || '').trim();
+  const version = (document.getElementById('ota-version').value || '').trim();
+  const msg = document.getElementById('ota-msg');
+  if (!url || !version) { msg.style.color = '#d32f2f'; msg.textContent = 'Bitte URL und Version angeben.'; return; }
+  if (!/^https?:\/\//i.test(url)) { msg.style.color = '#d32f2f'; msg.textContent = 'URL muss mit http:// oder https:// beginnen.'; return; }
+  if (!confirm('Firmware-Update v' + version + ' an ALLE Kisten senden?')) return;
+  sendCmd('ota_update', { url: url, version: version });
+  msg.style.color = '#2e7d32';
+  msg.textContent = 'Update v' + version + ' gesendet – Kisten mit niedrigerer Version aktualisieren sich.';
 }
 
 function setTagOverride(tag) {
