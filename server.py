@@ -18,6 +18,7 @@ import asyncio
 import datetime
 import json
 import os
+import time
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -264,12 +265,48 @@ _STATUS_CODE = {"pending": "p", "active": "a", "done": "d"}
 # Plaetze publishen.
 _mqtt_client = None
 _last_payloads: dict[int, str] = {}
+_esp_status: dict[int, dict] = {}   # platz -> {"online": bool, "version": str, "ts": float}
+_main_loop = None                   # Event-Loop (im lifespan gesetzt) fuer Push aus MQTT-Thread
 
 
 def _on_mqtt_connect(client, userdata, flags, reason_code, properties=None):
     # Nach (Re)connect alle Plaetze neu senden (z.B. falls Broker neu gestartet
     # wurde und die retained Werte verloren gingen).
     _last_payloads.clear()
+    # ESP-Status-Meldungen abonnieren (online/offline + Firmware-Version)
+    try:
+        client.subscribe("baeckerei/status/#")
+    except Exception as exc:
+        print(f"[MQTT] subscribe-Fehler: {exc}")
+
+
+def _on_mqtt_message(client, userdata, msg):
+    """ESP-Status empfangen. Topic: baeckerei/status/<platz>,
+    Payload: 'online|<version>' oder 'offline' (retained + per Last-Will)."""
+    try:
+        parts = msg.topic.split("/")
+        if len(parts) != 3 or parts[1] != "status":
+            return
+        platz = int(parts[2])
+        payload = msg.payload.decode(errors="ignore").strip()
+        if payload.startswith("online"):
+            seg = payload.split("|")
+            version = seg[1] if len(seg) > 1 else "?"
+            _esp_status[platz] = {"online": True, "version": version, "ts": time.time()}
+        else:  # offline / leer
+            vor = _esp_status.get(platz, {})
+            _esp_status[platz] = {"online": False, "version": vor.get("version", "?"), "ts": time.time()}
+        # Web-Clients live aktualisieren (Aufruf aus dem MQTT-Hintergrund-Thread)
+        if _main_loop is not None:
+            asyncio.run_coroutine_threadsafe(push_state(), _main_loop)
+    except Exception as exc:
+        print(f"[MQTT] Status-Parse-Fehler: {exc}")
+
+
+def esp_status_list() -> list[dict]:
+    """ESP-Status als sortierte Liste fuer den Snapshot."""
+    return [{"platz": p, "online": v["online"], "version": v.get("version", "?")}
+            for p, v in sorted(_esp_status.items())]
 
 
 def _get_mqtt_client():
@@ -280,10 +317,11 @@ def _get_mqtt_client():
     if _mqtt_client is None:
         c = mqtt_lib.Client(mqtt_lib.CallbackAPIVersion.VERSION2)
         c.on_connect = _on_mqtt_connect
+        c.on_message = _on_mqtt_message
         c.reconnect_delay_set(min_delay=1, max_delay=15)
         try:
             c.connect_async(MQTT_BROKER, MQTT_PORT, 60)
-            c.loop_start()   # Hintergrund-Thread: Verbindung/Reconnect/Senden
+            c.loop_start()   # Hintergrund-Thread: Verbindung/Reconnect/Senden/Empfangen
             _mqtt_client = c
         except Exception as exc:
             print(f"[MQTT] Connect-Fehler: {exc}")
@@ -465,6 +503,7 @@ async def push_state() -> None:
     snapshot["aktiver_tag"] = get_heute_tag()
     snapshot.update(get_block_meta())
     snapshot["displays"] = compute_display_states(snapshot)   # Platz-Zustaende (echt + virtuell)
+    snapshot["esp_status"] = esp_status_list()                # ESP online/offline + Firmware-Version
     await manager.broadcast(snapshot)
     mqtt_broadcast_displays(snapshot)   # physische Kisten: alle Plaetze farbcodiert versorgen
     save_runtime_state()
@@ -476,6 +515,8 @@ async def push_state() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("[Server] Bäckerei Pick-by-Light startet...")
+    global _main_loop
+    _main_loop = asyncio.get_running_loop()   # fuer Push aus dem MQTT-Thread (ESP-Status)
     db_module.init_db()
     print("[DB] SQLite bereit.")
     # PDF automatisch laden + Fortschritt wiederherstellen
@@ -611,6 +652,7 @@ async def websocket_endpoint(ws: WebSocket):
     init_snap["aktiver_tag"] = get_heute_tag()
     init_snap.update(get_block_meta())
     init_snap["displays"] = compute_display_states(init_snap)
+    init_snap["esp_status"] = esp_status_list()
     await ws.send_text(json.dumps(init_snap, ensure_ascii=False))
 
     try:
@@ -991,6 +1033,7 @@ async def api_state():
     snap["aktiver_tag"] = get_heute_tag()
     snap.update(get_block_meta())
     snap["displays"] = compute_display_states(snap)   # wie WS-Snapshot (Platz-Zustaende)
+    snap["esp_status"] = esp_status_list()
     return snap
 
 
