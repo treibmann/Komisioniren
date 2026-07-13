@@ -528,6 +528,11 @@
   .lp-split { display: flex; align-items: baseline; gap: 5px; }
   .lp-split .rest { font-size: 26px; }
   .led-panel .strike { text-decoration: line-through; }
+  /* ESP-Status je Kiste (online/offline + Firmware-Version) */
+  .kiste-esp { font-size: 11px; font-weight: 700; margin-top: 3px; letter-spacing: .3px; }
+  .kiste-esp.k-on   { color: #33d17a; }
+  .kiste-esp.k-off  { color: #ff5252; }
+  .kiste-esp.k-none { color: #607d8b; font-weight: 600; }
   #display-info-bar {
     background: #263238; color: #eceff1; border-radius: 10px;
     padding: 12px 18px; margin-bottom: 16px; font-size: 13px;
@@ -2124,10 +2129,20 @@ function renderDisplays(s) {
   const TYP   = { '1': '#1e90ff', 'V': '#c85aff', '2': '#c8811e' };            // blau / lila / braun
   const STAT  = { active: '#ffa500', pending: '#ff5252', done: '#33d17a' };    // orange / rot / gruen
   const GRUEN = '#33d17a';
+  const estat = {};
+  (s.esp_status || []).forEach(e => { estat[e.platz] = e; });
+  function espBadge(platz) {
+    const e = estat[platz];
+    if (!e)        return '<div class="kiste-esp k-none">◌ kein ESP</div>';
+    if (e.online)  return '<div class="kiste-esp k-on">🟢 online · v' + e.version + '</div>';
+    const v = (e.version && e.version !== '?') ? ' · v' + e.version : '';
+    return '<div class="kiste-esp k-off">🔴 offline' + v + '</div>';
+  }
   container.innerHTML = displays.map(d => {
     const platz = '<div class="kiste-platz">Platz ' + d.platz + '</div>';
+    const badge = espBadge(d.platz);
     if (d.kind === 'off') {
-      return '<div class="kiste">' + platz + '<div class="led-panel off"></div></div>';
+      return '<div class="kiste">' + platz + '<div class="led-panel off"></div>' + badge + '</div>';
     }
     const nameCol = TYP[d.typ] || '#ffd54f';
     const name = '<div class="lp-name" style="color:' + nameCol + '">' + d.name + '</div>';
@@ -2150,7 +2165,7 @@ function renderDisplays(s) {
         inner = '<div class="lp-zahl' + strike + '" style="color:' + statCol + '">' + d.menge + '</div>';
       }
     }
-    return '<div class="kiste">' + platz + '<div class="led-panel' + aktiv + '">' + name + inner + '</div></div>';
+    return '<div class="kiste">' + platz + '<div class="led-panel' + aktiv + '">' + name + inner + '</div>' + badge + '</div>';
   }).join('');
 }
 
