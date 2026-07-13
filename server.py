@@ -990,6 +990,7 @@ async def api_state():
     snap = state.to_ui_snapshot(filialen)
     snap["aktiver_tag"] = get_heute_tag()
     snap.update(get_block_meta())
+    snap["displays"] = compute_display_states(snap)   # wie WS-Snapshot (Platz-Zustaende)
     return snap
 
 
