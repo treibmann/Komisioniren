@@ -29,6 +29,9 @@ data/runtime_state.json
 # ESP32-Firmware bleibt lokal (enthaelt echte WLAN-Zugangsdaten)
 firmware/
 
+# OTA: kompilierte .bin-Dateien nicht committen
+data/firmware/
+
 # OS
 .DS_Store
 Thumbs.db

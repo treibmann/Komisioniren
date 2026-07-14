@@ -23,7 +23,7 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -57,6 +57,8 @@ import db as db_module
 
 DATA_DIR = os.getenv("DATA_DIR", "data")
 os.makedirs(DATA_DIR, exist_ok=True)
+FIRMWARE_DIR = os.path.join(DATA_DIR, "firmware")   # .bin-Ablage fuer OTA (lokal, per HTTP)
+os.makedirs(FIRMWARE_DIR, exist_ok=True)
 HISTORY_FILE = os.path.join(DATA_DIR, "kuerzungs_history.json")
 RUNTIME_STATE_FILE = os.path.join(DATA_DIR, "runtime_state.json")
 PIN_CONFIG_FILE = os.path.join(DATA_DIR, "pin_config.json")
@@ -573,6 +575,18 @@ async def root():
         with open(html_path, "r", encoding="utf-8") as f:
             return f.read()
     return HTMLResponse("<h1>index.html nicht gefunden</h1>", status_code=500)
+
+
+@app.get("/firmware/{filename}")
+async def get_firmware(filename: str):
+    """Liefert eine Firmware-.bin fuer OTA aus (aus DATA_DIR/firmware/).
+    URL fuer den ESP: http://<PC-IP>:8000/firmware/<datei>.bin"""
+    if not filename.endswith(".bin") or "/" in filename or "\\" in filename or ".." in filename:
+        raise HTTPException(400, "Ungueltiger Dateiname (nur *.bin, kein Pfad).")
+    path = os.path.join(FIRMWARE_DIR, filename)
+    if not os.path.exists(path):
+        raise HTTPException(404, f"Firmware nicht gefunden: {filename}")
+    return FileResponse(path, media_type="application/octet-stream", filename=filename)
 
 
 # ---------------------------------------------------------------------------
